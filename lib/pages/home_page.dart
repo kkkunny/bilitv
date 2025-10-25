@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../data/mock_data.dart';
 import '../models/video_model.dart';
 import '../widgets/video_card.dart';
@@ -15,8 +14,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final ScrollController _categoryScrollController = ScrollController();
   final ScrollController _videoScrollController = ScrollController();
-  final FocusNode _categoryFocusNode = FocusNode();
-  final List<FocusNode> _videoFocusNodes = [];
 
   int _selectedCategoryIndex = 0;
   List<VideoModel> _videos = [];
@@ -26,17 +23,12 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadVideos();
-    _setupKeyboardNavigation();
   }
 
   @override
   void dispose() {
     _categoryScrollController.dispose();
     _videoScrollController.dispose();
-    _categoryFocusNode.dispose();
-    for (var node in _videoFocusNodes) {
-      node.dispose();
-    }
     super.dispose();
   }
 
@@ -49,17 +41,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _videos = MockData.getVideoList();
         _isLoading = false;
-        _videoFocusNodes.clear();
-        _videoFocusNodes.addAll(
-          List.generate(_videos.length, (_) => FocusNode()),
-        );
       });
-    });
-  }
-
-  void _setupKeyboardNavigation() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      FocusScope.of(context).autofocus(_categoryFocusNode);
     });
   }
 
@@ -83,12 +65,8 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      body: RawKeyboardListener(
-        focusNode: FocusNode(),
-        onKey: _handleKeyEvent,
-        child: Column(
-          children: [_buildAppBar(), _buildCategoryTabs(), _buildVideoGrid()],
-        ),
+      body: Column(
+        children: [_buildAppBar(), _buildCategoryTabs(), _buildVideoGrid()],
       ),
     );
   }
@@ -139,7 +117,7 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                '哔哩哔哩 TV版',
+                '哔哩哔哩TV',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -156,37 +134,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ],
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: Colors.grey[300]!),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.search, color: Colors.grey[600], size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  '搜索视频',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),
@@ -249,116 +196,16 @@ class _HomePageState extends State<HomePage> {
           ),
           itemCount: _videos.length,
           itemBuilder: (context, index) {
-            return FocusableWidget(
-              focusNode: _videoFocusNodes[index],
-              onFocusChanged: (hasFocus) {
-                setState(() {});
-              },
-              child: VideoCard(
-                video: _videos[index],
+            return Material(
+              child: InkWell(
                 onTap: () => _onVideoTapped(_videos[index]),
-                isFocused: _videoFocusNodes[index].hasFocus,
+                child: VideoCard(video: _videos[index]),
               ),
             );
           },
         ),
       ),
     );
-  }
-
-  KeyEventResult _handleKeyEvent(RawKeyEvent event) {
-    if (event is RawKeyDownEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.arrowRight ||
-          event.logicalKey == LogicalKeyboardKey.arrowLeft ||
-          event.logicalKey == LogicalKeyboardKey.arrowUp ||
-          event.logicalKey == LogicalKeyboardKey.arrowDown) {
-        return _handleArrowKey(event.logicalKey);
-      }
-    }
-    return KeyEventResult.ignored;
-  }
-
-  KeyEventResult _handleArrowKey(LogicalKeyboardKey key) {
-    final currentFocus = FocusScope.of(context).focusedChild;
-
-    if (currentFocus != null) {
-      final focusIndex = _videoFocusNodes.indexOf(currentFocus);
-
-      switch (key) {
-        case LogicalKeyboardKey.arrowRight:
-          if (focusIndex < _videoFocusNodes.length - 1) {
-            _videoFocusNodes[focusIndex + 1].requestFocus();
-            _ensureItemVisible(focusIndex + 1);
-            return KeyEventResult.handled;
-          }
-          break;
-        case LogicalKeyboardKey.arrowLeft:
-          if (focusIndex > 0) {
-            _videoFocusNodes[focusIndex - 1].requestFocus();
-            _ensureItemVisible(focusIndex - 1);
-            return KeyEventResult.handled;
-          }
-          break;
-        case LogicalKeyboardKey.arrowDown:
-          if (focusIndex + 4 < _videoFocusNodes.length) {
-            _videoFocusNodes[focusIndex + 4].requestFocus();
-            _ensureItemVisible(focusIndex + 4);
-            return KeyEventResult.handled;
-          }
-          break;
-        case LogicalKeyboardKey.arrowUp:
-          if (focusIndex - 4 >= 0) {
-            _videoFocusNodes[focusIndex - 4].requestFocus();
-            _ensureItemVisible(focusIndex - 4);
-            return KeyEventResult.handled;
-          } else {
-            _categoryFocusNode.requestFocus();
-            return KeyEventResult.handled;
-          }
-          break;
-      }
-    } else if (currentFocus == _categoryFocusNode) {
-      switch (key) {
-        case LogicalKeyboardKey.arrowDown:
-          if (_videoFocusNodes.isNotEmpty) {
-            _videoFocusNodes.first.requestFocus();
-            return KeyEventResult.handled;
-          }
-          break;
-      }
-    }
-
-    return KeyEventResult.ignored;
-  }
-
-  void _ensureItemVisible(int index) {
-    final itemHeight = 280 + 16;
-    final itemWidth = 300 + 16;
-    final itemsPerRow = 4;
-
-    final row = index ~/ itemsPerRow;
-    final scrollOffset = row * itemHeight;
-
-    if (_videoScrollController.hasClients) {
-      final maxScrollExtent = _videoScrollController.position.maxScrollExtent;
-      final viewportHeight = _videoScrollController.position.viewportDimension;
-
-      if (scrollOffset >
-          _videoScrollController.offset + viewportHeight - itemHeight * 2) {
-        _videoScrollController.animateTo(
-          scrollOffset - viewportHeight + itemHeight * 2,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      } else if (scrollOffset < _videoScrollController.offset + itemHeight) {
-        var offset = (scrollOffset - itemHeight).clamp(0.0, maxScrollExtent);
-        _videoScrollController.animateTo(
-          offset.toDouble(),
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
-    }
   }
 }
 

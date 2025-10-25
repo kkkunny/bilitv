@@ -4,104 +4,35 @@ import '../models/video_model.dart';
 
 class VideoCard extends StatefulWidget {
   final VideoModel video;
-  final VoidCallback onTap;
-  final bool isFocused;
 
-  const VideoCard({
-    super.key,
-    required this.video,
-    required this.onTap,
-    this.isFocused = false,
-  });
+  const VideoCard({super.key, required this.video});
 
   @override
   State<VideoCard> createState() => _VideoCardState();
 }
 
-class _VideoCardState extends State<VideoCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-
-    if (widget.isFocused) {
-      _animationController.forward();
-    }
-  }
-
-  @override
-  void didUpdateWidget(VideoCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isFocused != oldWidget.isFocused) {
-      if (widget.isFocused) {
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
+class _VideoCardState extends State<VideoCard> {
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _scaleAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: GestureDetector(
-            onTap: widget.onTap,
-            child: Container(
-              width: 300,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: widget.isFocused
-                    ? [
-                        BoxShadow(
-                          color: Colors.blue.withOpacity(0.3),
-                          blurRadius: 15,
-                          spreadRadius: 2,
-                        ),
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [_buildThumbnail(), _buildVideoInfo()],
-                ),
-              ),
-            ),
+    return Container(
+      width: 300,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-        );
-      },
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [_buildThumbnail(), _buildVideoInfo()],
+        ),
+      ),
     );
   }
 
@@ -152,10 +83,8 @@ class _VideoCardState extends State<VideoCard>
       width: 300,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: widget.isFocused ? Colors.grey[50] : Colors.white,
-        border: widget.isFocused
-            ? Border.all(color: Colors.blue, width: 1)
-            : Border.all(color: Colors.grey[200]!, width: 0.5),
+        color: Colors.white,
+        border: Border.all(color: Colors.grey[200]!, width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +94,7 @@ class _VideoCardState extends State<VideoCard>
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: widget.isFocused ? Colors.blue[700] : Colors.black87,
+              color: Colors.black87,
               height: 1.3,
             ),
             maxLines: 2,
@@ -198,9 +127,7 @@ class _VideoCardState extends State<VideoCard>
                   widget.video.userName,
                   style: TextStyle(
                     fontSize: 12,
-                    color: widget.isFocused
-                        ? Colors.blue[600]
-                        : Colors.grey[600],
+                    color: Colors.grey[600],
                     fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -214,29 +141,23 @@ class _VideoCardState extends State<VideoCard>
               Icon(
                 Icons.play_arrow_outlined,
                 size: 14,
-                color: widget.isFocused ? Colors.blue[600] : Colors.grey[500],
+                color: Colors.grey[500],
               ),
               const SizedBox(width: 2),
               Text(
                 widget.video.viewCount,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: widget.isFocused ? Colors.blue[600] : Colors.grey[500],
-                ),
+                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
               ),
               const SizedBox(width: 12),
               Icon(
                 Icons.chat_bubble_outline,
                 size: 14,
-                color: widget.isFocused ? Colors.blue[600] : Colors.grey[500],
+                color: Colors.grey[500],
               ),
               const SizedBox(width: 2),
               Text(
                 widget.video.danmakuCount,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: widget.isFocused ? Colors.blue[600] : Colors.grey[500],
-                ),
+                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
               ),
             ],
           ),
