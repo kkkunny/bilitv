@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../consts/bilibili.dart';
 import '../models/video_model.dart';
+
+const videoCardWidth = 400.0;
+const videoCardHigh = videoCardWidth / coverSizeRatio + 65.0;
 
 class VideoCard extends StatefulWidget {
   final VideoModel video;
@@ -14,18 +18,8 @@ class VideoCard extends StatefulWidget {
 class _VideoCardState extends State<VideoCard> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 300,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Column(
@@ -39,19 +33,77 @@ class _VideoCardState extends State<VideoCard> {
   Widget _buildThumbnail() {
     return Stack(
       children: [
-        Container(
-          width: 300,
-          height: 180,
+        SizedBox(
+          width: videoCardWidth,
+          height: videoCardWidth / coverSizeRatio,
           child: CachedNetworkImage(
             imageUrl: widget.video.thumbnail,
             fit: BoxFit.cover,
             placeholder: (context, url) => Container(
-              color: Colors.grey[300],
+              color: Colors.black,
               child: const Center(child: CircularProgressIndicator()),
             ),
-            errorWidget: (context, url, error) => Container(
-              color: Colors.grey[300],
-              child: const Icon(Icons.error),
+            errorWidget: (context, url, error) =>
+                Container(color: Colors.black, child: const Icon(Icons.error)),
+          ),
+        ),
+        Positioned(
+          top: 8,
+          left: 8,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            child: Row(
+              children: [
+                ClipOval(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CachedNetworkImage(
+                      imageUrl: widget.video.userAvatar,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: Colors.black,
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.black,
+                        child: const Icon(Icons.error),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  widget.video.userName,
+                  style: TextStyle(fontSize: 12, color: Colors.white),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 8,
+          left: 8,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.play_circle_outline,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  widget.video.viewCount,
+                  style: TextStyle(fontSize: 12, color: Colors.white),
+                ),
+              ],
             ),
           ),
         ),
@@ -60,10 +112,6 @@ class _VideoCardState extends State<VideoCard> {
           right: 8,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(4),
-            ),
             child: Text(
               widget.video.duration,
               style: const TextStyle(
@@ -80,88 +128,20 @@ class _VideoCardState extends State<VideoCard> {
 
   Widget _buildVideoInfo() {
     return Container(
-      width: 300,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey[200]!, width: 0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            widget.video.title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-              height: 1.3,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              ClipOval(
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    border: Border.all(color: Colors.grey[400]!, width: 0.5),
-                  ),
-                  child: CachedNetworkImage(
-                    imageUrl: widget.video.userAvatar,
-                    fit: BoxFit.cover,
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.person, size: 12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  widget.video.userName,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Icon(
-                Icons.play_arrow_outlined,
-                size: 14,
-                color: Colors.grey[500],
-              ),
-              const SizedBox(width: 2),
-              Text(
-                widget.video.viewCount,
-                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-              ),
-              const SizedBox(width: 12),
-              Icon(
-                Icons.chat_bubble_outline,
-                size: 14,
-                color: Colors.grey[500],
-              ),
-              const SizedBox(width: 2),
-              Text(
-                widget.video.danmakuCount,
-                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-              ),
-            ],
-          ),
-        ],
+      width: videoCardWidth,
+      height: videoCardHigh - videoCardWidth / coverSizeRatio,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(color: Colors.white),
+      child: Text(
+        widget.video.title,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
+          height: 1.3,
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

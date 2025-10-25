@@ -188,11 +188,12 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(16),
         child: GridView.builder(
           controller: _videoScrollController,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            childAspectRatio: 300 / 280,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: videoCardWidth,
+            mainAxisExtent: videoCardHigh + 8,
+            // childAspectRatio: videoCardWidth / videoCardHigh,
+            mainAxisSpacing: 20,
+            crossAxisSpacing: 20,
           ),
           itemCount: _videos.length,
           itemBuilder: (context, index) {
@@ -206,44 +207,5 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
-  }
-}
-
-class FocusableWidget extends StatefulWidget {
-  final Widget child;
-  final FocusNode focusNode;
-  final Function(bool) onFocusChanged;
-
-  const FocusableWidget({
-    super.key,
-    required this.child,
-    required this.focusNode,
-    required this.onFocusChanged,
-  });
-
-  @override
-  State<FocusableWidget> createState() => _FocusableWidgetState();
-}
-
-class _FocusableWidgetState extends State<FocusableWidget> {
-  @override
-  void initState() {
-    super.initState();
-    widget.focusNode.addListener(_onFocusChange);
-  }
-
-  @override
-  void dispose() {
-    widget.focusNode.removeListener(_onFocusChange);
-    super.dispose();
-  }
-
-  void _onFocusChange() {
-    widget.onFocusChanged(widget.focusNode.hasFocus);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Focus(focusNode: widget.focusNode, child: widget.child);
   }
 }
