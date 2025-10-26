@@ -17,7 +17,7 @@ class _HomePageState extends State<HomePage> {
 
   int page = 0;
   final pageVideoCount = 30;
-  List<VideoCardInfo> _videos = [];
+  List<MediaCardInfo> _videos = [];
   bool _isLoading = true;
 
   @override
@@ -69,7 +69,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _onVideoTapped(VideoCardInfo video) {
+  void _onVideoTapped(MediaCardInfo video) {
     Navigator.push(
       context,
       MaterialPageRoute<void>(

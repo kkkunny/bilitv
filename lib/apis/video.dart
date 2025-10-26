@@ -15,7 +15,7 @@ final bilibiliHttpClient = Dio(
 );
 
 // 获取推荐视频
-Future<List<VideoCardInfo>> fetchRecommendVideos({
+Future<List<MediaCardInfo>> fetchRecommendVideos({
   int freshType = 4,
   int count = 30,
   int page = 1,
@@ -42,9 +42,14 @@ Future<List<VideoCardInfo>> fetchRecommendVideos({
     );
   }
 
-  final List<VideoCardInfo> videos = [];
+  final List<MediaCardInfo> videos = [];
   for (final item in data['data']['item']) {
-    videos.add(VideoCardInfo.fromJson(item));
+    // 过滤掉非视频媒体
+    final media = MediaCardInfo.fromJson(item);
+    if (media.type != MediaType.video) {
+      continue;
+    }
+    videos.add(media);
   }
   return videos;
 }

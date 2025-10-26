@@ -5,7 +5,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 class VideoPlayerPage extends StatefulWidget {
-  final VideoCardInfo video;
+  final MediaCardInfo video;
 
   const VideoPlayerPage({super.key, required this.video});
 

@@ -9,7 +9,7 @@ const videoCardWidth = 400.0;
 const videoCardHigh = videoCardWidth / coverSizeRatio + 65.0;
 
 class VideoCard extends StatefulWidget {
-  final VideoCardInfo video;
+  final MediaCardInfo video;
 
   const VideoCard({super.key, required this.video});
 

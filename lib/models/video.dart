@@ -1,4 +1,13 @@
-class VideoCardInfo {
+enum MediaType {
+  unknown,
+  video, // 视频
+  live, // 直播
+  ogv, // 边栏
+}
+
+// 媒体卡片信息
+class MediaCardInfo {
+  final MediaType type;
   final int avid;
   final String bvid;
   final int cid;
@@ -12,7 +21,8 @@ class VideoCardInfo {
   final String userAvatar;
   final DateTime publishTime;
 
-  VideoCardInfo({
+  MediaCardInfo({
+    required this.type,
     required this.avid,
     required this.bvid,
     required this.cid,
@@ -27,8 +37,13 @@ class VideoCardInfo {
     required this.publishTime,
   });
 
-  factory VideoCardInfo.fromJson(Map<String, dynamic> json) {
-    return VideoCardInfo(
+  factory MediaCardInfo.fromJson(Map<String, dynamic> json) {
+    return MediaCardInfo(
+      type: json['goto'] == 'av'
+          ? MediaType.video
+          : (json['goto'] == 'live'
+                ? MediaType.live
+                : (json['goto'] == 'ogv' ? MediaType.ogv : MediaType.unknown)),
       avid: json['id'] ?? 0,
       bvid: json['bvid'] ?? '',
       cid: json['cid'] ?? 0,
