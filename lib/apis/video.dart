@@ -13,9 +13,20 @@ final bilibiliHttpClient = Dio(
 );
 
 // 获取推荐视频
-Future<List<VideoCardInfo>> fetchRecommendVideos() async {
+Future<List<VideoCardInfo>> fetchRecommendVideos({
+  int freshType = 4,
+  int count = 30,
+  int page = 1,
+  List<int> removeAvids = const [],
+}) async {
   final response = await bilibiliHttpClient.get(
     'https://api.bilibili.com/x/web-interface/wbi/index/top/feed/rcmd',
+    queryParameters: {
+      'fresh_type': freshType,
+      'ps': count,
+      'fresh_idx': page,
+      'last_show_list': removeAvids.map((v) => 'av_$v').join(','),
+    },
   );
   if (response.statusCode != 200) {
     throw Exception(
@@ -42,15 +53,16 @@ Future<List<VideoPlayInfo>> getVideoPlayURL({
   String? bvid,
   required int cid,
 }) async {
-  var url = 'https://api.bilibili.com/x/player/wbi/playurl';
+  Map<String, dynamic> queryParams = {'cid': cid};
   if (avid != null) {
-    url += '?avid=$avid';
+    queryParams['avid'] = avid;
   } else {
-    url += '?bvid=$bvid';
+    queryParams['bvid'] = bvid;
   }
-  url += '&cid=$cid';
-
-  final response = await bilibiliHttpClient.get(url);
+  final response = await bilibiliHttpClient.get(
+    'https://api.bilibili.com/x/player/wbi/playurl',
+    queryParameters: queryParams,
+  );
   if (response.statusCode != 200) {
     throw Exception(
       'http error, code=${response.statusCode}, msg=${response.data}',

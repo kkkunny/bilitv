@@ -1,5 +1,4 @@
 import 'package:bilitv/pages/video_player_page.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../apis/video.dart';
@@ -20,6 +19,8 @@ class _HomePageState extends State<HomePage> {
   final ScrollController _videoScrollController = ScrollController();
 
   int _selectedCategoryIndex = 0;
+  int page = 0;
+  final pageVideoCount = 30;
   List<VideoCardInfo> _videos = [];
   bool _isLoading = true;
 
@@ -46,12 +47,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onRefresh() {
+    page++;
+
     if (_videos.isEmpty) {
       setState(() {
         _isLoading = true;
       });
 
-      fetchRecommendVideos().then((videos) {
+      fetchRecommendVideos(page: page, count: pageVideoCount).then((videos) {
         setState(() {
           _videos = videos;
           _isLoading = false;
@@ -60,7 +63,11 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    fetchRecommendVideos().then((videos) {
+    fetchRecommendVideos(
+      page: page,
+      count: pageVideoCount,
+      removeAvids: _videos.map((e) => e.avid).toList(),
+    ).then((videos) {
       setState(() {
         _videos.addAll(videos);
       });
@@ -71,6 +78,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _selectedCategoryIndex = index;
     });
+    page = 0;
     _videos.clear();
     _onRefresh();
   }
