@@ -23,7 +23,8 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _loadVideos();
+    _onRefresh();
+    _videoScrollController.addListener(_onListenScroll);
   }
 
   @override
@@ -33,15 +34,32 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  void _loadVideos() {
-    setState(() {
-      _isLoading = true;
-    });
+  void _onListenScroll() {
+    if (!_videoScrollController.position.atEdge ||
+        _videoScrollController.position.pixels == 0) {
+      return;
+    }
+    _onRefresh();
+  }
+
+  void _onRefresh() {
+    if (_videos.isEmpty) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      fetchRecommendVideos().then((videos) {
+        setState(() {
+          _videos = videos;
+          _isLoading = false;
+        });
+      });
+      return;
+    }
 
     fetchRecommendVideos().then((videos) {
       setState(() {
-        _videos = videos;
-        _isLoading = false;
+        _videos.addAll(videos);
       });
     });
   }
@@ -50,7 +68,8 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _selectedCategoryIndex = index;
     });
-    _loadVideos();
+    _videos.clear();
+    _onRefresh();
   }
 
   void _onVideoTapped(VideoCardInfo video) {

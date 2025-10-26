@@ -96,12 +96,16 @@ class _VideoCardState extends State<VideoCard> {
           left: 8,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              color: Colors.black26.withValues(alpha: 0.1),
+            ),
             child: Row(
               children: [
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Icon(
-                    Icons.play_circle_outline,
+                    Icons.play_circle_outline_sharp,
                     size: 14,
                     color: Colors.white,
                   ),
@@ -120,13 +124,30 @@ class _VideoCardState extends State<VideoCard> {
           right: 8,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            child: Text(
-              videoDurationString(widget.video.duration),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              color: Colors.black26.withValues(alpha: 0.1),
+            ),
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.access_time_sharp,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  videoDurationString(widget.video.duration),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

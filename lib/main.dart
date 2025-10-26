@@ -1,3 +1,4 @@
+import 'package:bilitv/utils/scroll_behavior.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'pages/home_page.dart';
@@ -23,10 +24,11 @@ class BiliTVApp extends StatelessWidget {
             brightness: Brightness.light,
           ),
           useMaterial3: true,
-          fontFamily: 'Roboto',
+          fontFamily: 'HarmonyOS_Sans_SC',
         ),
         home: const HomePage(),
         debugShowCheckedModeBanner: false,
+        scrollBehavior: NoThumbScrollBehavior().copyWith(scrollbars: false),
       ),
     );
   }
