@@ -53,6 +53,8 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
 
+  flutter_launcher_icons: ^0.14.4 # 图标
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -109,3 +111,10 @@ flutter:
           weight: 700
         - asset: assets/fonts/HarmonyOS_Sans_SC/HarmonyOS_Sans_SC_Black.ttf
           weight: 900
+
+flutter_launcher_icons:
+  image_path: "assets/icon.png"
+  android: true
+  min_sdk_android: 21
+  linux:
+    generate: true
