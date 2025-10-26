@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../apis/video.dart';
 import '../data/mock_data.dart';
-import '../models/video_model.dart';
+import '../models/video.dart';
 import '../widgets/video_card.dart';
 import '../widgets/category_tab.dart';
 
@@ -16,7 +17,7 @@ class _HomePageState extends State<HomePage> {
   final ScrollController _videoScrollController = ScrollController();
 
   int _selectedCategoryIndex = 0;
-  List<VideoModel> _videos = [];
+  List<VideoCardInfo> _videos = [];
   bool _isLoading = true;
 
   @override
@@ -37,9 +38,9 @@ class _HomePageState extends State<HomePage> {
       _isLoading = true;
     });
 
-    Future.delayed(const Duration(milliseconds: 800), () {
+    fetchRecommendVideos().then((videos) {
       setState(() {
-        _videos = MockData.getVideoList();
+        _videos = videos;
         _isLoading = false;
       });
     });
@@ -52,7 +53,7 @@ class _HomePageState extends State<HomePage> {
     _loadVideos();
   }
 
-  void _onVideoTapped(VideoModel video) {
+  void _onVideoTapped(VideoCardInfo video) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('点击了视频: ${video.title}'),
@@ -191,7 +192,6 @@ class _HomePageState extends State<HomePage> {
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: videoCardWidth,
             mainAxisExtent: videoCardHigh + 8,
-            // childAspectRatio: videoCardWidth / videoCardHigh,
             mainAxisSpacing: 20,
             crossAxisSpacing: 20,
           ),

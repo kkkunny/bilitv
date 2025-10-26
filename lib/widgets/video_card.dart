@@ -1,13 +1,15 @@
+import 'package:bilitv/models/video.dart';
+import 'package:bilitv/utils/format.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../apis/video.dart';
 import '../consts/bilibili.dart';
-import '../models/video_model.dart';
 
 const videoCardWidth = 400.0;
 const videoCardHigh = videoCardWidth / coverSizeRatio + 65.0;
 
 class VideoCard extends StatefulWidget {
-  final VideoModel video;
+  final VideoCardInfo video;
 
   const VideoCard({super.key, required this.video});
 
@@ -37,8 +39,10 @@ class _VideoCardState extends State<VideoCard> {
           width: videoCardWidth,
           height: videoCardWidth / coverSizeRatio,
           child: CachedNetworkImage(
-            imageUrl: widget.video.thumbnail,
+            imageUrl: widget.video.cover,
             fit: BoxFit.cover,
+            httpHeaders: bilibiliHttpClient.options.headers
+                .cast<String, String>(),
             placeholder: (context, url) => Container(
               color: Colors.black,
               child: const Center(child: CircularProgressIndicator()),
@@ -52,6 +56,10 @@ class _VideoCardState extends State<VideoCard> {
           left: 8,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              color: Colors.black.withValues(alpha: 0.3),
+            ),
             child: Row(
               children: [
                 ClipOval(
@@ -100,7 +108,7 @@ class _VideoCardState extends State<VideoCard> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  widget.video.viewCount,
+                  videoViewCountString(widget.video.viewCount),
                   style: TextStyle(fontSize: 12, color: Colors.white),
                 ),
               ],
@@ -113,7 +121,7 @@ class _VideoCardState extends State<VideoCard> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             child: Text(
-              widget.video.duration,
+              videoDurationString(widget.video.duration),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
