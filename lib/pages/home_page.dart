@@ -2,6 +2,7 @@ import 'package:bilitv/apis/rcmd.dart';
 import 'package:bilitv/pages/video_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:bilitv/pages/qr_login_page.dart';
 import '../apis/video.dart';
 import '../models/video.dart';
 import '../widgets/loading.dart';
@@ -92,15 +93,27 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<void> _onLogin(BuildContext context) async {
+    final token = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (c) => const QRLoginPage()),
+    );
+    if (token != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('登录成功: $token')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      body: Column(children: [_buildAppBar(), _buildVideoGrid()]),
+      body: Column(children: [_buildAppBar(context), _buildVideoGrid()]),
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(BuildContext context) {
     return Container(
       height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -157,6 +170,11 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ],
+          ),
+          Expanded(child: Container()),
+          ElevatedButton(
+            onPressed: () => _onLogin(context),
+            child: const Text('登录'),
           ),
         ],
       ),
