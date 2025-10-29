@@ -1,4 +1,3 @@
-import 'package:bilitv/apis/auth.dart';
 import 'package:bilitv/utils/scroll_behavior.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

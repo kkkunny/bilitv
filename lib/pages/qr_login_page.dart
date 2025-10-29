@@ -119,41 +119,37 @@ class _QRLoginPageState extends State<QRLoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(title: const Text('二维码登录')),
-      body: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildQRBox(),
-            const SizedBox(width: 24),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildStatusText(),
-                const SizedBox(height: 8),
-                Text(
-                  '使用哔哩哔哩 App 扫描二维码登录',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    _refreshQR();
-                  },
-                  child: const Text('刷新二维码'),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('取消'),
-                ),
-              ],
-            ),
-          ],
-        ),
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildQRBox(),
+          const SizedBox(width: 24),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStatusText(),
+              const SizedBox(height: 8),
+              Text(
+                '使用哔哩哔哩 App 扫描二维码登录',
+                style: TextStyle(color: Colors.grey[600], fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  _refreshQR();
+                },
+                child: const Text('刷新二维码'),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('取消'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
