@@ -1,22 +1,35 @@
-import 'dart:io' show Platform, Cookie;
+import 'dart:io' show Cookie;
 
 import 'package:dio/dio.dart';
 
-final bilibiliHttpClient = Dio(
-  BaseOptions(
-    headers: {
-      'Referer': 'https://www.bilibili.com/',
-      'User-Agent':
-          'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0',
-      'Cookie': getCookie(),
-    },
-  ),
-);
+import '../storages/cookie.dart' show loadCookie;
 
-String getCookie() {
-  Map<String, String> envVars = Platform.environment;
-  return envVars['BILIBILI_COOKIE'] ?? '';
-}
+final Dio bilibiliHttpClient = () {
+  final client = Dio(
+    BaseOptions(
+      headers: {
+        'Referer': 'https://www.bilibili.com/',
+        'User-Agent':
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0',
+      },
+    ),
+  );
+
+  // cookie自动加载
+  client.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final cookie = await loadCookie();
+        if (cookie.isNotEmpty) {
+          options.headers['Cookie'] = cookie;
+        }
+        return handler.next(options);
+      },
+    ),
+  );
+
+  return client;
+}();
 
 class QR {
   final String key;
@@ -60,7 +73,7 @@ class QRStatus {
   final String? refreshToken;
   late List<Cookie> cookies;
 
-  QRStatus({required this.state, this.refreshToken, this.cookies=const []});
+  QRStatus({required this.state, this.refreshToken, this.cookies = const []});
 
   factory QRStatus.fromJson(Map<String, dynamic> json) {
     switch (json['code']) {

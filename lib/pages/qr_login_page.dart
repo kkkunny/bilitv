@@ -4,6 +4,8 @@ import 'package:bilitv/apis/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../storages/cookie.dart' show saveCookie;
+
 class QRLoginPage extends StatefulWidget {
   const QRLoginPage({super.key});
 
@@ -57,7 +59,7 @@ class _QRLoginPageState extends State<QRLoginPage> {
       setState(() => _state = status.state);
       switch (status.state) {
         case QRState.confirmed:
-          await _onLoginSuccess();
+          await _onLoginSuccess(status);
         case QRState.expired:
           _pollTimer?.cancel();
         default:
@@ -67,8 +69,11 @@ class _QRLoginPageState extends State<QRLoginPage> {
     }
   }
 
-  Future<void> _onLoginSuccess() async {
-    Navigator.of(context).pop();
+  Future<void> _onLoginSuccess(QRStatus status) async {
+    final cookieHeader = status.cookies
+        .map((c) => '${c.name}=${c.value}')
+        .join('; ');
+    await saveCookie(cookieHeader);
   }
 
   Widget _buildQRBox() {
