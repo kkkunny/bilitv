@@ -69,9 +69,22 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     if (value.runtimeType == KeyUpEvent) {
       return;
     }
+    final step = Duration(seconds: 5);
     if (value.logicalKey == LogicalKeyboardKey.select ||
         value.logicalKey == LogicalKeyboardKey.enter) {
       player.playOrPause();
+    } else if (value.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      if (player.state.position < step) {
+        player.seek(Duration(seconds: 0));
+      } else {
+        player.seek(player.state.position - step);
+      }
+    } else if (value.logicalKey == LogicalKeyboardKey.arrowRight) {
+      if (player.state.duration - player.state.position < step) {
+        player.seek(player.state.duration);
+      } else {
+        player.seek(player.state.position + step);
+      }
     }
   }
 }
