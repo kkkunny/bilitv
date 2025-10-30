@@ -1,8 +1,12 @@
 # 哔哩哔哩TV
 
-BBLL和bilibilitv都凉了，只能自力更生了
+一款由flutter实现的哔哩哔哩TV app，灵感来源于[BBLL](https://github.com/xiaye13579/BBLL)和[bilibilitv](https://github.com/peacefulprogram/BilibiliTv)
 
-目前只实现了首页推荐和简易视频播放，还无法登陆，走的游客模式
+api来自[bilibili-api](https://github.com/SocialSisterYi/bilibili-API-collect)
+
+学习flutter的练手之作
+
+**优先完善基础功能，暂无稳定性和性能保障！**
 
 截图有点糊
 
