@@ -1,9 +1,8 @@
-import 'package:bilitv/apis/bilibili.dart' show bilibiliHttpClient;
 import 'package:bilitv/consts/bilibili.dart';
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/utils/format.dart';
+import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 const videoCardWidth = 400.0;
 const videoCardHigh = videoCardWidth / coverSizeRatio + 65.0;
@@ -39,18 +38,7 @@ class _VideoCardState extends State<VideoCard> {
         SizedBox(
           width: videoCardWidth,
           height: videoCardWidth / coverSizeRatio,
-          child: CachedNetworkImage(
-            imageUrl: widget.video.cover,
-            fit: BoxFit.cover,
-            httpHeaders: bilibiliHttpClient.options.headers
-                .cast<String, String>(),
-            placeholder: (context, url) => Container(
-              color: Colors.black,
-              child: const Center(child: CircularProgressIndicator()),
-            ),
-            errorWidget: (context, url, error) =>
-                Container(color: Colors.black, child: const Icon(Icons.error)),
-          ),
+          child: BilibiliNetworkImage(widget.video.cover),
         ),
         Positioned(
           top: 8,
@@ -67,18 +55,7 @@ class _VideoCardState extends State<VideoCard> {
                   child: SizedBox(
                     width: 20,
                     height: 20,
-                    child: CachedNetworkImage(
-                      imageUrl: widget.video.userAvatar,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: Colors.black,
-                        child: const Center(child: CircularProgressIndicator()),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: Colors.black,
-                        child: const Icon(Icons.error),
-                      ),
-                    ),
+                    child: BilibiliAvatar(widget.video.userAvatar),
                   ),
                 ),
                 const SizedBox(width: 4),

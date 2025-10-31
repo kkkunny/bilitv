@@ -1,6 +1,6 @@
 import 'package:bilitv/apis/bilibili.dart'
     show MySelf, getMySelfInfo, AuthError;
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:flutter/material.dart';
 import 'package:bilitv/storages/cookie.dart' show clearCookie, loginNotifier;
 
@@ -65,10 +65,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(
-              backgroundImage: CachedNetworkImageProvider(_me!.avatar),
-              radius: 100,
-            ),
+            BilibiliAvatar(_me!.avatar, radius: 100),
             const SizedBox(width: 30),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,

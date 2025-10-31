@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-class Loading<T> extends StatefulWidget {
+class LoadingWidget<T> extends StatefulWidget {
   final Future<T> Function() loader;
   final Widget Function(BuildContext, T) builder;
 
-  const Loading({super.key, required this.loader, required this.builder});
+  const LoadingWidget({super.key, required this.loader, required this.builder});
 
   @override
-  State<Loading<T>> createState() => _Loading<T>();
+  State<LoadingWidget<T>> createState() => _Loading<T>();
 }
 
-class _Loading<T> extends State<Loading<T>> {
+class _Loading<T> extends State<LoadingWidget<T>> {
   bool _isLoading = true;
   late T _data;
 
@@ -34,19 +34,19 @@ class _Loading<T> extends State<Loading<T>> {
   }
 
   Widget _buildLoading() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.pink.shade500),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '加载中...',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
-          ),
-        ],
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset("assets/loading.gif"),
+            const SizedBox(height: 16),
+            Text(
+              '加载中...',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+            ),
+          ],
+        ),
       ),
     );
   }

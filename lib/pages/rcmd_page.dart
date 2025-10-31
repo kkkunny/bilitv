@@ -74,7 +74,7 @@ class _RecommendPageState extends State<RecommendPage> {
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (context) => Loading(
+        builder: (context) => LoadingWidget(
           loader: () async {
             final v = await getVideoInfo(avid: video.avid);
             final relatedVs = await fetchRelatedVideos(avid: video.avid);
