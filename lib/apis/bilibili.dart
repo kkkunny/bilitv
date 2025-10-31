@@ -1,9 +1,12 @@
+import 'dart:convert' show utf8;
 import 'dart:io' show Cookie;
 
 import 'package:bilitv/models/video.dart'
     show MediaCardInfo, MediaType, VideoPlayInfo, VideoInfo;
 import 'package:bilitv/storages/cookie.dart' show loadCookie;
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:dio/dio.dart';
+import 'dart:collection' show SplayTreeMap;
 
 final Dio bilibiliHttpClient = () {
   final client = Dio(
@@ -131,6 +134,30 @@ Future<QRStatus> checkQRStatus(String key) async {
     }).toList();
   }
   return qrStatus;
+}
+
+// APP 签名
+Map<String, dynamic> appSign(
+  Map<String, dynamic> params,
+  String appKey,
+  String appSec,
+) {
+  params = Map.from(params);
+  params['appkey'] = appKey;
+  final sortParams = SplayTreeMap<String, dynamic>.from(
+    params,
+    (key1, key2) => key1.compareTo(key2),
+  );
+  final query = Uri.encodeFull(
+    sortParams.keys
+        .map((String key) {
+          return '$key=${sortParams[key]}';
+        })
+        .join('&'),
+  );
+  final sign = crypto.md5.convert(utf8.encode(query + appSec)).toString();
+  params['sign'] = sign;
+  return params;
 }
 
 // ******************* 推荐 *******************
