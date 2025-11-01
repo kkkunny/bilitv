@@ -328,7 +328,7 @@ class VideoPlayerPage extends StatefulWidget {
 
 class _VideoPlayerPageState extends State<VideoPlayerPage> {
   final allowQualities = VideoQuality.values
-      .where((e) => e.needLogin == loginNotifier.value)
+      .where((e) => !e.needLogin || loginNotifier.value)
       .toList();
   late ValueNotifier<VideoQuality> currentQuality = ValueNotifier<VideoQuality>(
     allowQualities.last,
