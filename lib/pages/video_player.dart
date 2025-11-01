@@ -103,13 +103,14 @@ class _SelectQualityWidgetState extends State<_SelectQualityWidget> {
       case LogicalKeyboardKey.goBack:
       case LogicalKeyboardKey.escape:
         widget.overlayEntry.remove();
-        break;
+        return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowUp:
         final focusIndex = qualityFocusNodes.indexWhere((e) => e.hasFocus);
         if (focusIndex > 0) {
           FocusScope.of(
             context,
           ).requestFocus(qualityFocusNodes[focusIndex - 1]);
+          return KeyEventResult.handled;
         }
         break;
       case LogicalKeyboardKey.arrowDown:
@@ -118,15 +119,11 @@ class _SelectQualityWidgetState extends State<_SelectQualityWidget> {
           FocusScope.of(
             context,
           ).requestFocus(qualityFocusNodes[focusIndex + 1]);
+          return KeyEventResult.handled;
         }
         break;
-      case LogicalKeyboardKey.select:
-      case LogicalKeyboardKey.enter:
-        final focusIndex = qualityFocusNodes.indexWhere((e) => e.hasFocus);
-        _onSelectQuality(widget.pageState.allowQualities[focusIndex]);
-        break;
     }
-    return KeyEventResult.handled;
+    return KeyEventResult.ignored;
   }
 }
 
@@ -252,9 +249,9 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                         focusColor: Colors.grey.withValues(alpha: 0.2),
                         onPressed: () => player.playOrPause(),
                         icon: Icon(
-                          playing.data == true
-                              ? Icons.pause_rounded
-                              : Icons.play_arrow_rounded,
+                          playing.data == false
+                              ? Icons.play_arrow_rounded
+                              : Icons.pause_rounded,
                           color: Colors.white,
                           size: 44,
                         ),
@@ -293,13 +290,22 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
 
   KeyEventResult _onKeyEvent(focusNode, event) {
     if (event is KeyUpEvent) {
-      return KeyEventResult.ignored;
+      return KeyEventResult.handled;
     }
 
     switch (event.logicalKey) {
       case LogicalKeyboardKey.goBack:
       case LogicalKeyboardKey.escape:
         pageState.displayControl.value = false;
+        break;
+      case LogicalKeyboardKey.select:
+      case LogicalKeyboardKey.enter:
+        if (playButtonFocusNode.hasFocus) {
+          final player = widget.state.widget.controller.player;
+          player.playOrPause();
+        } else if (qualityButtonFocusNode.hasFocus) {
+          _onSelectQuality();
+        }
         break;
       case LogicalKeyboardKey.arrowLeft:
         if (qualityButtonFocusNode.hasFocus) {
@@ -394,6 +400,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     if (value.runtimeType == KeyUpEvent) {
       return;
     }
+    print('${value.runtimeType} ${value.logicalKey}');
 
     final step = Duration(seconds: 5);
     switch (value.logicalKey) {
