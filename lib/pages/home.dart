@@ -21,10 +21,15 @@ class _HomePageState extends State<HomePage>
     super.initState();
     _tabController = TabController(vsync: this, length: tabs.length);
     _tabFocusNodes = tabs.map((e) => FocusNode()).toList();
+    // 当 TabController 索引变化时刷新，以便 IndexedStack 切换显示
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     for (var node in _tabFocusNodes) {
       node.dispose();
     }
@@ -53,7 +58,11 @@ class _HomePageState extends State<HomePage>
           );
         },
       ),
-      body: TabBarView(controller: _tabController, children: tabChildren),
+      // 使用 IndexedStack 使各 tab 的子 widget 在应用启动时就被构建并保持状态
+      body: IndexedStack(
+        index: _tabController.index,
+        children: tabChildren,
+      ),
     );
   }
 }
