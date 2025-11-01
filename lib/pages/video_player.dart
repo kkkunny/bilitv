@@ -407,7 +407,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       case LogicalKeyboardKey.enter:
         controller.player.playOrPause();
         break;
-      case LogicalKeyboardKey.tvContentsMenu:
+      case LogicalKeyboardKey.contextMenu:
       case LogicalKeyboardKey.superKey:
         displayControl.value = true;
         break;
