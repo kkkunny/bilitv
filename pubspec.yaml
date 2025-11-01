@@ -42,7 +42,10 @@ dependencies:
   media_kit_video: ^1.3.1 # 视频播放器sdk
   media_kit_libs_video: ^1.0.7 # 视频播放器sdk
   qr_flutter: ^4.1.0 # 二维码
-  crypto: ^3.0.6 # 加密
+  crypto: ^3.0.6 # 加解密
+  pointycastle: ^4.0.0 # 加解密
+  convert: ^3.1.2
+  basic_utils: ^5.8.2 # 工具包
 
 dev_dependencies:
   flutter_test:

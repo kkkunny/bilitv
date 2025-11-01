@@ -4,6 +4,13 @@ import 'dart:io' show Cookie;
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:dio/dio.dart';
 import 'dart:collection' show SplayTreeMap;
+import 'dart:convert';
+import 'dart:math';
+import 'dart:typed_data';
+
+import 'package:basic_utils/basic_utils.dart';
+import 'package:convert/convert.dart' as convert;
+import 'package:pointycastle/export.dart';
 
 import 'client.dart';
 
@@ -87,6 +94,52 @@ Future<QRStatus> checkQRStatus(String key) async {
     }).toList();
   }
   return qrStatus;
+}
+
+class CookieStatus {
+  final bool refresh;
+  final int timestamp;
+  CookieStatus({required this.refresh, required this.timestamp});
+  factory CookieStatus.fromJson(Map<String, dynamic> json) {
+    return CookieStatus(refresh: json['refresh'], timestamp: json['timestamp']);
+  }
+}
+
+const _publicKeyPEM = """
+-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDLgd2OAkcGVtoE3ThUREbio0Eg
+Uc/prcajMKXvkCKFCWhJYJcLkcM2DKKcSeFpD/j6Boy538YXnR6VhcuUJOhH2x71
+nzPjfdTcqMz7djHum0qSZA0AyCBDABUqCrfNgCiJ00Ra7GmRj+YCK1NJEuewlb40
+JNrRuoEUXpabUzGB8QIDAQAB
+-----END PUBLIC KEY-----
+""";
+
+// 生成CorrespondPath
+String _generateCorrespondPath(int ts) {
+  final RSAPublicKey pubKey = CryptoUtils.rsaPublicKeyFromPem(_publicKeyPEM);
+  final oaep = OAEPEncoding.withSHA256(RSAEngine());
+  oaep.init(
+    true,
+    ParametersWithRandom(
+      PublicKeyParameter<RSAPublicKey>(pubKey),
+      _secureRandom(),
+    ),
+  );
+  final msgBytes = Uint8List.fromList(utf8.encode('refresh_$ts'));
+  final cipherBytes = oaep.process(msgBytes);
+  return convert.hex.encode(cipherBytes);
+}
+
+// 提供加密所需的安全随机源
+SecureRandom _secureRandom() {
+  final rnd = Random.secure();
+  final seed = Uint8List(32);
+  for (var i = 0; i < seed.length; i++) {
+    seed[i] = rnd.nextInt(256);
+  }
+  final fortuna = FortunaRandom();
+  fortuna.seed(KeyParameter(seed));
+  return fortuna;
 }
 
 // APP 签名
