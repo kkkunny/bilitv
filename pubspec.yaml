@@ -59,12 +59,17 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
   flutter_launcher_icons: ^0.14.4 # 图标
+  iconfont_convert: ^1.0.2 # icon
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
 flutter:
+  fonts:
+    - family: iconfont
+      fonts:
+        - asset: assets/icons/iconfont.ttf
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

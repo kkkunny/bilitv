@@ -1,6 +1,7 @@
 import 'package:bilitv/apis/bilibili/media.dart' show getVideoInfo;
 import 'package:bilitv/apis/bilibili/rcmd.dart' show fetchRelatedVideos;
 import 'package:bilitv/consts/bilibili.dart';
+import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/pages/video_player.dart';
 import 'package:bilitv/utils/format.dart';
@@ -148,63 +149,127 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                   Row(
                     children: [
                       Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.play_circle_outline_sharp,
-                              size: 30,
-                              color: Colors.grey.shade600,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              amountString(widget.video.viewCount),
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.grey.shade600,
+                        child: MaterialButton(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          onPressed: () {},
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.thumb_up_rounded,
+                                size: 40,
+                                // color: Colors.pinkAccent,
+                                color: Colors.grey,
                               ),
-                            ),
-                          ],
+                              Text(
+                                amountString(widget.video.likeCount),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
+                      SizedBox(width: 20),
                       Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.thumb_up_outlined,
-                              size: 30,
-                              color: Colors.grey.shade600,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              amountString(widget.video.likeCount),
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.grey.shade600,
+                        child: MaterialButton(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          onPressed: () {},
+                          child: Column(
+                            children: [
+                              Transform.scale(
+                                scaleX: -1,
+                                child: Icon(
+                                  Icons.thumb_down_rounded,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
                               ),
-                            ),
-                          ],
+                              Text(
+                                amountString(widget.video.dislikeCount),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
+                      SizedBox(width: 20),
                       Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.chat_bubble_outline_sharp,
-                              size: 30,
-                              color: Colors.grey.shade600,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              amountString(widget.video.replyCount),
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.grey.shade600,
+                        child: MaterialButton(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          onPressed: () {},
+                          child: Column(
+                            children: [
+                              Icon(IconFont.coin, size: 40, color: Colors.grey),
+                              Text(
+                                amountString(widget.video.coinCount),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.grey.shade600,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 20),
+                      Expanded(
+                        child: MaterialButton(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          onPressed: () {},
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.star_rounded,
+                                size: 46,
+                                color: Colors.grey,
+                              ),
+                              Text(
+                                amountString(widget.video.favoriteCount),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 20),
+                      Expanded(
+                        child: MaterialButton(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          onPressed: () {},
+                          child: Column(
+                            children: [
+                              Icon(
+                                IconFont.share,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
+                              Text(
+                                amountString(widget.video.shareCount),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],

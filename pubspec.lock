@@ -240,6 +240,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.1.2"
+  iconfont_convert:
+    dependency: "direct dev"
+    description:
+      name: iconfont_convert
+      sha256: e22c7dabdfed81c3dbe4e23a9dd361082e37e03c91a0528a1ee22cd11f87badc
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.2"
   image:
     dependency: transitive
     description:

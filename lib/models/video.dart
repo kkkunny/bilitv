@@ -101,10 +101,11 @@ class VideoInfo {
   final String cover;
   final String desc;
   final Duration duration;
-  final int viewCount;
+  final int favoriteCount;
   final int likeCount;
-  final int replyCount;
-  final int danmakuCount;
+  final int dislikeCount;
+  final int coinCount;
+  final int shareCount;
   final String userName;
   final String userAvatar;
   final DateTime publishTime;
@@ -117,10 +118,11 @@ class VideoInfo {
     required this.cover,
     required this.desc,
     required this.duration,
-    required this.viewCount,
+    required this.favoriteCount,
     required this.likeCount,
-    required this.replyCount,
-    required this.danmakuCount,
+    required this.dislikeCount,
+    required this.coinCount,
+    required this.shareCount,
     required this.userName,
     required this.userAvatar,
     required this.publishTime,
@@ -135,10 +137,11 @@ class VideoInfo {
       cover: json['pic'] ?? '',
       desc: json['desc'] ?? '',
       duration: Duration(seconds: json['duration'] ?? 0),
-      viewCount: json['stat']['view'] ?? 0,
+      favoriteCount: json['stat']['favorite'] ?? 0,
       likeCount: json['stat']['like'] ?? 0,
-      replyCount: json['stat']['reply'] ?? 0,
-      danmakuCount: json['stat']['danmaku'] ?? 0,
+      dislikeCount: json['stat']['dislike'] ?? 0,
+      coinCount: json['stat']['coin'] ?? 0,
+      shareCount: json['stat']['share'] ?? 0,
       userName: json['owner']['name'] ?? '',
       userAvatar: json['owner']['face'] ?? '',
       publishTime: DateTime.fromMillisecondsSinceEpoch(
