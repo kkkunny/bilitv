@@ -46,6 +46,7 @@ dependencies:
   pointycastle: ^4.0.0 # 加解密
   convert: ^3.1.2
   basic_utils: ^5.8.2 # 工具包
+  toastification: ^3.0.3 # toast
 
 dev_dependencies:
   flutter_test:

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:toastification/toastification.dart';
 
 // 清晰度选择组件
 class _SelectQualityWidget extends StatefulWidget {
@@ -362,7 +363,28 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     super.dispose();
   }
 
-  _onEpisodeChanged() async {
+  DateTime? _lastBackTime;
+  void _onBack() {
+    final now = DateTime.now();
+    if (_lastBackTime != null && now.difference(_lastBackTime!).inSeconds < 2) {
+      return Navigator.of(context).pop();
+    }
+    _lastBackTime = now;
+
+    toastification.show(
+      context: context,
+      closeButtonShowType: CloseButtonShowType.none,
+      style: ToastificationStyle.simple,
+      alignment: Alignment.bottomCenter,
+      backgroundColor: Colors.white10.withValues(alpha: 0.5),
+      borderSide: BorderSide(width: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      title: Text('再按一次返回退出播放'),
+      autoCloseDuration: const Duration(seconds: 2),
+    );
+  }
+
+  Future<void> _onEpisodeChanged() async {
     final infos = await getVideoPlayURL(
       avid: widget.video.avid,
       cid: currentCid.value,
@@ -376,7 +398,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     );
   }
 
-  _onQualityChange() async {
+  Future<void> _onQualityChange() async {
     final infos = await getVideoPlayURL(
       avid: widget.video.avid,
       cid: currentCid.value,
@@ -393,17 +415,20 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: SizedBox(
-          child: KeyboardListener(
-            autofocus: true,
-            focusNode: screenFocusNode,
-            onKeyEvent: _onKeyEvent,
-            child: Video(
-              controller: controller,
-              controls: (VideoState state) =>
-                  _VideoControlWidget(state, displayControl),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: Center(
+          child: SizedBox(
+            child: KeyboardListener(
+              autofocus: true,
+              focusNode: screenFocusNode,
+              onKeyEvent: _onKeyEvent,
+              child: Video(
+                controller: controller,
+                controls: (VideoState state) =>
+                    _VideoControlWidget(state, displayControl),
+              ),
             ),
           ),
         ),
@@ -438,7 +463,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         break;
       case LogicalKeyboardKey.goBack:
       case LogicalKeyboardKey.escape:
-        Navigator.of(context).pop();
+        _onBack();
         break;
       case LogicalKeyboardKey.arrowLeft:
         if (controller.player.state.position < step) {
