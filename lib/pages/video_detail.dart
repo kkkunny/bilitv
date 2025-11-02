@@ -373,27 +373,41 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   void _onEpisodeTapped(Episode episode) {
+    if (episode.cid == _currentEpisodeCid.value) return;
     _currentEpisodeCid.value = episode.cid;
   }
 
   Widget _buildEpisodes() {
     final children = widget.video.episodes
         .map(
-          (episode) => ValueListenableBuilder(
-            valueListenable: _currentEpisodeCid,
-            builder: (context, cid, _) => MaterialButton(
-              color: Colors.grey[100],
-              disabledColor: Colors.pinkAccent.shade100,
-              focusColor: Colors.blue.shade100,
-              hoverColor: Colors.blue.shade100,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          (episode) => Container(
+            width: 200,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Colors.pinkAccent.shade100, Colors.blue.shade100],
               ),
-              onPressed: episode.cid == cid
-                  ? null
-                  : () => _onEpisodeTapped(episode),
-              child: Container(
-                width: 200,
+            ),
+            child: ValueListenableBuilder(
+              valueListenable: _currentEpisodeCid,
+              builder: (context, cid, child) => MaterialButton(
+                color: episode.cid == cid ? Colors.pinkAccent.shade100 : null,
+                focusColor: episode.cid == cid
+                    ? Colors.lightBlueAccent
+                    : Colors.blue.shade100,
+                hoverColor: episode.cid == cid
+                    ? Colors.lightBlueAccent
+                    : Colors.blue.shade100,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                onPressed: () => _onEpisodeTapped(episode),
+                child: child,
+              ),
+              child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
