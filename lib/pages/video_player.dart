@@ -141,8 +141,7 @@ class _VideoControlWidget extends StatefulWidget {
 class _VideoControlWidgetState extends State<_VideoControlWidget> {
   late _VideoPlayerPageState pageState = context
       .findAncestorStateOfType<_VideoPlayerPageState>()!;
-  FocusNode playButtonFocusNode = FocusNode();
-  FocusNode qualityButtonFocusNode = FocusNode();
+  late final player = widget.state.widget.controller.player;
 
   @override
   void initState() {
@@ -152,8 +151,6 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
 
   @override
   void dispose() {
-    playButtonFocusNode.dispose();
-    qualityButtonFocusNode.dispose();
     super.dispose();
   }
 
@@ -172,13 +169,33 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     overlayState.insert(overlayEntry);
   }
 
+  void _onPrevTapped() {
+    final index = pageState.widget.video.episodes.indexWhere(
+      (e) => e.cid == pageState.currentCid.value,
+    );
+    if (index == 0) return;
+
+    pageState.currentCid.value = pageState.widget.video.episodes[index - 1].cid;
+  }
+
+  void _onPlayOrPauseTapped() {
+    player.playOrPause();
+  }
+
+  void _onNextTapped() {
+    final index = pageState.widget.video.episodes.indexWhere(
+      (e) => e.cid == pageState.currentCid.value,
+    );
+    if (index == pageState.widget.video.episodes.length - 1) return;
+
+    pageState.currentCid.value = pageState.widget.video.episodes[index + 1].cid;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!widget.displayListener.value) {
       return Container();
     }
-
-    final player = widget.state.widget.controller.player;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,7 +218,6 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
           padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
           child: FocusScope(
             autofocus: true,
-            onKeyEvent: _onKeyEvent,
             child: Column(
               children: [
                 StreamBuilder<Duration>(
@@ -239,15 +255,22 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                   },
                 ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    IconButton(
+                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      onPressed: _onPrevTapped,
+                      icon: Icon(
+                        Icons.skip_previous_rounded,
+                        color: Colors.white,
+                        size: 44,
+                      ),
+                    ),
                     StreamBuilder<bool>(
                       stream: player.stream.playing,
                       builder: (context, playing) => IconButton(
                         autofocus: true,
-                        focusNode: playButtonFocusNode,
                         focusColor: Colors.grey.withValues(alpha: 0.2),
-                        onPressed: () => player.playOrPause(),
+                        onPressed: _onPlayOrPauseTapped,
                         icon: Icon(
                           playing.data == false
                               ? Icons.play_arrow_rounded
@@ -258,7 +281,16 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                       ),
                     ),
                     IconButton(
-                      focusNode: qualityButtonFocusNode,
+                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      onPressed: _onNextTapped,
+                      icon: Icon(
+                        Icons.skip_next_rounded,
+                        color: Colors.white,
+                        size: 44,
+                      ),
+                    ),
+                    Expanded(child: SizedBox()),
+                    IconButton(
                       focusColor: Colors.grey.withValues(alpha: 0.2),
                       onPressed: _onSelectQuality,
                       icon: Padding(
@@ -287,39 +319,6 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
       ],
     );
   }
-
-  KeyEventResult _onKeyEvent(focusNode, event) {
-    if (event is KeyUpEvent) {
-      return KeyEventResult.handled;
-    }
-
-    switch (event.logicalKey) {
-      case LogicalKeyboardKey.goBack:
-      case LogicalKeyboardKey.escape:
-        pageState.displayControl.value = false;
-        break;
-      case LogicalKeyboardKey.select:
-      case LogicalKeyboardKey.enter:
-        if (playButtonFocusNode.hasFocus) {
-          final player = widget.state.widget.controller.player;
-          player.playOrPause();
-        } else if (qualityButtonFocusNode.hasFocus) {
-          _onSelectQuality();
-        }
-        break;
-      case LogicalKeyboardKey.arrowLeft:
-        if (qualityButtonFocusNode.hasFocus) {
-          playButtonFocusNode.requestFocus();
-        }
-        break;
-      case LogicalKeyboardKey.arrowRight:
-        if (playButtonFocusNode.hasFocus) {
-          qualityButtonFocusNode.requestFocus();
-        }
-        break;
-    }
-    return KeyEventResult.handled;
-  }
 }
 
 // 视频播放页
@@ -334,12 +333,11 @@ class VideoPlayerPage extends StatefulWidget {
 }
 
 class _VideoPlayerPageState extends State<VideoPlayerPage> {
+  late final currentCid = ValueNotifier(widget.cid);
   final allowQualities = VideoQuality.values
       .where((e) => !e.needLogin || loginNotifier.value)
       .toList();
-  late ValueNotifier<VideoQuality> currentQuality = ValueNotifier<VideoQuality>(
-    allowQualities.last,
-  );
+  late final currentQuality = ValueNotifier(allowQualities.last);
 
   late final controller = VideoController(Player());
 
@@ -348,13 +346,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void initState() {
+    currentCid.addListener(_onEpisodeChanged);
     currentQuality.addListener(_onQualityChange);
     super.initState();
-    _onQualityChange();
+    _onEpisodeChanged();
   }
 
   @override
   void dispose() {
+    currentCid.dispose();
     currentQuality.dispose();
     screenFocusNode.dispose();
     controller.player.dispose();
@@ -362,10 +362,24 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     super.dispose();
   }
 
+  _onEpisodeChanged() async {
+    final infos = await getVideoPlayURL(
+      avid: widget.video.avid,
+      cid: currentCid.value,
+      quality: currentQuality.value.index,
+    );
+    await controller.player.open(
+      Media(
+        infos.first.urls.first,
+        httpHeaders: bilibiliHttpClient.options.headers.cast<String, String>(),
+      ),
+    );
+  }
+
   _onQualityChange() async {
     final infos = await getVideoPlayURL(
       avid: widget.video.avid,
-      cid: widget.cid,
+      cid: currentCid.value,
       quality: currentQuality.value.index,
     );
     await controller.player.open(
@@ -402,6 +416,16 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       return;
     }
 
+    if (displayControl.value) {
+      switch (value.logicalKey) {
+        case LogicalKeyboardKey.goBack:
+        case LogicalKeyboardKey.escape:
+          displayControl.value = false;
+          break;
+      }
+      return;
+    }
+
     final step = Duration(seconds: 5);
     switch (value.logicalKey) {
       case LogicalKeyboardKey.select:
@@ -414,11 +438,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         break;
       case LogicalKeyboardKey.goBack:
       case LogicalKeyboardKey.escape:
-        if (displayControl.value) {
-          displayControl.value = false;
-        } else {
-          Navigator.of(context).pop();
-        }
+        Navigator.of(context).pop();
         break;
       case LogicalKeyboardKey.arrowLeft:
         if (controller.player.state.position < step) {
