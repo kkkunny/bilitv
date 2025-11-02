@@ -1,5 +1,3 @@
-import 'package:bilitv/apis/bilibili/media.dart' show getVideoInfo;
-import 'package:bilitv/apis/bilibili/rcmd.dart';
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
@@ -57,19 +55,7 @@ class _ToViewPageState extends State<ToViewPage> {
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (context) => LoadingPage(
-          loader: () async {
-            final v = await getVideoInfo(avid: video.avid);
-            final relatedVs = await fetchRelatedVideos(avid: video.avid);
-            return VideoDetailPageInput(v, relatedVs);
-          },
-          builder: (context, input) {
-            return VideoDetailPage(
-              video: input.video,
-              relatedVideos: input.relatedVideos,
-            );
-          },
-        ),
+        builder: (context) => VideoDetailPageWrap(avid: video.avid),
       ),
     );
   }

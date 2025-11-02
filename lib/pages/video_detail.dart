@@ -1,4 +1,5 @@
-import 'package:bilitv/apis/bilibili/media.dart' show getVideoInfo;
+import 'package:bilitv/apis/bilibili/media.dart'
+    show getVideoInfo, getArchiveRelation, ArchiveRelation;
 import 'package:bilitv/apis/bilibili/rcmd.dart' show fetchRelatedVideos;
 import 'package:bilitv/consts/bilibili.dart';
 import 'package:bilitv/icons/iconfont.dart';
@@ -10,20 +11,55 @@ import 'package:bilitv/widgets/loading.dart';
 import 'package:bilitv/widgets/video_card.dart';
 import 'package:flutter/material.dart';
 
+class VideoDetailPageWrap extends StatelessWidget {
+  final int? avid;
+  final String? bvid;
+
+  const VideoDetailPageWrap({super.key, this.avid, this.bvid});
+
+  @override
+  Widget build(BuildContext context) {
+    return LoadingPage(
+      loader: () async {
+        final res = await Future.wait([
+          getVideoInfo(avid: avid, bvid: bvid),
+          getArchiveRelation(avid: avid, bvid: bvid),
+          fetchRelatedVideos(avid: avid, bvid: bvid),
+        ]);
+        return VideoDetailPageInput(
+          res[0] as Video,
+          res[1] as ArchiveRelation,
+          res[2] as List<MediaCardInfo>,
+        );
+      },
+      builder: (context, input) {
+        return VideoDetailPage(
+          video: input.video,
+          relation: input.relation,
+          relatedVideos: input.relatedVideos,
+        );
+      },
+    );
+  }
+}
+
 class VideoDetailPageInput {
   final Video video;
+  final ArchiveRelation relation;
   final List<MediaCardInfo> relatedVideos;
 
-  VideoDetailPageInput(this.video, this.relatedVideos);
+  VideoDetailPageInput(this.video, this.relation, this.relatedVideos);
 }
 
 class VideoDetailPage extends StatefulWidget {
   final Video video;
+  final ArchiveRelation relation;
   final List<MediaCardInfo> relatedVideos;
 
   const VideoDetailPage({
     super.key,
     required this.video,
+    required this.relation,
     this.relatedVideos = const [],
   });
 
@@ -48,19 +84,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (context) => LoadingPage(
-          loader: () async {
-            final v = await getVideoInfo(avid: video.avid);
-            final relatedVs = await fetchRelatedVideos(avid: video.avid);
-            return VideoDetailPageInput(v, relatedVs);
-          },
-          builder: (context, input) {
-            return VideoDetailPage(
-              video: input.video,
-              relatedVideos: input.relatedVideos,
-            );
-          },
-        ),
+        builder: (context) => VideoDetailPageWrap(avid: video.avid),
       ),
     );
   }
@@ -167,8 +191,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                               Icon(
                                 Icons.thumb_up_rounded,
                                 size: 40,
-                                // color: Colors.pinkAccent,
-                                color: Colors.grey,
+                                color: widget.relation.like
+                                    ? Colors.pinkAccent
+                                    : Colors.grey,
                               ),
                               Text(
                                 amountString(widget.video.stat.likeCount),
@@ -195,7 +220,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                                 child: Icon(
                                   Icons.thumb_down_rounded,
                                   size: 40,
-                                  color: Colors.grey,
+                                  color: widget.relation.dislike
+                                      ? Colors.pinkAccent
+                                      : Colors.grey,
                                 ),
                               ),
                               Text(
@@ -218,7 +245,13 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                           onPressed: () {},
                           child: Column(
                             children: [
-                              Icon(IconFont.coin, size: 40, color: Colors.grey),
+                              Icon(
+                                IconFont.coin,
+                                size: 40,
+                                color: widget.relation.coin > 0
+                                    ? Colors.pinkAccent
+                                    : Colors.grey,
+                              ),
                               Text(
                                 amountString(widget.video.stat.coinCount),
                                 style: TextStyle(
@@ -242,7 +275,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                               Icon(
                                 Icons.star_rounded,
                                 size: 46,
-                                color: Colors.grey,
+                                color: widget.relation.favorite
+                                    ? Colors.pinkAccent
+                                    : Colors.grey,
                               ),
                               Text(
                                 amountString(widget.video.stat.favoriteCount),
@@ -262,6 +297,33 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           onPressed: () {},
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.playlist_add_rounded,
+                                size: 50,
+                                color: widget.relation.inPlayList
+                                    ? Colors.pinkAccent
+                                    : Colors.grey,
+                              ),
+                              Text(
+                                '',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 20),
+                      Expanded(
+                        child: MaterialButton(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          onPressed: null,
                           child: Column(
                             children: [
                               Icon(
