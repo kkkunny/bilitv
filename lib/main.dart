@@ -25,6 +25,7 @@ class BiliTVApp extends StatelessWidget {
         title: '哔哩哔哩TV',
         theme: ThemeData(
           useMaterial3: true,
+          canvasColor: lightPink,
           scaffoldBackgroundColor: lightPink,
           focusColor: Colors.blue.shade100,
           hoverColor: Colors.blue.shade100,

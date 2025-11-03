@@ -10,6 +10,7 @@ import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/loading.dart';
 import 'package:bilitv/widgets/video_card.dart';
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class VideoDetailPageWrap extends StatelessWidget {
   final int? avid;
@@ -105,7 +106,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             _buildRelatedVideos(),
           ];
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -547,11 +547,15 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           ),
           itemCount: widget.relatedVideos.length,
           itemBuilder: (context, index) {
-            return Material(
-              child: InkWell(
-                onTap: () => _onVideoTapped(widget.relatedVideos[index]),
-                child: VideoCard(video: widget.relatedVideos[index]),
+            return VisibilityDetector(
+              key: Key(widget.relatedVideos[index].avid.toString()),
+              child: Material(
+                child: InkWell(
+                  onTap: () => _onVideoTapped(widget.relatedVideos[index]),
+                  child: VideoCard(video: widget.relatedVideos[index]),
+                ),
               ),
+              onVisibilityChanged: (VisibilityInfo info) {},
             );
           },
         ),

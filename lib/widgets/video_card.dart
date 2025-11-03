@@ -3,6 +3,7 @@ import 'package:bilitv/models/video.dart';
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 const videoCardWidth = 400.0;
 const videoCardHigh = videoCardWidth / coverSizeRatio + 65.0;

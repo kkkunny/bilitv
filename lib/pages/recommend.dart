@@ -5,6 +5,7 @@ import 'package:bilitv/widgets/loading.dart';
 import 'package:bilitv/widgets/video_card.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class RecommendPage extends StatefulWidget {
   final ValueNotifier<int> _tappedListener;
@@ -113,6 +114,8 @@ class _RecommendPageState extends State<RecommendPage> {
               return false;
             },
             child: GridView.builder(
+              addAutomaticKeepAlives: false,
+              addRepaintBoundaries: false,
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: videoCardWidth,
                 mainAxisExtent: videoCardHigh + 8,
@@ -121,11 +124,15 @@ class _RecommendPageState extends State<RecommendPage> {
               ),
               itemCount: _videos.length,
               itemBuilder: (context, index) {
-                return Material(
-                  child: InkWell(
-                    onTap: () => _onVideoTapped(_videos[index]),
-                    child: VideoCard(video: _videos[index]),
+                return VisibilityDetector(
+                  key: Key(_videos[index].avid.toString()),
+                  child: Material(
+                    child: InkWell(
+                      onTap: () => _onVideoTapped(_videos[index]),
+                      child: VideoCard(video: _videos[index]),
+                    ),
                   ),
+                  onVisibilityChanged: (VisibilityInfo info) {},
                 );
               },
             ),
