@@ -16,8 +16,6 @@ class RecommendPage extends StatefulWidget {
 }
 
 class _RecommendPageState extends State<RecommendPage> {
-  final ScrollController _videoScrollController = ScrollController();
-
   int page = 0;
   final pageVideoCount = 30;
   final List<MediaCardInfo> _videos = [];
@@ -26,14 +24,12 @@ class _RecommendPageState extends State<RecommendPage> {
 
   @override
   void initState() {
-    _videoScrollController.addListener(_onListenScroll);
     widget._tappedListener.addListener(_onRefresh);
     super.initState();
   }
 
   @override
   void dispose() {
-    _videoScrollController.dispose();
     widget._tappedListener.removeListener(_onRefresh);
     super.dispose();
   }
@@ -58,11 +54,11 @@ class _RecommendPageState extends State<RecommendPage> {
   }
 
   DateTime? _lastLoadMore;
-  void _onListenScroll() {
-    if (_isLoading.value ||
-        _isLoadingMore ||
-        !_videoScrollController.position.atEdge ||
-        _videoScrollController.position.pixels == 0) {
+  void _onScrollNotification(ScrollNotification notification) {
+    final end =
+        notification is ScrollEndNotification &&
+        notification.metrics.pixels == notification.metrics.maxScrollExtent;
+    if (_isLoading.value || _isLoadingMore || !end) {
       return;
     }
 
@@ -111,23 +107,28 @@ class _RecommendPageState extends State<RecommendPage> {
       builder: (context, _) {
         return Container(
           padding: const EdgeInsets.all(16),
-          child: GridView.builder(
-            controller: _videoScrollController,
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: videoCardWidth,
-              mainAxisExtent: videoCardHigh + 8,
-              mainAxisSpacing: 20,
-              crossAxisSpacing: 20,
-            ),
-            itemCount: _videos.length,
-            itemBuilder: (context, index) {
-              return Material(
-                child: InkWell(
-                  onTap: () => _onVideoTapped(_videos[index]),
-                  child: VideoCard(video: _videos[index]),
-                ),
-              );
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              _onScrollNotification(notification);
+              return false;
             },
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: videoCardWidth,
+                mainAxisExtent: videoCardHigh + 8,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+              ),
+              itemCount: _videos.length,
+              itemBuilder: (context, index) {
+                return Material(
+                  child: InkWell(
+                    onTap: () => _onVideoTapped(_videos[index]),
+                    child: VideoCard(video: _videos[index]),
+                  ),
+                );
+              },
+            ),
           ),
         );
       },
