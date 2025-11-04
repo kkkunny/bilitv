@@ -48,6 +48,7 @@ dependencies:
   basic_utils: ^5.8.2 # 工具包
   toastification: ^3.0.3 # toast
   visibility_detector: ^0.4.0+2 # 不可见组件释放
+  tab_container: ^3.5.3 # 侧边栏
 
 dev_dependencies:
   flutter_test:

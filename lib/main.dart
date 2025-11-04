@@ -1,9 +1,9 @@
 import 'package:bilitv/utils/scroll_behavior.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Page;
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'consts/color.dart';
-import 'pages/home.dart';
+import 'pages/page.dart';
 import 'pages/splash.dart';
 
 void main() {
@@ -37,7 +37,7 @@ class BiliTVApp extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': (ctx) => const SplashPage(),
-          '/home': (ctx) => const HomePage(),
+          '/home': (ctx) => const Page(),
         },
         debugShowCheckedModeBanner: false,
         scrollBehavior: NoThumbScrollBehavior().copyWith(scrollbars: false),
