@@ -1,3 +1,4 @@
+import 'package:bilitv/apis/bilibili/user.dart' show getMySelfInfo;
 import 'package:bilitv/consts/bilibili.dart' show defaultSplashImage;
 import 'package:bilitv/storages/cookie.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -26,13 +27,22 @@ class _SplashPageState extends State<SplashPage> {
 
   static Future<void> _onAppInit() async {
     try {
-      final cookie = await loadCookie();
-      if (cookie.isNotEmpty) {
-        loginNotifier.value = true;
-      }
+      await _checkLogin();
     } catch (_) {}
 
     await Future.delayed(const Duration(milliseconds: 500));
+  }
+
+  static Future<void> _checkLogin() async {
+    final cookie = await loadCookie();
+    if (!cookie.isNotEmpty) {
+      return;
+    }
+    final info = await getMySelfInfo();
+    loginInfoNotifier.value = LoginInfo.login(
+      nickname: info.name,
+      avatar: info.avatar,
+    );
   }
 
   @override

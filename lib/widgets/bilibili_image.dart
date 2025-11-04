@@ -14,16 +14,19 @@ class BilibiliNetworkImage extends CachedNetworkImage {
 
 class BilibiliAvatar extends CircleAvatar {
   BilibiliAvatar(
-    String url, {
+    String? url, {
     super.key,
     super.radius,
     void Function(Object, StackTrace?)? onError,
   }) : super(
          backgroundImage: AssetImage("assets/images/noface.webp"),
-         foregroundImage: CachedNetworkImageProvider(
-           url,
-           headers: bilibiliHttpClient.options.headers.cast<String, String>(),
-         ),
+         foregroundImage: url == null
+             ? null
+             : CachedNetworkImageProvider(
+                 url,
+                 headers: bilibiliHttpClient.options.headers
+                     .cast<String, String>(),
+               ),
          onForegroundImageError: onError,
        );
 }

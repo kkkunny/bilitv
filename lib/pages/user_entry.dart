@@ -16,12 +16,12 @@ class _UserEntryPageState extends State<UserEntryPage> {
   @override
   void initState() {
     super.initState();
-    loginNotifier.addListener(_onLoginChanged);
+    loginInfoNotifier.addListener(_onLoginChanged);
   }
 
   @override
   void dispose() {
-    loginNotifier.removeListener(_onLoginChanged);
+    loginInfoNotifier.removeListener(_onLoginChanged);
     super.dispose();
   }
 
@@ -31,7 +31,7 @@ class _UserEntryPageState extends State<UserEntryPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (loginNotifier.value) {
+    if (loginInfoNotifier.value.isLogin) {
       return const UserInfoPage();
     }
     return const QRLoginPage();

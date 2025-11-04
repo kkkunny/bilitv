@@ -8,7 +8,20 @@ const _cookieKey = 'bilibili_cookie';
 // debug: 是否从环境变量中读取cookie
 var _loadFromEnv = true;
 
-final ValueNotifier<bool> loginNotifier = ValueNotifier(false);
+class LoginInfo {
+  final bool isLogin;
+  final String? nickname;
+  final String? avatar;
+
+  const LoginInfo({required this.isLogin, this.nickname, this.avatar});
+
+  static const notLogin = LoginInfo(isLogin: true);
+  static login({required String nickname, required String avatar}) {
+    return LoginInfo(isLogin: true, nickname: nickname, avatar: avatar);
+  }
+}
+
+final loginInfoNotifier = ValueNotifier(LoginInfo.notLogin);
 
 Future<void> saveCookie(String cookie) async {
   final prefs = await SharedPreferences.getInstance();

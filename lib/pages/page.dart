@@ -1,6 +1,7 @@
 import 'package:bilitv/pages/to_view.dart';
 import 'package:bilitv/pages/user_entry.dart';
 import 'package:bilitv/pages/recommend.dart';
+import 'package:bilitv/storages/cookie.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/keep_alive.dart';
 import 'package:flutter/material.dart';
@@ -84,57 +85,66 @@ class _PageState extends State<Page> with SingleTickerProviderStateMixin {
     return Scaffold(
       body: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            width: 80,
-            decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(
-                  color: Colors.pink.withValues(alpha: 0.1),
-                  width: 1,
-                ),
-              ),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                BilibiliAvatar("123", radius: 30),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MediaQuery.of(context).size.height / 4,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: _tabs
-                          .map(
-                            (tab) => IconButton(
-                              onPressed: () => _onTabTapped(tab),
-                              icon: ListenableBuilder(
-                                listenable: _pageController,
-                                builder: (context, child) => Icon(
-                                  tab.icon,
-                                  color:
-                                      _pageController.page?.round() ==
-                                          _tabs.indexOf(tab)
-                                      ? Colors.pinkAccent
-                                      : Colors.grey.shade400,
-                                  size: 40,
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
+          FutureBuilder(
+            future: Future.value(true),
+            builder: (context, snap) {
+              if (!snap.hasData) {
+                return Container();
+              }
+
+              return Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                width: 80,
+                decoration: BoxDecoration(
+                  border: Border(
+                    right: BorderSide(
+                      color: Colors.pink.withValues(alpha: 0.1),
+                      width: 1,
                     ),
                   ),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(Icons.settings, size: 40),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    BilibiliAvatar(loginInfoNotifier.value.avatar, radius: 30),
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: MediaQuery.of(context).size.height / 4,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: _tabs
+                              .map(
+                                (tab) => IconButton(
+                                  onPressed: () => _onTabTapped(tab),
+                                  icon: ListenableBuilder(
+                                    listenable: _pageController,
+                                    builder: (context, child) => Icon(
+                                      tab.icon,
+                                      color:
+                                          _pageController.page?.round() ==
+                                              _tabs.indexOf(tab)
+                                          ? Colors.pinkAccent
+                                          : Colors.grey.shade400,
+                                      size: 40,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.settings, size: 40),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
           Expanded(
             child: PageView(

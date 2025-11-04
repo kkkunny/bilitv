@@ -1,8 +1,7 @@
 import 'dart:async';
 
 import 'package:bilitv/apis/bilibili/auth.dart';
-import 'package:bilitv/storages/cookie.dart'
-    show loadCookie, saveCookie, loginNotifier;
+import 'package:bilitv/storages/cookie.dart' show saveCookie, loginInfoNotifier;
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -19,24 +18,9 @@ class _QRLoginPageState extends State<QRLoginPage> {
   Timer? _pollTimer;
 
   @override
-  void initState() {
-    super.initState();
-    _initCookie();
-  }
-
-  @override
   void dispose() {
     _pollTimer?.cancel();
     super.dispose();
-  }
-
-  Future<void> _initCookie() async {
-    final cookie = await loadCookie();
-    if (cookie.isNotEmpty) {
-      loginNotifier.value = true;
-      return;
-    }
-    await _refreshQR();
   }
 
   Future<void> _refreshQR() async {
@@ -83,7 +67,7 @@ class _QRLoginPageState extends State<QRLoginPage> {
         .map((c) => '${c.name}=${c.value}')
         .join('; ');
     await saveCookie(cookieHeader);
-    loginNotifier.value = true;
+    // loginInfoNotifier.value = true;
   }
 
   Widget _buildQRBox() {
