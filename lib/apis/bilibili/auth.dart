@@ -142,26 +142,26 @@ SecureRandom _secureRandom() {
   return fortuna;
 }
 
-// APP 签名
-Map<String, dynamic> appSign(
-  Map<String, dynamic> params,
-  String appKey,
-  String appSec,
-) {
-  params = Map.from(params);
-  params['appkey'] = appKey;
-  final sortParams = SplayTreeMap<String, dynamic>.from(
-    params,
-    (key1, key2) => key1.compareTo(key2),
-  );
-  final query = Uri.encodeFull(
-    sortParams.keys
-        .map((String key) {
-          return '$key=${sortParams[key]}';
-        })
-        .join('&'),
-  );
-  final sign = crypto.md5.convert(utf8.encode(query + appSec)).toString();
-  params['sign'] = sign;
-  return params;
-}
+// // APP 签名
+// Map<String, dynamic> appSign(
+//   Map<String, dynamic> params,
+//   String appKey,
+//   String appSec,
+// ) {
+//   params = Map.from(params);
+//   params['appkey'] = appKey;
+//   final sortParams = SplayTreeMap<String, dynamic>.from(
+//     params,
+//     (key1, key2) => key1.compareTo(key2),
+//   );
+//   final query = Uri.encodeFull(
+//     sortParams.keys
+//         .map((String key) {
+//           return '$key=${sortParams[key]}';
+//         })
+//         .join('&'),
+//   );
+//   final sign = crypto.md5.convert(utf8.encode(query + appSec)).toString();
+//   params['sign'] = sign;
+//   return params;
+// }

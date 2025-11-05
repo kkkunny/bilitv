@@ -3,6 +3,7 @@ import 'package:bilitv/models/video.dart';
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 const videoCardWidth = 400.0;
 const videoCardHigh = videoCardWidth / coverSizeRatio + 65.0;
@@ -16,7 +17,9 @@ class VideoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return RepaintBoundary(
       child: Card(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
         elevation: 4,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
@@ -87,7 +90,7 @@ class VideoCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  amountString(video.viewCount),
+                  amountString(video.stat.viewCount),
                   style: TextStyle(fontSize: 12, color: Colors.white),
                 ),
               ],

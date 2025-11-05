@@ -1,11 +1,14 @@
 import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/apis/bilibili/user.dart';
+import 'package:bilitv/storages/cookie.dart'
+    show clearCookie, loginInfoNotifier, LoginInfo;
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:flutter/material.dart';
-import 'package:bilitv/storages/cookie.dart' show clearCookie, loginNotifier;
 
 class UserInfoPage extends StatefulWidget {
-  const UserInfoPage({super.key});
+  final ValueNotifier<bool> loginNotifier;
+
+  const UserInfoPage(this.loginNotifier, {super.key});
 
   @override
   State<UserInfoPage> createState() => _UserInfoPageState();
@@ -24,14 +27,17 @@ class _UserInfoPageState extends State<UserInfoPage> {
   Future<void> _load() async {
     try {
       final info = await getMySelfInfo();
+      loginInfoNotifier.value = LoginInfo.login(
+        nickname: info.name,
+        avatar: info.avatar,
+      );
       setState(() {
         _me = info;
         _loading = false;
       });
     } on BilibiliError catch (e) {
       if (e == noLoginError) {
-        clearCookie();
-        loginNotifier.value = false;
+        await _logout();
       } else {
         setState(() {
           _loading = false;
@@ -50,7 +56,8 @@ class _UserInfoPageState extends State<UserInfoPage> {
       _me = null;
       _loading = true;
     });
-    loginNotifier.value = false;
+    loginInfoNotifier.value = LoginInfo.notLogin;
+    widget.loginNotifier.value = false;
   }
 
   @override

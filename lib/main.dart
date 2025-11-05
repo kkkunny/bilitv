@@ -1,8 +1,10 @@
 import 'package:bilitv/utils/scroll_behavior.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Page;
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
-import 'pages/home.dart';
+import 'consts/color.dart';
+import 'pages/page.dart';
+import 'pages/splash.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,13 +24,21 @@ class BiliTVApp extends StatelessWidget {
       child: MaterialApp(
         title: '哔哩哔哩TV',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF00A1D6),
-            brightness: Brightness.light,
-          ),
           useMaterial3: true,
+          canvasColor: lightPink,
+          scaffoldBackgroundColor: lightPink,
+          focusColor: Colors.blue.shade100,
+          hoverColor: Colors.blue.shade100,
+          // colorScheme: ColorScheme.fromSeed(
+          //   seedColor: const Color(0xFF00A1D6),
+          //   brightness: Brightness.light,
+          // ),
         ),
-        home: const HomePage(),
+        initialRoute: '/',
+        routes: {
+          '/': (ctx) => const SplashPage(),
+          '/home': (ctx) => const Page(),
+        },
         debugShowCheckedModeBanner: false,
         scrollBehavior: NoThumbScrollBehavior().copyWith(scrollbars: false),
       ),

@@ -1,5 +1,5 @@
 name: bilitv
-description: "A new Flutter project."
+description: "一个面向TV端的BiliBili客户端"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.4.1+1
+version: 0.5.1+1
 
 environment:
   sdk: ^3.9.2
@@ -46,6 +46,9 @@ dependencies:
   pointycastle: ^4.0.0 # 加解密
   convert: ^3.1.2
   basic_utils: ^5.8.2 # 工具包
+  toastification: ^3.0.3 # toast
+  visibility_detector: ^0.4.0+2 # 不可见组件释放
+  tab_container: ^3.5.3 # 侧边栏
 
 dev_dependencies:
   flutter_test:
@@ -59,12 +62,17 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
   flutter_launcher_icons: ^0.14.4 # 图标
+  iconfont_convert: ^1.0.2 # icon
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
 flutter:
+  fonts:
+    - family: iconfont
+      fonts:
+        - asset: assets/icons/iconfont.ttf
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -72,6 +80,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/images/
     - assets/images/loading/
 
   # An image asset can refer to one or more resolution-specific "variants", see

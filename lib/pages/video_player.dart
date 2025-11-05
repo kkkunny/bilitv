@@ -1,13 +1,14 @@
 import 'package:bilitv/apis/bilibili/client.dart' show bilibiliHttpClient;
 import 'package:bilitv/apis/bilibili/media.dart' show getVideoPlayURL;
 import 'package:bilitv/consts/bilibili.dart' show VideoQuality;
-import 'package:bilitv/models/video.dart';
+import 'package:bilitv/models/video.dart' as model;
 import 'package:bilitv/storages/cookie.dart';
 import 'package:bilitv/utils/format.dart' show videoDurationString;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:toastification/toastification.dart';
 
 // 清晰度选择组件
 class _SelectQualityWidget extends StatefulWidget {
@@ -141,8 +142,7 @@ class _VideoControlWidget extends StatefulWidget {
 class _VideoControlWidgetState extends State<_VideoControlWidget> {
   late _VideoPlayerPageState pageState = context
       .findAncestorStateOfType<_VideoPlayerPageState>()!;
-  FocusNode playButtonFocusNode = FocusNode();
-  FocusNode qualityButtonFocusNode = FocusNode();
+  late final player = widget.state.widget.controller.player;
 
   @override
   void initState() {
@@ -152,8 +152,6 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
 
   @override
   void dispose() {
-    playButtonFocusNode.dispose();
-    qualityButtonFocusNode.dispose();
     super.dispose();
   }
 
@@ -172,13 +170,33 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     overlayState.insert(overlayEntry);
   }
 
+  void _onPrevTapped() {
+    final index = pageState.widget.video.episodes.indexWhere(
+      (e) => e.cid == pageState.currentCid.value,
+    );
+    if (index == 0) return;
+
+    pageState.currentCid.value = pageState.widget.video.episodes[index - 1].cid;
+  }
+
+  void _onPlayOrPauseTapped() {
+    player.playOrPause();
+  }
+
+  void _onNextTapped() {
+    final index = pageState.widget.video.episodes.indexWhere(
+      (e) => e.cid == pageState.currentCid.value,
+    );
+    if (index == pageState.widget.video.episodes.length - 1) return;
+
+    pageState.currentCid.value = pageState.widget.video.episodes[index + 1].cid;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!widget.displayListener.value) {
       return Container();
     }
-
-    final player = widget.state.widget.controller.player;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,7 +219,6 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
           padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
           child: FocusScope(
             autofocus: true,
-            onKeyEvent: _onKeyEvent,
             child: Column(
               children: [
                 StreamBuilder<Duration>(
@@ -239,15 +256,22 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                   },
                 ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    IconButton(
+                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      onPressed: _onPrevTapped,
+                      icon: Icon(
+                        Icons.skip_previous_rounded,
+                        color: Colors.white,
+                        size: 44,
+                      ),
+                    ),
                     StreamBuilder<bool>(
                       stream: player.stream.playing,
                       builder: (context, playing) => IconButton(
                         autofocus: true,
-                        focusNode: playButtonFocusNode,
                         focusColor: Colors.grey.withValues(alpha: 0.2),
-                        onPressed: () => player.playOrPause(),
+                        onPressed: _onPlayOrPauseTapped,
                         icon: Icon(
                           playing.data == false
                               ? Icons.play_arrow_rounded
@@ -258,7 +282,16 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                       ),
                     ),
                     IconButton(
-                      focusNode: qualityButtonFocusNode,
+                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      onPressed: _onNextTapped,
+                      icon: Icon(
+                        Icons.skip_next_rounded,
+                        color: Colors.white,
+                        size: 44,
+                      ),
+                    ),
+                    Expanded(child: SizedBox()),
+                    IconButton(
                       focusColor: Colors.grey.withValues(alpha: 0.2),
                       onPressed: _onSelectQuality,
                       icon: Padding(
@@ -287,58 +320,25 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
       ],
     );
   }
-
-  KeyEventResult _onKeyEvent(focusNode, event) {
-    if (event is KeyUpEvent) {
-      return KeyEventResult.handled;
-    }
-
-    switch (event.logicalKey) {
-      case LogicalKeyboardKey.goBack:
-      case LogicalKeyboardKey.escape:
-        pageState.displayControl.value = false;
-        break;
-      case LogicalKeyboardKey.select:
-      case LogicalKeyboardKey.enter:
-        if (playButtonFocusNode.hasFocus) {
-          final player = widget.state.widget.controller.player;
-          player.playOrPause();
-        } else if (qualityButtonFocusNode.hasFocus) {
-          _onSelectQuality();
-        }
-        break;
-      case LogicalKeyboardKey.arrowLeft:
-        if (qualityButtonFocusNode.hasFocus) {
-          playButtonFocusNode.requestFocus();
-        }
-        break;
-      case LogicalKeyboardKey.arrowRight:
-        if (playButtonFocusNode.hasFocus) {
-          qualityButtonFocusNode.requestFocus();
-        }
-        break;
-    }
-    return KeyEventResult.handled;
-  }
 }
 
 // 视频播放页
 class VideoPlayerPage extends StatefulWidget {
-  final VideoInfo video;
+  final model.Video video;
+  final int cid;
 
-  const VideoPlayerPage({super.key, required this.video});
+  const VideoPlayerPage({super.key, required this.video, required this.cid});
 
   @override
   State<VideoPlayerPage> createState() => _VideoPlayerPageState();
 }
 
 class _VideoPlayerPageState extends State<VideoPlayerPage> {
+  late final currentCid = ValueNotifier(widget.cid);
   final allowQualities = VideoQuality.values
-      .where((e) => !e.needLogin || loginNotifier.value)
+      .where((e) => !e.needLogin || loginInfoNotifier.value.isLogin)
       .toList();
-  late ValueNotifier<VideoQuality> currentQuality = ValueNotifier<VideoQuality>(
-    allowQualities.last,
-  );
+  late final currentQuality = ValueNotifier(allowQualities.last);
 
   late final controller = VideoController(Player());
 
@@ -347,13 +347,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void initState() {
+    currentCid.addListener(_onEpisodeChanged);
     currentQuality.addListener(_onQualityChange);
     super.initState();
-    _onQualityChange();
+    _onEpisodeChanged();
   }
 
   @override
   void dispose() {
+    currentCid.dispose();
     currentQuality.dispose();
     screenFocusNode.dispose();
     controller.player.dispose();
@@ -361,10 +363,45 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     super.dispose();
   }
 
-  _onQualityChange() async {
+  DateTime? _lastBackTime;
+  void _onBack() {
+    final now = DateTime.now();
+    if (_lastBackTime != null && now.difference(_lastBackTime!).inSeconds < 2) {
+      return Navigator.of(context).pop();
+    }
+    _lastBackTime = now;
+
+    toastification.show(
+      context: context,
+      closeButtonShowType: CloseButtonShowType.none,
+      style: ToastificationStyle.simple,
+      alignment: Alignment.bottomCenter,
+      backgroundColor: Colors.white10.withValues(alpha: 0.5),
+      borderSide: BorderSide(width: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      title: Text('再按一次返回退出播放'),
+      autoCloseDuration: const Duration(seconds: 2),
+    );
+  }
+
+  Future<void> _onEpisodeChanged() async {
     final infos = await getVideoPlayURL(
       avid: widget.video.avid,
-      cid: widget.video.cid,
+      cid: currentCid.value,
+      quality: currentQuality.value.index,
+    );
+    await controller.player.open(
+      Media(
+        infos.first.urls.first,
+        httpHeaders: bilibiliHttpClient.options.headers.cast<String, String>(),
+      ),
+    );
+  }
+
+  Future<void> _onQualityChange() async {
+    final infos = await getVideoPlayURL(
+      avid: widget.video.avid,
+      cid: currentCid.value,
       quality: currentQuality.value.index,
     );
     await controller.player.open(
@@ -378,17 +415,20 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: SizedBox(
-          child: KeyboardListener(
-            autofocus: true,
-            focusNode: screenFocusNode,
-            onKeyEvent: _onKeyEvent,
-            child: Video(
-              controller: controller,
-              controls: (VideoState state) =>
-                  _VideoControlWidget(state, displayControl),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: Center(
+          child: SizedBox(
+            child: KeyboardListener(
+              autofocus: true,
+              focusNode: screenFocusNode,
+              onKeyEvent: _onKeyEvent,
+              child: Video(
+                controller: controller,
+                controls: (VideoState state) =>
+                    _VideoControlWidget(state, displayControl),
+              ),
             ),
           ),
         ),
@@ -398,6 +438,16 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   void _onKeyEvent(KeyEvent value) {
     if (value.runtimeType == KeyUpEvent) {
+      return;
+    }
+
+    if (displayControl.value) {
+      switch (value.logicalKey) {
+        case LogicalKeyboardKey.goBack:
+        case LogicalKeyboardKey.escape:
+          displayControl.value = false;
+          break;
+      }
       return;
     }
 
@@ -413,11 +463,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         break;
       case LogicalKeyboardKey.goBack:
       case LogicalKeyboardKey.escape:
-        if (displayControl.value) {
-          displayControl.value = false;
-        } else {
-          Navigator.of(context).pop();
-        }
+        _onBack();
         break;
       case LogicalKeyboardKey.arrowLeft:
         if (controller.player.state.position < step) {
