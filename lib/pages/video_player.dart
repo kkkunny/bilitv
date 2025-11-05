@@ -1,11 +1,12 @@
 import 'dart:async';
 
+import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:bilitv/apis/bilibili/client.dart' show bilibiliHttpClient;
 import 'package:bilitv/apis/bilibili/media.dart' show getVideoPlayURL;
 import 'package:bilitv/consts/bilibili.dart' show VideoQuality;
+import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/models/video.dart' as model;
 import 'package:bilitv/storages/cookie.dart';
-import 'package:bilitv/utils/format.dart' show videoDurationString;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
@@ -259,34 +260,14 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                 StreamBuilder<Duration>(
                   stream: player.stream.position,
                   builder: (context, snap) {
-                    final position = snap.data ?? player.state.position;
-                    final duration = player.state.duration;
-                    final percent = duration.inMilliseconds > 0
-                        ? position.inMilliseconds / duration.inMilliseconds
-                        : 0.0;
-                    return Column(
-                      children: [
-                        LinearProgressIndicator(
-                          value: percent,
-                          backgroundColor: Colors.grey.shade200.withValues(
-                            alpha: 0.5,
-                          ),
-                          valueColor: AlwaysStoppedAnimation(Colors.blue),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              videoDurationString(position),
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                            Text(
-                              videoDurationString(duration),
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                          ],
-                        ),
-                      ],
+                    return ProgressBar(
+                      progress: snap.data ?? player.state.position,
+                      buffered: player.state.buffer,
+                      total: player.state.duration,
+                      progressBarColor: lightPink,
+                      bufferedBarColor: lightPink.withValues(alpha: 0.3),
+                      thumbColor: lightPink,
+                      timeLabelTextStyle: TextStyle(),
                     );
                   },
                 ),

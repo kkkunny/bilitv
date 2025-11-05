@@ -48,6 +48,7 @@ dependencies:
   basic_utils: ^5.8.2 # 工具包
   toastification: ^3.0.3 # toast
   visibility_detector: ^0.4.0+2 # 不可见组件释放
+  audio_video_progress_bar: ^2.0.3 # 视频进度条
 
 dev_dependencies:
   flutter_test:
