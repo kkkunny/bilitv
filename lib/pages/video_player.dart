@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bilitv/apis/bilibili/client.dart' show bilibiliHttpClient;
 import 'package:bilitv/apis/bilibili/media.dart' show getVideoPlayURL;
 import 'package:bilitv/consts/bilibili.dart' show VideoQuality;
@@ -143,16 +145,13 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
   late _VideoPlayerPageState pageState = context
       .findAncestorStateOfType<_VideoPlayerPageState>()!;
   late final player = widget.state.widget.controller.player;
+  Timer? _nextTimer; // 播放下一个视频的计时器
 
   @override
   void initState() {
     widget.displayListener.addListener(_onDisplayChanged);
+    player.stream.completed.listen(_onCompleted);
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   void _onDisplayChanged() {
@@ -190,6 +189,42 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     if (index == pageState.widget.video.episodes.length - 1) return;
 
     pageState.currentCid.value = pageState.widget.video.episodes[index + 1].cid;
+  }
+
+  void _onCompleted(bool completed) {
+    if (!completed) {
+      if (_nextTimer != null) {
+        _nextTimer!.cancel();
+        _nextTimer = null;
+      }
+      return;
+    }
+
+    final index = pageState.widget.video.episodes.indexWhere(
+      (e) => e.cid == pageState.currentCid.value,
+    );
+    if (index == pageState.widget.video.episodes.length - 1) return;
+
+    _nextTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (_nextTimer != null) {
+        _nextTimer!.cancel();
+        _nextTimer = null;
+      }
+      pageState.currentCid.value =
+          pageState.widget.video.episodes[index + 1].cid;
+    });
+
+    toastification.show(
+      context: context,
+      closeButtonShowType: CloseButtonShowType.none,
+      style: ToastificationStyle.simple,
+      alignment: Alignment.centerRight,
+      backgroundColor: Colors.white10.withValues(alpha: 0.5),
+      borderSide: BorderSide(width: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      title: Text('即将播放下一分P'),
+      autoCloseDuration: const Duration(seconds: 3),
+    );
   }
 
   @override
