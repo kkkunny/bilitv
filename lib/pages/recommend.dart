@@ -118,21 +118,15 @@ class _RecommendPageState extends State<RecommendPage> {
               addRepaintBoundaries: false,
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: videoCardWidth,
-                mainAxisExtent: videoCardHigh + 8,
+                childAspectRatio: 1.1,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
               ),
               itemCount: _videos.length,
               itemBuilder: (context, index) {
-                return VisibilityDetector(
-                  key: Key(_videos[index].avid.toString()),
-                  child: Material(
-                    child: InkWell(
-                      onTap: () => _onVideoTapped(_videos[index]),
-                      child: VideoCard(video: _videos[index]),
-                    ),
-                  ),
-                  onVisibilityChanged: (VisibilityInfo info) {},
+                return VideoCard(
+                  video: _videos[index],
+                  onTap: () => _onVideoTapped(_videos[index]),
                 );
               },
             ),

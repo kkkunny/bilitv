@@ -6,33 +6,39 @@ import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 const videoCardWidth = 400.0;
-const videoCardHigh = videoCardWidth / coverSizeRatio + 65.0;
 
 class VideoCard extends StatelessWidget {
   final MediaCardInfo video;
+  final void Function()? onTap;
 
-  const VideoCard({super.key, required this.video});
+  const VideoCard({super.key, required this.video, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: Card(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-        ),
-        elevation: 4,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_buildThumbnail(), _buildVideoInfo()],
+    return VisibilityDetector(
+      key: Key(video.avid.toString()),
+      onVisibilityChanged: null,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              width: videoCardWidth,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [_buildCover(), _buildTitle()],
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildThumbnail() {
+  Widget _buildCover() {
     return Stack(
       children: [
         SizedBox(
@@ -133,22 +139,23 @@ class VideoCard extends StatelessWidget {
     );
   }
 
-  Widget _buildVideoInfo() {
-    return Container(
-      width: videoCardWidth,
-      height: videoCardHigh - videoCardWidth / coverSizeRatio,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: Colors.white),
-      child: Text(
-        video.title,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Colors.black87,
-          height: 1.3,
+  Widget _buildTitle() {
+    return Expanded(
+      child: Container(
+        width: videoCardWidth,
+        padding: const EdgeInsets.all(10),
+        color: Colors.white,
+        child: Text(
+          video.title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+            height: 1.5,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
       ),
     );
   }

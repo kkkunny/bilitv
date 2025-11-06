@@ -541,21 +541,15 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: videoCardWidth,
-            mainAxisExtent: videoCardHigh + 8,
+            childAspectRatio: 1.1,
             mainAxisSpacing: 16,
             crossAxisSpacing: 16,
           ),
           itemCount: widget.relatedVideos.length,
           itemBuilder: (context, index) {
-            return VisibilityDetector(
-              key: Key(widget.relatedVideos[index].avid.toString()),
-              child: Material(
-                child: InkWell(
-                  onTap: () => _onVideoTapped(widget.relatedVideos[index]),
-                  child: VideoCard(video: widget.relatedVideos[index]),
-                ),
-              ),
-              onVisibilityChanged: (VisibilityInfo info) {},
+            return VideoCard(
+              video: widget.relatedVideos[index],
+              onTap: () => _onVideoTapped(widget.relatedVideos[index]),
             );
           },
         ),

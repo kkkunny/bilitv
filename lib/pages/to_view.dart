@@ -75,17 +75,15 @@ class _ToViewPageState extends State<ToViewPage> {
           child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: videoCardWidth,
-              mainAxisExtent: videoCardHigh + 8,
+              childAspectRatio: 1.1,
               mainAxisSpacing: 20,
               crossAxisSpacing: 20,
             ),
             itemCount: _videos.length,
             itemBuilder: (context, index) {
-              return Material(
-                child: InkWell(
-                  onTap: () => _onVideoTapped(_videos[index]),
-                  child: VideoCard(video: _videos[index]),
-                ),
+              return VideoCard(
+                video: _videos[index],
+                onTap: () => _onVideoTapped(_videos[index]),
               );
             },
           ),
