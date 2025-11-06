@@ -14,6 +14,7 @@ class MediaCardInfo {
   final String title;
   final String cover;
   final Duration duration;
+  final Duration? progress;
   final Stat stat;
   final String userName;
   final String userAvatar;
@@ -27,6 +28,7 @@ class MediaCardInfo {
     required this.title,
     required this.cover,
     required this.duration,
+    this.progress,
     required this.stat,
     required this.userName,
     required this.userAvatar,
@@ -46,6 +48,9 @@ class MediaCardInfo {
       title: json['title'] ?? '',
       cover: json['pic'] ?? '',
       duration: Duration(seconds: json['duration'] ?? 0),
+      progress: json['progress'] == null
+          ? null
+          : Duration(seconds: json['progress']),
       stat: Stat.fromJson(json['stat'] ?? {}),
       userName: json['owner']['name'] ?? '',
       userAvatar: json['owner']['face'] ?? '',

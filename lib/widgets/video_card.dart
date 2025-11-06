@@ -1,4 +1,5 @@
 import 'package:bilitv/consts/bilibili.dart';
+import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
@@ -29,12 +30,23 @@ class VideoCard extends StatelessWidget {
               width: videoCardWidth,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [_buildCover(), _buildTitle()],
+                children: [_buildCover(), ?_buildProgress(), _buildTitle()],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget? _buildProgress() {
+    if (video.progress == null) return null;
+    final progressRatio = video.progress!.inSeconds / video.duration.inSeconds;
+    if (progressRatio < 0.01) return null;
+    return LinearProgressIndicator(
+      value: progressRatio,
+      color: Colors.pinkAccent,
+      backgroundColor: Colors.grey.shade400,
     );
   }
 
@@ -148,7 +160,7 @@ class VideoCard extends StatelessWidget {
         child: Text(
           video.title,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
             height: 1.5,
