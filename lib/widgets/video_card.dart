@@ -1,5 +1,4 @@
 import 'package:bilitv/consts/bilibili.dart';
-import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
@@ -41,7 +40,8 @@ class VideoCard extends StatelessWidget {
 
   Widget? _buildProgress() {
     if (video.progress == null) return null;
-    final progressRatio = video.progress!.inSeconds / video.duration.inSeconds;
+    final progressRatio =
+        video.progress!.duration().inSeconds / video.duration.inSeconds;
     if (progressRatio < 0.01) return null;
     return LinearProgressIndicator(
       value: progressRatio,
@@ -87,6 +87,39 @@ class VideoCard extends StatelessWidget {
             ),
           ),
         ),
+        ?video.progress != null && video.progress!.finished()
+            ? Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(6),
+                    color: Colors.black.withValues(alpha: 0.3),
+                  ),
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Icon(Icons.done, size: 14, color: Colors.green),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        "已看完",
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : null,
         Positioned(
           bottom: 8,
           left: 8,

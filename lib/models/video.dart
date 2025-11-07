@@ -5,6 +5,21 @@ enum MediaType {
   ogv, // 边栏
 }
 
+// 播放进度
+class PlayProgress {
+  final int progress; // 播放时长秒数
+
+  PlayProgress(this.progress);
+
+  factory PlayProgress.fromJson(Map<String, dynamic> json) {
+    return PlayProgress(json['progress'] ?? 0);
+  }
+
+  bool finished() => progress < 0;
+
+  Duration duration() => Duration(seconds: progress);
+}
+
 // 媒体卡片信息
 class MediaCardInfo {
   final MediaType type;
@@ -14,7 +29,7 @@ class MediaCardInfo {
   final String title;
   final String cover;
   final Duration duration;
-  final Duration? progress;
+  final PlayProgress? progress;
   final Stat stat;
   final String userName;
   final String userAvatar;
@@ -48,9 +63,7 @@ class MediaCardInfo {
       title: json['title'] ?? '',
       cover: json['pic'] ?? '',
       duration: Duration(seconds: json['duration'] ?? 0),
-      progress: json['progress'] == null
-          ? null
-          : Duration(seconds: json['progress']),
+      progress: json['progress'] == null ? null : PlayProgress.fromJson(json),
       stat: Stat.fromJson(json['stat'] ?? {}),
       userName: json['owner']['name'] ?? '',
       userAvatar: json['owner']['face'] ?? '',
