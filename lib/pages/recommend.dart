@@ -86,7 +86,7 @@ class _RecommendPageState extends State<RecommendPage> {
       }),
       builder: (context, _) {
         return Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: VideoGridView(provider: _videos, onTap: _onVideoTapped),
         );
       },

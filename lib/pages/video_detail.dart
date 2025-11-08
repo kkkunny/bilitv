@@ -8,6 +8,7 @@ import 'package:bilitv/pages/video_player.dart';
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/loading.dart';
+import 'package:bilitv/widgets/video_card.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
 import 'package:flutter/material.dart';
 
@@ -102,60 +103,51 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   @override
   Widget build(BuildContext context) {
     final children = widget.video.episodes.length == 1
-        ? [
-            _buildVideoHeader(),
-            const SizedBox(height: 24),
-            _buildRelatedVideos(),
-          ]
-        : [
-            _buildVideoHeader(),
-            const SizedBox(height: 24),
-            _buildEpisodes(),
-            const SizedBox(height: 24),
-            _buildRelatedVideos(),
-          ];
+        ? [_buildVideoHeader(), _buildRelatedVideos()]
+        : [_buildVideoHeader(), _buildEpisodes(), _buildRelatedVideos()];
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: children,
-        ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
       ),
     );
   }
 
   Widget _buildVideoHeader() {
-    return Row(children: [_buildVideoPlayer(), _buildVideoInfo()]);
+    final height = MediaQuery.of(context).size.height / 2;
+    return Container(
+      height: height,
+      padding: const EdgeInsets.all(10),
+      child: Row(
+        children: [_buildVideoPlayer(), SizedBox(width: 10), _buildVideoInfo()],
+      ),
+    );
   }
 
   Widget _buildVideoPlayer() {
-    return Expanded(
+    return InkWell(
+      autofocus: true,
+      onTap: _onCoverTapped,
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.all(10),
-        child: InkWell(
-          onTap: _onCoverTapped,
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                AspectRatio(
-                  aspectRatio: coverSizeRatio,
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: BilibiliNetworkImage(widget.video.cover),
-                    ),
-                  ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            AspectRatio(
+              aspectRatio: coverSizeRatio,
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                Icon(Icons.play_circle_sharp, size: 150, color: Colors.black54),
-              ],
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: BilibiliNetworkImage(widget.video.cover),
+                ),
+              ),
             ),
-          ),
+            Icon(Icons.play_circle_sharp, size: 150, color: Colors.black54),
+          ],
         ),
       ),
     );
@@ -163,268 +155,252 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
   Widget _buildVideoInfo() {
     return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Card(
-          child: AspectRatio(
-            aspectRatio: coverSizeRatio,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 110,
+                child: Text(
+                  widget.video.title,
+                  style: const TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
                 children: [
-                  SizedBox(
-                    height: 110,
-                    child: Text(
-                      widget.video.title,
-                      style: const TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.black,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: MaterialButton(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          onPressed: () {},
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.thumb_up_rounded,
-                                size: 40,
-                                color: widget.relation.like
-                                    ? Colors.pinkAccent
-                                    : Colors.grey,
-                              ),
-                              Text(
-                                amountString(widget.video.stat.likeCount),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: MaterialButton(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          onPressed: () {},
-                          child: Column(
-                            children: [
-                              Transform.scale(
-                                scaleX: -1,
-                                child: Icon(
-                                  Icons.thumb_down_rounded,
-                                  size: 40,
-                                  color: widget.relation.dislike
-                                      ? Colors.pinkAccent
-                                      : Colors.grey,
-                                ),
-                              ),
-                              Text(
-                                amountString(widget.video.stat.dislikeCount),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: MaterialButton(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          onPressed: () {},
-                          child: Column(
-                            children: [
-                              Icon(
-                                IconFont.coin,
-                                size: 40,
-                                color: widget.relation.coin > 0
-                                    ? Colors.pinkAccent
-                                    : Colors.grey,
-                              ),
-                              Text(
-                                amountString(widget.video.stat.coinCount),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: MaterialButton(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          onPressed: () {},
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.star_rounded,
-                                size: 46,
-                                color: widget.relation.favorite
-                                    ? Colors.pinkAccent
-                                    : Colors.grey,
-                              ),
-                              Text(
-                                amountString(widget.video.stat.favoriteCount),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: MaterialButton(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          onPressed: () {},
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.playlist_add_rounded,
-                                size: 50,
-                                color: widget.relation.inPlayList
-                                    ? Colors.pinkAccent
-                                    : Colors.grey,
-                              ),
-                              Text(
-                                '',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: MaterialButton(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          onPressed: null,
-                          child: Column(
-                            children: [
-                              Icon(
-                                IconFont.share,
-                                size: 40,
-                                color: Colors.grey,
-                              ),
-                              Text(
-                                amountString(widget.video.stat.shareCount),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    '视频简介',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   Expanded(
-                    child: Text(
-                      widget.video.desc,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
+                    child: MaterialButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      ClipOval(
-                        child: SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: BilibiliAvatar(widget.video.userAvatar),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      onPressed: () {},
+                      child: Column(
                         children: [
-                          Text(
-                            widget.video.userName,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
+                          Icon(
+                            Icons.thumb_up_rounded,
+                            size: 40,
+                            color: widget.relation.like
+                                ? Colors.pinkAccent
+                                : Colors.grey,
                           ),
-                          const SizedBox(height: 4),
                           Text(
-                            'UP主',
+                            amountString(widget.video.stat.likeCount),
                             style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
+                              fontSize: 20,
+                              color: Colors.grey.shade600,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '发布日期: ${datetimeString(widget.video.publishTime)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade500,
-                              ),
-                            ),
-                          ],
-                        ),
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  Expanded(
+                    child: MaterialButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ],
+                      onPressed: () {},
+                      child: Column(
+                        children: [
+                          Transform.scale(
+                            scaleX: -1,
+                            child: Icon(
+                              Icons.thumb_down_rounded,
+                              size: 40,
+                              color: widget.relation.dislike
+                                  ? Colors.pinkAccent
+                                  : Colors.grey,
+                            ),
+                          ),
+                          Text(
+                            amountString(widget.video.stat.dislikeCount),
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  Expanded(
+                    child: MaterialButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      onPressed: () {},
+                      child: Column(
+                        children: [
+                          Icon(
+                            IconFont.coin,
+                            size: 40,
+                            color: widget.relation.coin > 0
+                                ? Colors.pinkAccent
+                                : Colors.grey,
+                          ),
+                          Text(
+                            amountString(widget.video.stat.coinCount),
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  Expanded(
+                    child: MaterialButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      onPressed: () {},
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.star_rounded,
+                            size: 46,
+                            color: widget.relation.favorite
+                                ? Colors.pinkAccent
+                                : Colors.grey,
+                          ),
+                          Text(
+                            amountString(widget.video.stat.favoriteCount),
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  Expanded(
+                    child: MaterialButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      onPressed: () {},
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.playlist_add_rounded,
+                            size: 50,
+                            color: widget.relation.inPlayList
+                                ? Colors.pinkAccent
+                                : Colors.grey,
+                          ),
+                          Text(
+                            '',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  Expanded(
+                    child: MaterialButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      onPressed: null,
+                      child: Column(
+                        children: [
+                          Icon(IconFont.share, size: 40, color: Colors.grey),
+                          Text(
+                            amountString(widget.video.stat.shareCount),
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 12),
+              const Text(
+                '视频简介',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: Text(
+                  widget.video.desc,
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  ClipOval(
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: BilibiliAvatar(widget.video.userAvatar),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.video.userName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'UP主',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '发布日期: ${datetimeString(widget.video.publishTime)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -437,6 +413,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   Widget _buildEpisodes() {
+    final height = MediaQuery.of(context).size.height / 2 / 3;
     final children = widget.video.episodes
         .map(
           (episode) => Container(
@@ -503,54 +480,35 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         )
         .toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '视频分P',
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w900,
-            color: Colors.black,
-          ),
+    return Container(
+      height: height,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          margin: const EdgeInsets.all(16),
+          height: 120,
+          child: ListView(scrollDirection: Axis.horizontal, children: children),
         ),
-        const SizedBox(height: 12),
-        Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Container(
-            margin: const EdgeInsets.all(16),
-            height: 120,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: children,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildRelatedVideos() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '相关视频',
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w900,
-            color: Colors.black,
-          ),
+    final height = MediaQuery.of(context).size.height / 2 / 3 * 2;
+    return Container(
+      height: height,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      child: ListView.builder(
+        addAutomaticKeepAlives: false,
+        addRepaintBoundaries: false,
+        scrollDirection: Axis.horizontal,
+        itemCount: _relatedVideosProvider.length,
+        itemBuilder: (BuildContext context, int index) => VideoCard(
+          video: _relatedVideosProvider[index],
+          onTap: () => _onVideoTapped(_relatedVideosProvider[index]),
         ),
-        const SizedBox(height: 16),
-        VideoGridView(
-          provider: _relatedVideosProvider,
-          shrinkWrap: true,
-          onTap: _onVideoTapped,
-        ),
-      ],
+      ),
     );
   }
 }
