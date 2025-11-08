@@ -49,6 +49,7 @@ dependencies:
   toastification: ^3.0.3 # toast
   visibility_detector: ^0.4.0+2 # 不可见组件释放
   audio_video_progress_bar: ^2.0.3 # 视频进度条
+  animated_infinite_scroll_pagination: ^1.0.13 # 无限列表
 
 dev_dependencies:
   flutter_test:

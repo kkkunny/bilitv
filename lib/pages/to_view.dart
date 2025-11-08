@@ -2,7 +2,7 @@ import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
 import 'package:bilitv/widgets/loading.dart';
-import 'package:bilitv/widgets/video_card.dart';
+import 'package:bilitv/widgets/video_grid_view.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 
@@ -17,7 +17,7 @@ class ToViewPage extends StatefulWidget {
 
 class _ToViewPageState extends State<ToViewPage> {
   final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(true);
-  final List<MediaCardInfo> _videos = [];
+  final _videos = VideoGridViewProvider();
 
   @override
   void initState() {
@@ -72,21 +72,7 @@ class _ToViewPageState extends State<ToViewPage> {
       builder: (context, _) {
         return Container(
           padding: const EdgeInsets.all(16),
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: videoCardWidth,
-              childAspectRatio: 1.1,
-              mainAxisSpacing: 20,
-              crossAxisSpacing: 20,
-            ),
-            itemCount: _videos.length,
-            itemBuilder: (context, index) {
-              return VideoCard(
-                video: _videos[index],
-                onTap: () => _onVideoTapped(_videos[index]),
-              );
-            },
-          ),
+          child: VideoGridView(provider: _videos, onTap: _onVideoTapped),
         );
       },
     );

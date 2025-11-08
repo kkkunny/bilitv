@@ -8,9 +8,8 @@ import 'package:bilitv/pages/video_player.dart';
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/loading.dart';
-import 'package:bilitv/widgets/video_card.dart';
+import 'package:bilitv/widgets/video_grid_view.dart';
 import 'package:flutter/material.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 
 class VideoDetailPageWrap extends StatelessWidget {
   final int? avid;
@@ -70,6 +69,13 @@ class VideoDetailPage extends StatefulWidget {
 
 class _VideoDetailPageState extends State<VideoDetailPage> {
   late final _currentEpisodeCid = ValueNotifier(widget.video.cid);
+  final _relatedVideosProvider = VideoGridViewProvider();
+
+  @override
+  void initState() {
+    _relatedVideosProvider.addAll(widget.relatedVideos);
+    super.initState();
+  }
 
   void _onCoverTapped() {
     Navigator.push(
@@ -536,22 +542,10 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           ),
         ),
         const SizedBox(height: 16),
-        GridView.builder(
+        VideoGridView(
+          provider: _relatedVideosProvider,
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: videoCardWidth,
-            childAspectRatio: 1.1,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-          ),
-          itemCount: widget.relatedVideos.length,
-          itemBuilder: (context, index) {
-            return VideoCard(
-              video: widget.relatedVideos[index],
-              onTap: () => _onVideoTapped(widget.relatedVideos[index]),
-            );
-          },
+          onTap: _onVideoTapped,
         ),
       ],
     );

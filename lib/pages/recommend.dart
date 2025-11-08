@@ -2,10 +2,9 @@ import 'package:bilitv/apis/bilibili/rcmd.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
 import 'package:bilitv/widgets/loading.dart';
-import 'package:bilitv/widgets/video_card.dart';
+import 'package:bilitv/widgets/video_grid_view.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 
 class RecommendPage extends StatefulWidget {
   final ValueNotifier<int> _tappedListener;
@@ -19,13 +18,13 @@ class RecommendPage extends StatefulWidget {
 class _RecommendPageState extends State<RecommendPage> {
   int page = 0;
   final pageVideoCount = 30;
-  final List<MediaCardInfo> _videos = [];
+  final _videos = VideoGridViewProvider();
   final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(true);
-  bool _isLoadingMore = false;
 
   @override
   void initState() {
     widget._tappedListener.addListener(_onRefresh);
+    _videos.onLoad = _pullMoreVideos;
     super.initState();
   }
 
@@ -49,46 +48,24 @@ class _RecommendPageState extends State<RecommendPage> {
     _isLoading.value = true;
     page = 0;
     _videos.clear();
-    _pullMoreVideos().then((_) {
+    _pullMoreVideos().then((res) {
+      _videos.addAll(res.$1);
       _isLoading.value = false;
     });
   }
 
-  DateTime? _lastLoadMore;
-  void _onScrollNotification(ScrollNotification notification) {
-    final end =
-        notification is ScrollEndNotification &&
-        notification.metrics.pixels == notification.metrics.maxScrollExtent;
-    if (_isLoading.value || _isLoadingMore || !end) {
-      return;
-    }
-
-    final now = DateTime.now();
-    if (_lastLoadMore != null &&
-        now.difference(_lastLoadMore!).inMilliseconds < 500) {
-      return;
-    }
-    _lastLoadMore = now;
-
-    _isLoadingMore = true;
-    _pullMoreVideos();
-  }
-
-  // 拉取更多视频
-  Future<void> _pullMoreVideos() async {
+  Future<(List<MediaCardInfo>, bool)> _pullMoreVideos({
+    bool isFetchMore = false,
+  }) async {
     page++;
 
     final videos = await fetchRecommendVideos(
       page: page,
       count: pageVideoCount,
-      removeAvids: _videos.map((e) => e.avid).toList(),
+      removeAvids: _videos.toList().map((e) => e.avid).toList(),
     );
 
-    if (!mounted) return;
-    setState(() {
-      _videos.addAll(videos);
-      _isLoadingMore = false;
-    });
+    return (videos, true);
   }
 
   void _onVideoTapped(MediaCardInfo video) {
@@ -104,33 +81,13 @@ class _RecommendPageState extends State<RecommendPage> {
   Widget build(BuildContext context) {
     return LoadingWidget(
       isLoading: _isLoading,
-      loader: _pullMoreVideos,
+      loader: () async => await _pullMoreVideos().then((res) {
+        _videos.addAll(res.$1);
+      }),
       builder: (context, _) {
         return Container(
           padding: const EdgeInsets.all(16),
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              _onScrollNotification(notification);
-              return false;
-            },
-            child: GridView.builder(
-              addAutomaticKeepAlives: false,
-              addRepaintBoundaries: false,
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: videoCardWidth,
-                childAspectRatio: 1.1,
-                mainAxisSpacing: 20,
-                crossAxisSpacing: 20,
-              ),
-              itemCount: _videos.length,
-              itemBuilder: (context, index) {
-                return VideoCard(
-                  video: _videos[index],
-                  onTap: () => _onVideoTapped(_videos[index]),
-                );
-              },
-            ),
-          ),
+          child: VideoGridView(provider: _videos, onTap: _onVideoTapped),
         );
       },
     );
