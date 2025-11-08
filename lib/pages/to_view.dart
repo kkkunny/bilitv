@@ -1,6 +1,7 @@
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
+import 'package:bilitv/storages/cookie.dart';
 import 'package:bilitv/widgets/loading.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
 import 'dart:async';
@@ -31,8 +32,16 @@ class _ToViewPageState extends State<ToViewPage> {
     super.dispose();
   }
 
+  Future<void> _onInitData() async {
+    if (!loginInfoNotifier.value.isLogin) return;
+
+    final videos = await listToView();
+    _videos.addAll(videos);
+  }
+
   DateTime? _lastRefresh;
   Future<void> _onRefresh() async {
+    if (!loginInfoNotifier.value.isLogin) return;
     if (_isLoading.value) return;
 
     final now = DateTime.now();
@@ -64,12 +73,12 @@ class _ToViewPageState extends State<ToViewPage> {
   Widget build(BuildContext context) {
     return LoadingWidget(
       isLoading: _isLoading,
-      loader: () async {
-        final videos = await listToView();
-        _videos.addAll(videos);
-        return;
-      },
+      loader: _onInitData,
       builder: (context, _) {
+        if (_videos.isEmpty) {
+          return Center(child: Image.asset("assets/images/empty.png"));
+        }
+
         return Container(
           padding: const EdgeInsets.all(16),
           child: VideoGridView(provider: _videos, onTap: _onVideoTapped),

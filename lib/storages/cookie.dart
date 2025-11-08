@@ -15,7 +15,7 @@ class LoginInfo {
 
   const LoginInfo({required this.isLogin, this.nickname, this.avatar});
 
-  static const notLogin = LoginInfo(isLogin: true);
+  static const notLogin = LoginInfo(isLogin: false);
   static login({required String nickname, required String avatar}) {
     return LoginInfo(isLogin: true, nickname: nickname, avatar: avatar);
   }

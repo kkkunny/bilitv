@@ -49,13 +49,13 @@ class ArchiveRelation {
   final int coin;
   final bool seasonFav;
 
-  ArchiveRelation({
-    required this.like,
-    required this.dislike,
-    required this.favorite,
-    required this.inPlayList,
-    required this.coin,
-    required this.seasonFav,
+  const ArchiveRelation({
+    this.like = false,
+    this.dislike = false,
+    this.favorite = false,
+    this.inPlayList = false,
+    this.coin = 0,
+    this.seasonFav = false,
   });
 
   factory ArchiveRelation.fromJson(Map<String, dynamic> json) {

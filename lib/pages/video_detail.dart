@@ -23,7 +23,10 @@ class VideoDetailPageWrap extends StatelessWidget {
       loader: () async {
         final res = await Future.wait([
           getVideoInfo(avid: avid, bvid: bvid),
-          getArchiveRelation(avid: avid, bvid: bvid),
+          getArchiveRelation(
+            avid: avid,
+            bvid: bvid,
+          ).onError((_, _) => ArchiveRelation()),
           fetchRelatedVideos(avid: avid, bvid: bvid),
         ]);
         return VideoDetailPageInput(

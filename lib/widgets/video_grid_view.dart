@@ -16,6 +16,8 @@ class VideoGridViewProvider
   operator [](int index) => _videos[index];
 
   get length => _videos.length;
+  get isEmpty => _videos.isEmpty;
+  get isNotEmpty => _videos.isNotEmpty;
 
   void addAll(Iterable<MediaCardInfo> iterable) {
     _videos.addAll(iterable);

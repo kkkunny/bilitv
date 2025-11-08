@@ -35,7 +35,7 @@ class _SplashPageState extends State<SplashPage> {
 
   static Future<void> _checkLogin() async {
     final cookie = await loadCookie();
-    if (!cookie.isNotEmpty) {
+    if (cookie.isEmpty) {
       return;
     }
     final info = await getMySelfInfo();
