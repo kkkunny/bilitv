@@ -17,9 +17,9 @@ final Dio bilibiliHttpClient = () {
   client.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final cookie = await loadCookie();
-        if (cookie.isNotEmpty) {
-          options.headers['Cookie'] = cookie;
+        final cookies = await loadCookie();
+        if (cookies.isNotEmpty) {
+          options.headers['Cookie'] = cookies.join('; ');
         }
         return handler.next(options);
       },
@@ -29,15 +29,29 @@ final Dio bilibiliHttpClient = () {
   return client;
 }();
 
-Future<dynamic> bilibiliGet<T>(
+Future<dynamic> bilibiliRequest<T>(
+  String method,
   String url, {
   Map<String, dynamic>? queryParameters,
   Function(Response<dynamic>)? respHandler,
 }) async {
-  final response = await bilibiliHttpClient.get(
-    url,
-    queryParameters: queryParameters,
-  );
+  final Response<dynamic> response;
+  switch (method.toLowerCase()) {
+    case 'get':
+      response = await bilibiliHttpClient.get(
+        url,
+        queryParameters: queryParameters,
+      );
+      break;
+    case 'post':
+      response = await bilibiliHttpClient.post(
+        url,
+        queryParameters: queryParameters,
+      );
+      break;
+    default:
+      throw Exception('unsupported method: $method');
+  }
   if (response.statusCode != 200) {
     throw Exception(
       'http error, code=${response.statusCode}, msg=${response.data}',

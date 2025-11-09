@@ -1,6 +1,5 @@
-# dart run iconfont_convert --config iconfont.yaml
 - icons:
-    - url: //at.alicdn.com/t/c/font_5055255_lofkd30c0xp.css
+    - url: //at.alicdn.com/t/c/font_5055255_f6kz2ghjmbd.css
       icon_name: iconfont # 字体文件名，Dart文件名
       icon_class: IconFont # Dart类名
       font_family: iconfont # 指定字体的 Font Family

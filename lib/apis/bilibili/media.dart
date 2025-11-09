@@ -1,4 +1,6 @@
+import 'package:bilitv/models/pbs/dm.pb.dart';
 import 'package:bilitv/models/video.dart' show VideoPlayInfo, Video;
+import 'package:dio/dio.dart';
 
 import 'client.dart';
 
@@ -15,7 +17,8 @@ Future<List<VideoPlayInfo>> getVideoPlayURL({
   } else {
     queryParams['bvid'] = bvid;
   }
-  final data = await bilibiliGet(
+  final data = await bilibiliRequest(
+    'GET',
     'https://api.bilibili.com/x/player/wbi/playurl',
     queryParameters: queryParams,
   );
@@ -34,7 +37,8 @@ Future<Video> getVideoInfo({int? avid, String? bvid}) async {
   } else {
     queryParams['bvid'] = bvid;
   }
-  final data = await bilibiliGet(
+  final data = await bilibiliRequest(
+    'GET',
     'https://api.bilibili.com/x/web-interface/view',
     queryParameters: queryParams,
   );
@@ -42,20 +46,20 @@ Future<Video> getVideoInfo({int? avid, String? bvid}) async {
 }
 
 class ArchiveRelation {
-  final bool like;
-  final bool dislike;
-  final bool favorite;
-  final bool inPlayList;
-  final int coin;
-  final bool seasonFav;
+  bool like;
+  bool dislike;
+  bool favorite;
+  bool inPlayList;
+  int coin;
+  bool seasonFav;
 
   ArchiveRelation({
-    required this.like,
-    required this.dislike,
-    required this.favorite,
-    required this.inPlayList,
-    required this.coin,
-    required this.seasonFav,
+    this.like = false,
+    this.dislike = false,
+    this.favorite = false,
+    this.inPlayList = false,
+    this.coin = 0,
+    this.seasonFav = false,
   });
 
   factory ArchiveRelation.fromJson(Map<String, dynamic> json) {
@@ -78,9 +82,25 @@ Future<ArchiveRelation> getArchiveRelation({int? avid, String? bvid}) async {
   } else {
     queryParams['bvid'] = bvid;
   }
-  final data = await bilibiliGet(
+  final data = await bilibiliRequest(
+    'GET',
     'https://api.bilibili.com/x/web-interface/archive/relation',
     queryParameters: queryParams,
   );
   return ArchiveRelation.fromJson(data);
+}
+
+// 获取弹幕
+Future<DmSegMobileReply> getDanmaku(int cid, int segmentIndex) async {
+  Map<String, dynamic> queryParams = {
+    'type': 1,
+    'oid': cid,
+    'segment_index': segmentIndex,
+  };
+  final response = await bilibiliHttpClient.get(
+    'https://api.bilibili.com/x/v2/dm/web/seg.so',
+    queryParameters: queryParams,
+    options: Options(responseType: ResponseType.bytes),
+  );
+  return DmSegMobileReply.fromBuffer(response.data);
 }

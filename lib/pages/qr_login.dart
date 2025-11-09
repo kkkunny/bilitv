@@ -71,10 +71,7 @@ class _QRLoginPageState extends State<QRLoginPage> {
   }
 
   Future<void> _onLoginSuccess(QRStatus status) async {
-    final cookieHeader = status.cookies
-        .map((c) => '${c.name}=${c.value}')
-        .join('; ');
-    await saveCookie(cookieHeader);
+    await saveCookie(status.cookies);
     widget.loginNotifier.value = true;
   }
 

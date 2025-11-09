@@ -17,7 +17,8 @@ class MySelf {
 }
 
 Future<MySelf> getMySelfInfo() async {
-  final data = await bilibiliGet(
+  final data = await bilibiliRequest(
+    'GET',
     'https://api.bilibili.com/x/web-interface/nav',
   );
   return MySelf.fromJson(data);

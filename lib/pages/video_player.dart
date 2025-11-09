@@ -1,9 +1,14 @@
+import 'dart:async';
+
+import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:bilitv/apis/bilibili/client.dart' show bilibiliHttpClient;
 import 'package:bilitv/apis/bilibili/media.dart' show getVideoPlayURL;
 import 'package:bilitv/consts/bilibili.dart' show VideoQuality;
+import 'package:bilitv/consts/color.dart';
+import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart' as model;
 import 'package:bilitv/storages/cookie.dart';
-import 'package:bilitv/utils/format.dart' show videoDurationString;
+import 'package:bilitv/widgets/bilibili_danmaku_wall.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
@@ -143,20 +148,21 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
   late _VideoPlayerPageState pageState = context
       .findAncestorStateOfType<_VideoPlayerPageState>()!;
   late final player = widget.state.widget.controller.player;
+  Timer? _nextTimer; // 播放下一个视频的计时器
 
   @override
   void initState() {
     widget.displayListener.addListener(_onDisplayChanged);
+    player.stream.completed.listen(_onCompleted);
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   void _onDisplayChanged() {
     setState(() {});
+  }
+
+  void _onDanmakuSwitchTapped() {
+    pageState.danmakuCtl.enabled = !pageState.danmakuCtl.enabled;
   }
 
   void _onSelectQuality() {
@@ -192,6 +198,42 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     pageState.currentCid.value = pageState.widget.video.episodes[index + 1].cid;
   }
 
+  void _onCompleted(bool completed) {
+    if (!completed) {
+      if (_nextTimer != null) {
+        _nextTimer!.cancel();
+        _nextTimer = null;
+      }
+      return;
+    }
+
+    final index = pageState.widget.video.episodes.indexWhere(
+      (e) => e.cid == pageState.currentCid.value,
+    );
+    if (index == pageState.widget.video.episodes.length - 1) return;
+
+    _nextTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (_nextTimer != null) {
+        _nextTimer!.cancel();
+        _nextTimer = null;
+      }
+      pageState.currentCid.value =
+          pageState.widget.video.episodes[index + 1].cid;
+    });
+
+    toastification.show(
+      context: context,
+      closeButtonShowType: CloseButtonShowType.none,
+      style: ToastificationStyle.simple,
+      alignment: Alignment.centerRight,
+      backgroundColor: Colors.white10.withValues(alpha: 0.5),
+      borderSide: BorderSide(width: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      title: Text('即将播放下一分P'),
+      autoCloseDuration: const Duration(seconds: 3),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!widget.displayListener.value) {
@@ -224,34 +266,14 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                 StreamBuilder<Duration>(
                   stream: player.stream.position,
                   builder: (context, snap) {
-                    final position = snap.data ?? player.state.position;
-                    final duration = player.state.duration;
-                    final percent = duration.inMilliseconds > 0
-                        ? position.inMilliseconds / duration.inMilliseconds
-                        : 0.0;
-                    return Column(
-                      children: [
-                        LinearProgressIndicator(
-                          value: percent,
-                          backgroundColor: Colors.grey.shade200.withValues(
-                            alpha: 0.5,
-                          ),
-                          valueColor: AlwaysStoppedAnimation(Colors.blue),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              videoDurationString(position),
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                            Text(
-                              videoDurationString(duration),
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                          ],
-                        ),
-                      ],
+                    return ProgressBar(
+                      progress: snap.data ?? player.state.position,
+                      buffered: player.state.buffer,
+                      total: player.state.duration,
+                      progressBarColor: lightPink,
+                      bufferedBarColor: lightPink.withValues(alpha: 0.3),
+                      thumbColor: lightPink,
+                      timeLabelTextStyle: TextStyle(),
                     );
                   },
                 ),
@@ -290,7 +312,23 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                         size: 44,
                       ),
                     ),
-                    Expanded(child: SizedBox()),
+                    Spacer(),
+                    IconButton(
+                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      onPressed: _onDanmakuSwitchTapped,
+                      icon: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 5.0),
+                        child: ValueListenableBuilder(
+                          valueListenable: pageState.danmakuCtl.enableNotifier,
+                          builder: (context, isEnabled, _) => Icon(
+                            isEnabled
+                                ? IconFont.danmukai
+                                : IconFont.danmuguanbi,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
                     IconButton(
                       focusColor: Colors.grey.withValues(alpha: 0.2),
                       onPressed: _onSelectQuality,
@@ -341,6 +379,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   late final currentQuality = ValueNotifier(allowQualities.last);
 
   late final controller = VideoController(Player());
+  final danmakuCtl = BilibiliDanmakuWallController();
 
   FocusNode screenFocusNode = FocusNode();
   final ValueNotifier<bool> displayControl = ValueNotifier(false);
@@ -359,6 +398,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     currentQuality.dispose();
     screenFocusNode.dispose();
     controller.player.dispose();
+    danmakuCtl.dispose();
     displayControl.dispose();
     super.dispose();
   }
@@ -418,17 +458,23 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        body: Center(
-          child: SizedBox(
-            child: KeyboardListener(
-              autofocus: true,
-              focusNode: screenFocusNode,
-              onKeyEvent: _onKeyEvent,
-              child: Video(
-                controller: controller,
-                controls: (VideoState state) =>
-                    _VideoControlWidget(state, displayControl),
-              ),
+        body: KeyboardListener(
+          autofocus: true,
+          focusNode: screenFocusNode,
+          onKeyEvent: _onKeyEvent,
+          child: ValueListenableBuilder(
+            valueListenable: currentCid,
+            builder: (context, cid, child) => BilibiliDanmakuWall(
+              controller: danmakuCtl,
+              cid: cid,
+              timeline: controller.player.stream.position,
+              playing: controller.player.stream.playing,
+              child: child!,
+            ),
+            child: Video(
+              controller: controller,
+              controls: (VideoState state) =>
+                  _VideoControlWidget(state, displayControl),
             ),
           ),
         ),
@@ -451,7 +497,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       return;
     }
 
-    final step = Duration(seconds: 5);
     switch (value.logicalKey) {
       case LogicalKeyboardKey.select:
       case LogicalKeyboardKey.enter:
@@ -466,21 +511,32 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         _onBack();
         break;
       case LogicalKeyboardKey.arrowLeft:
-        if (controller.player.state.position < step) {
-          controller.player.seek(Duration(seconds: 0));
-        } else {
-          controller.player.seek(controller.player.state.position - step);
-        }
+        _onStepForward(false);
         break;
       case LogicalKeyboardKey.arrowRight:
-        if (controller.player.state.duration -
-                controller.player.state.position <
-            step) {
-          controller.player.seek(controller.player.state.duration);
-        } else {
-          controller.player.seek(controller.player.state.position + step);
-        }
+        _onStepForward(true);
         break;
     }
+  }
+
+  static const _step = Duration(seconds: 5);
+  static const _danmakuWaitDurationOnStep = Duration(seconds: 10);
+  void _onStepForward(bool forward) {
+    if (forward) {
+      if (controller.player.state.duration - controller.player.state.position <
+          _step) {
+        controller.player.seek(controller.player.state.duration);
+      } else {
+        controller.player.seek(controller.player.state.position + _step);
+      }
+    } else {
+      if (controller.player.state.position < _step) {
+        controller.player.seek(Duration(seconds: 0));
+      } else {
+        controller.player.seek(controller.player.state.position - _step);
+      }
+    }
+    danmakuCtl.wait(_danmakuWaitDurationOnStep);
+    danmakuCtl.clear();
   }
 }

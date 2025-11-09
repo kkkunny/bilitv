@@ -33,7 +33,8 @@ class QR {
 
 // 创建二维码
 Future<QR> createQR() async {
-  final data = await bilibiliGet(
+  final data = await bilibiliRequest(
+    'GET',
     'https://passport.bilibili.com/x/passport-login/web/qrcode/generate',
   );
   return QR.fromJson(data);
@@ -80,7 +81,8 @@ class QRStatus {
 // 检查二维码状态
 Future<QRStatus> checkQRStatus(String key) async {
   Headers? respHeaders;
-  final data = await bilibiliGet(
+  final data = await bilibiliRequest(
+    'GET',
     'https://passport.bilibili.com/x/passport-login/web/qrcode/poll',
     queryParameters: {'qrcode_key': key},
     respHandler: (response) {
@@ -92,8 +94,22 @@ Future<QRStatus> checkQRStatus(String key) async {
     qrStatus.cookies = respHeaders!['set-cookie']!.map((cookie) {
       return Cookie.fromSetCookieValue(cookie);
     }).toList();
+    final (buvid3, buvid4) = await getBuvids();
+    qrStatus.cookies.addAll([
+      Cookie('buvid3', buvid3),
+      Cookie('buvid4', buvid4),
+    ]);
   }
   return qrStatus;
+}
+
+// 获取 buvid3 / buvid4
+Future<(String, String)> getBuvids() async {
+  final data = await bilibiliRequest(
+    'GET',
+    'https://api.bilibili.com/x/frontend/finger/spi',
+  );
+  return (data['b_3'].toString(), data['b_4'].toString());
 }
 
 class CookieStatus {

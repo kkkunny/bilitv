@@ -15,7 +15,7 @@ class LoginInfo {
 
   const LoginInfo({required this.isLogin, this.nickname, this.avatar});
 
-  static const notLogin = LoginInfo(isLogin: true);
+  static const notLogin = LoginInfo(isLogin: false);
   static login({required String nickname, required String avatar}) {
     return LoginInfo(isLogin: true, nickname: nickname, avatar: avatar);
   }
@@ -23,9 +23,12 @@ class LoginInfo {
 
 final loginInfoNotifier = ValueNotifier(LoginInfo.notLogin);
 
-Future<void> saveCookie(String cookie) async {
+Future<void> saveCookie(List<Cookie> cookies) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(_cookieKey, cookie);
+  await prefs.setString(
+    _cookieKey,
+    cookies.map((c) => '${c.name}=${c.value}').join('; '),
+  );
 }
 
 Future<void> clearCookie() async {
@@ -34,10 +37,12 @@ Future<void> clearCookie() async {
   _loadFromEnv = false;
 }
 
-Future<String> loadCookie() async {
-  Map<String, String> env = _loadFromEnv ? Platform.environment : {};
+Future<List<Cookie>> loadCookie() async {
   final prefs = await SharedPreferences.getInstance();
-  final cookie =
-      prefs.getString(_cookieKey) ?? env[_cookieKey.toUpperCase()] ?? '';
-  return cookie;
+  final cookieString = prefs.getString(_cookieKey) ?? '';
+  if (cookieString.isEmpty) return [];
+  return cookieString
+      .split('; ')
+      .map((s) => Cookie.fromSetCookieValue(s))
+      .toList();
 }

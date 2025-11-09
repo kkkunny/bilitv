@@ -1,8 +1,10 @@
 import 'package:bilitv/apis/bilibili/toview.dart';
+import 'package:bilitv/consts/assets.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
+import 'package:bilitv/storages/cookie.dart';
 import 'package:bilitv/widgets/loading.dart';
-import 'package:bilitv/widgets/video_card.dart';
+import 'package:bilitv/widgets/video_grid_view.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 
@@ -17,7 +19,7 @@ class ToViewPage extends StatefulWidget {
 
 class _ToViewPageState extends State<ToViewPage> {
   final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(true);
-  final List<MediaCardInfo> _videos = [];
+  final _videos = VideoGridViewProvider();
 
   @override
   void initState() {
@@ -31,8 +33,16 @@ class _ToViewPageState extends State<ToViewPage> {
     super.dispose();
   }
 
+  Future<void> _onInitData() async {
+    if (!loginInfoNotifier.value.isLogin) return;
+
+    final videos = await listToView();
+    _videos.addAll(videos);
+  }
+
   DateTime? _lastRefresh;
   Future<void> _onRefresh() async {
+    if (!loginInfoNotifier.value.isLogin) return;
     if (_isLoading.value) return;
 
     final now = DateTime.now();
@@ -51,7 +61,7 @@ class _ToViewPageState extends State<ToViewPage> {
     _isLoading.value = false;
   }
 
-  void _onVideoTapped(MediaCardInfo video) {
+  void _onVideoTapped(_, MediaCardInfo video) {
     Navigator.push(
       context,
       MaterialPageRoute<void>(
@@ -64,31 +74,18 @@ class _ToViewPageState extends State<ToViewPage> {
   Widget build(BuildContext context) {
     return LoadingWidget(
       isLoading: _isLoading,
-      loader: () async {
-        final videos = await listToView();
-        _videos.addAll(videos);
-        return;
-      },
+      loader: _onInitData,
       builder: (context, _) {
+        if (_videos.isEmpty) {
+          return FractionallySizedBox(
+            widthFactor: 0.2,
+            child: Image.asset(Images.empty, fit: BoxFit.contain),
+          );
+        }
+
         return Container(
-          padding: const EdgeInsets.all(16),
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: videoCardWidth,
-              mainAxisExtent: videoCardHigh + 8,
-              mainAxisSpacing: 20,
-              crossAxisSpacing: 20,
-            ),
-            itemCount: _videos.length,
-            itemBuilder: (context, index) {
-              return Material(
-                child: InkWell(
-                  onTap: () => _onVideoTapped(_videos[index]),
-                  child: VideoCard(video: _videos[index]),
-                ),
-              );
-            },
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: VideoGridView(provider: _videos, onTap: _onVideoTapped),
         );
       },
     );

@@ -9,7 +9,8 @@ Future<List<MediaCardInfo>> fetchRecommendVideos({
   int page = 1,
   List<int> removeAvids = const [],
 }) async {
-  final data = await bilibiliGet(
+  final data = await bilibiliRequest(
+    'GET',
     'https://api.bilibili.com/x/web-interface/wbi/index/top/feed/rcmd',
     queryParameters: {
       'fresh_type': freshType,
@@ -41,7 +42,8 @@ Future<List<MediaCardInfo>> fetchRelatedVideos({
   } else {
     queryParams['bvid'] = bvid;
   }
-  final data = await bilibiliGet(
+  final data = await bilibiliRequest(
+    'GET',
     'https://api.bilibili.com/x/web-interface/archive/related',
     queryParameters: queryParams,
   );

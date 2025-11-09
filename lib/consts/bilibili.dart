@@ -2,10 +2,6 @@
 const appKey = '1d8b6e7d45233436';
 const appSec = '560c52ccd288fed045859ed18bffd973';
 
-// 默认开屏图片
-const defaultSplashImage =
-    'https://i0.hdslb.com/bfs/archive/1d40e975b09d5c87b11b3ae0c9ce6c6b82f63d9e.png';
-
 // 封面宽高比
 const coverSizeRatio = 16 / 10;
 
@@ -60,3 +56,6 @@ class VideoQuality {
     vqHDRVivid,
   ];
 }
+
+// 弹幕分块间隔时长
+const danmakuChunkIntervalDuration = Duration(minutes: 6);

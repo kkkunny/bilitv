@@ -1,7 +1,7 @@
+import 'package:bilitv/apis/bilibili/media.dart' show getDanmaku;
 import 'package:bilitv/apis/bilibili/user.dart' show getMySelfInfo;
-import 'package:bilitv/consts/bilibili.dart' show defaultSplashImage;
+import 'package:bilitv/consts/assets.dart';
 import 'package:bilitv/storages/cookie.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class SplashPage extends StatefulWidget {
@@ -34,8 +34,8 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   static Future<void> _checkLogin() async {
-    final cookie = await loadCookie();
-    if (!cookie.isNotEmpty) {
+    final cookies = await loadCookie();
+    if (cookies.isEmpty) {
       return;
     }
     final info = await getMySelfInfo();
@@ -49,11 +49,10 @@ class _SplashPageState extends State<SplashPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: CachedNetworkImage(
-          imageUrl: defaultSplashImage,
+        child: Image.asset(
+          Images.splash,
           fit: BoxFit.contain,
-          placeholder: (_, _) => const SizedBox(),
-          errorWidget: (_, _, _) => const SizedBox(),
+          errorBuilder: (_, _, _) => const SizedBox(),
         ),
       ),
     );

@@ -36,7 +36,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
         _loading = false;
       });
     } on BilibiliError catch (e) {
-      if (e == noLoginError) {
+      if (e == BilibiliError.notLoggedIn) {
         await _logout();
       } else {
         setState(() {
