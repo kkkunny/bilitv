@@ -1,3 +1,4 @@
+import 'package:bilitv/apis/bilibili/media.dart' show getDanmaku;
 import 'package:bilitv/apis/bilibili/user.dart' show getMySelfInfo;
 import 'package:bilitv/consts/assets.dart';
 import 'package:bilitv/storages/cookie.dart';

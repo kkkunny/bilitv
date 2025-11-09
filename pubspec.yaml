@@ -50,6 +50,9 @@ dependencies:
   visibility_detector: ^0.4.0+2 # 不可见组件释放
   audio_video_progress_bar: ^2.0.3 # 视频进度条
   animated_infinite_scroll_pagination: ^1.0.13 # 无限列表
+  protobuf: ^5.1.0 # pb
+  fixnum: ^1.1.1 # pb
+  canvas_danmaku: ^0.2.7 # 弹幕绘制
 
 dev_dependencies:
   flutter_test:

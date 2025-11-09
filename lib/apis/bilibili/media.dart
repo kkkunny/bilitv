@@ -1,9 +1,6 @@
-import 'dart:io';
-
-import 'package:bilitv/apis/bilibili/auth.dart';
-import 'package:bilitv/apis/bilibili/error.dart';
+import 'package:bilitv/models/pbs/dm.pb.dart';
 import 'package:bilitv/models/video.dart' show VideoPlayInfo, Video;
-import 'package:bilitv/storages/cookie.dart' show loadCookie, saveCookie;
+import 'package:dio/dio.dart';
 
 import 'client.dart';
 
@@ -91,4 +88,19 @@ Future<ArchiveRelation> getArchiveRelation({int? avid, String? bvid}) async {
     queryParameters: queryParams,
   );
   return ArchiveRelation.fromJson(data);
+}
+
+// 获取弹幕
+Future<DmSegMobileReply> getDanmaku(int cid, int segmentIndex) async {
+  Map<String, dynamic> queryParams = {
+    'type': 1,
+    'oid': cid,
+    'segment_index': segmentIndex,
+  };
+  final response = await bilibiliHttpClient.get(
+    'https://api.bilibili.com/x/v2/dm/web/seg.so',
+    queryParameters: queryParams,
+    options: Options(responseType: ResponseType.bytes),
+  );
+  return DmSegMobileReply.fromBuffer(response.data);
 }

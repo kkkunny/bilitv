@@ -5,8 +5,10 @@ import 'package:bilitv/apis/bilibili/client.dart' show bilibiliHttpClient;
 import 'package:bilitv/apis/bilibili/media.dart' show getVideoPlayURL;
 import 'package:bilitv/consts/bilibili.dart' show VideoQuality;
 import 'package:bilitv/consts/color.dart';
+import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart' as model;
 import 'package:bilitv/storages/cookie.dart';
+import 'package:bilitv/widgets/bilibili_danmaku_wall.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
@@ -159,6 +161,10 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     setState(() {});
   }
 
+  void _onDanmakuSwitchTapped() {
+    pageState.danmakuCtl.enabled = !pageState.danmakuCtl.enabled;
+  }
+
   void _onSelectQuality() {
     OverlayState? overlayState = Overlay.of(context);
     late OverlayEntry overlayEntry;
@@ -306,7 +312,23 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                         size: 44,
                       ),
                     ),
-                    Expanded(child: SizedBox()),
+                    Spacer(),
+                    IconButton(
+                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      onPressed: _onDanmakuSwitchTapped,
+                      icon: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 5.0),
+                        child: ValueListenableBuilder(
+                          valueListenable: pageState.danmakuCtl.enableNotifier,
+                          builder: (context, isEnabled, _) => Icon(
+                            isEnabled
+                                ? IconFont.danmukai
+                                : IconFont.danmuguanbi,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
                     IconButton(
                       focusColor: Colors.grey.withValues(alpha: 0.2),
                       onPressed: _onSelectQuality,
@@ -357,6 +379,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   late final currentQuality = ValueNotifier(allowQualities.last);
 
   late final controller = VideoController(Player());
+  final danmakuCtl = BilibiliDanmakuWallController();
 
   FocusNode screenFocusNode = FocusNode();
   final ValueNotifier<bool> displayControl = ValueNotifier(false);
@@ -375,6 +398,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     currentQuality.dispose();
     screenFocusNode.dispose();
     controller.player.dispose();
+    danmakuCtl.dispose();
     displayControl.dispose();
     super.dispose();
   }
@@ -434,17 +458,23 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        body: Center(
-          child: SizedBox(
-            child: KeyboardListener(
-              autofocus: true,
-              focusNode: screenFocusNode,
-              onKeyEvent: _onKeyEvent,
-              child: Video(
-                controller: controller,
-                controls: (VideoState state) =>
-                    _VideoControlWidget(state, displayControl),
-              ),
+        body: KeyboardListener(
+          autofocus: true,
+          focusNode: screenFocusNode,
+          onKeyEvent: _onKeyEvent,
+          child: ValueListenableBuilder(
+            valueListenable: currentCid,
+            builder: (context, cid, child) => BilibiliDanmakuWall(
+              controller: danmakuCtl,
+              cid: cid,
+              timeline: controller.player.stream.position,
+              playing: controller.player.stream.playing,
+              child: child!,
+            ),
+            child: Video(
+              controller: controller,
+              controls: (VideoState state) =>
+                  _VideoControlWidget(state, displayControl),
             ),
           ),
         ),
@@ -467,7 +497,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       return;
     }
 
-    final step = Duration(seconds: 5);
     switch (value.logicalKey) {
       case LogicalKeyboardKey.select:
       case LogicalKeyboardKey.enter:
@@ -482,21 +511,32 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         _onBack();
         break;
       case LogicalKeyboardKey.arrowLeft:
-        if (controller.player.state.position < step) {
-          controller.player.seek(Duration(seconds: 0));
-        } else {
-          controller.player.seek(controller.player.state.position - step);
-        }
+        _onStepForward(false);
         break;
       case LogicalKeyboardKey.arrowRight:
-        if (controller.player.state.duration -
-                controller.player.state.position <
-            step) {
-          controller.player.seek(controller.player.state.duration);
-        } else {
-          controller.player.seek(controller.player.state.position + step);
-        }
+        _onStepForward(true);
         break;
     }
+  }
+
+  static const _step = Duration(seconds: 5);
+  static const _danmakuWaitDurationOnStep = Duration(seconds: 10);
+  void _onStepForward(bool forward) {
+    if (forward) {
+      if (controller.player.state.duration - controller.player.state.position <
+          _step) {
+        controller.player.seek(controller.player.state.duration);
+      } else {
+        controller.player.seek(controller.player.state.position + _step);
+      }
+    } else {
+      if (controller.player.state.position < _step) {
+        controller.player.seek(Duration(seconds: 0));
+      } else {
+        controller.player.seek(controller.player.state.position - _step);
+      }
+    }
+    danmakuCtl.wait(_danmakuWaitDurationOnStep);
+    danmakuCtl.clear();
   }
 }
