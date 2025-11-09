@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:bilitv/apis/bilibili/client.dart' show bilibiliHttpClient;
-import 'package:bilitv/apis/bilibili/media.dart'
-    show getVideoPlayURL, getMediaPlayInfo, MediaPlayInfo;
+import 'package:bilitv/apis/bilibili/history.dart';
+import 'package:bilitv/apis/bilibili/media.dart' show getVideoPlayURL;
 import 'package:bilitv/consts/bilibili.dart' show VideoQuality;
 import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/icons/iconfont.dart';
@@ -408,6 +408,14 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   void _onBack() {
     final now = DateTime.now();
     if (_lastBackTime != null && now.difference(_lastBackTime!).inSeconds < 2) {
+      // 若已登陆，上报播放进度
+      if (loginInfoNotifier.value.isLogin) {
+        reportPlayProgress(
+          widget.video.avid,
+          currentCid.value,
+          controller.player.state.position,
+        );
+      }
       return Navigator.of(context).pop();
     }
     _lastBackTime = now;
@@ -427,12 +435,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   Future<void> _onEpisodeChanged() async {
     MediaPlayInfo? playInfo;
-    try {
-      playInfo = await getMediaPlayInfo(
-        avid: widget.video.avid,
-        cid: currentCid.value,
-      );
-    } catch (_) {}
+    // 若已登陆，获取播放进度
+    if (loginInfoNotifier.value.isLogin) {
+      try {
+        playInfo = await getMediaPlayInfo(
+          avid: widget.video.avid,
+          cid: currentCid.value,
+        );
+      } catch (_) {}
+    }
 
     final infos = await getVideoPlayURL(
       avid: widget.video.avid,

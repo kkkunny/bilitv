@@ -101,7 +101,6 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
 
   // 拉取弹幕
   Future<void> _onPullDanmaku(int index) async {
-    print('onPullDanmaku');
     _pullDanmaku = true;
 
     final danmakuResp = await getDanmaku(widget.cid, index);
