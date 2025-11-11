@@ -5,9 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _cookieKey = 'bilibili_cookie';
 
-// debug: 是否从环境变量中读取cookie
-var _loadFromEnv = true;
-
 class LoginInfo {
   final bool isLogin;
   final int? mid;
@@ -49,7 +46,6 @@ Future<void> saveCookie(List<Cookie> cookies) async {
 Future<void> clearCookie() async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove(_cookieKey);
-  _loadFromEnv = false;
 }
 
 Future<List<Cookie>> loadCookie() async {

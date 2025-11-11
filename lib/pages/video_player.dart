@@ -9,6 +9,7 @@ import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart' as model;
 import 'package:bilitv/storages/cookie.dart';
+import 'package:bilitv/storages/settings.dart';
 import 'package:bilitv/widgets/bilibili_danmaku_wall.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -164,6 +165,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
 
   void _onDanmakuSwitchTapped() {
     pageState.danmakuCtl.enabled = !pageState.danmakuCtl.enabled;
+    Settings.setBool(Settings.pathDanmuSwitch, pageState.danmakuCtl.enabled);
   }
 
   void _onSelectQuality() {
@@ -389,6 +391,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   void initState() {
     currentCid.addListener(_onEpisodeChanged);
     currentQuality.addListener(_onQualityChange);
+    _loadSettings();
     super.initState();
     _onEpisodeChanged();
   }
@@ -402,6 +405,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     danmakuCtl.dispose();
     displayControl.dispose();
     super.dispose();
+  }
+
+  void _loadSettings() {
+    Settings.getBool(Settings.pathDanmuSwitch).then((v) {
+      danmakuCtl.enabled = v;
+    });
   }
 
   DateTime? _lastBackTime;
