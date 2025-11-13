@@ -4,6 +4,7 @@ import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
 import 'package:bilitv/storages/cookie.dart';
 import 'package:bilitv/widgets/loading.dart';
+import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -119,9 +120,7 @@ class _RecommendPageState extends State<RecommendPage> {
                   if (!loginInfoNotifier.value.isLogin) return;
 
                   addToView(avid: media.avid);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('已加入稍后再看：${media.title}')),
-                  );
+                  pushTooltipInfo(context, '已加入稍后再看：${media.title}');
                 },
               ),
             ],

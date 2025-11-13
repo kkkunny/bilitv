@@ -4,6 +4,7 @@ import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
 import 'package:bilitv/storages/cookie.dart';
 import 'package:bilitv/widgets/loading.dart';
+import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -100,9 +101,7 @@ class _ToViewPageState extends State<ToViewPage> {
                   if (!loginInfoNotifier.value.isLogin) return;
 
                   deleteToView(media.avid);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('已从稍后再看中移除：${media.title}')),
-                  );
+                  pushTooltipInfo(context, '已从稍后再看中移除：${media.title}');
                   final newVideos = _videos.toList();
                   newVideos.removeWhere((video) => video.avid == media.avid);
                   _refreshFromData(newVideos);

@@ -1,9 +1,11 @@
 import 'package:bilitv/apis/bilibili/media.dart'
     show getVideoInfo, getArchiveRelation, ArchiveRelation;
 import 'package:bilitv/apis/bilibili/rcmd.dart' show fetchRelatedVideos;
+import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/pages/video_player.dart';
+import 'package:bilitv/storages/cookie.dart' show loginInfoNotifier;
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/loading.dart';
@@ -192,7 +194,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
+            onPressed: () => pushTooltipWarning(context, '暂不支持该功能！'),
             child: Column(
               children: [
                 Expanded(
@@ -225,7 +227,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
+            onPressed: () => pushTooltipWarning(context, '暂不支持该功能！'),
             child: Column(
               children: [
                 Expanded(
@@ -261,7 +263,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
+            onPressed: () => pushTooltipWarning(context, '暂不支持该功能！'),
             child: Column(
               children: [
                 Expanded(
@@ -294,7 +296,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
+            onPressed: () => pushTooltipWarning(context, '暂不支持该功能！'),
             child: Column(
               children: [
                 Expanded(
@@ -327,7 +329,20 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
+            onPressed: () {
+              if (!loginInfoNotifier.value.isLogin) return;
+
+              setState(() {
+                widget.relation.inPlayList = !widget.relation.inPlayList;
+              });
+              if (widget.relation.inPlayList) {
+                deleteToView(widget.video.avid);
+                pushTooltipInfo(context, '已从稍后再看中移除：${widget.video.title}');
+              } else {
+                addToView(avid: widget.video.avid);
+                pushTooltipInfo(context, '已加入稍后再看：${widget.video.title}');
+              }
+            },
             child: Column(
               children: [
                 Expanded(
