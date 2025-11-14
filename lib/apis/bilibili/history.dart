@@ -78,3 +78,32 @@ Future<void> reportPlayProgress(int? avid, int cid, Duration progress) async {
     queries: queryParams,
   );
 }
+
+// 播放心跳
+Future<void> reportPlayHeartbeat({
+  int? avid,
+  String? bvid,
+  required int cid,
+  required Duration progress,
+}) async {
+  final csrf = (await loadCookie())
+      .firstWhere((c) => c.name == 'bili_jct')
+      .value;
+  Map<String, dynamic> body = {
+    'mid': loginInfoNotifier.value.mid,
+    'cid': cid,
+    'csrf': csrf,
+    'played_time': progress.inSeconds,
+  };
+  if (avid != null) {
+    body['aid'] = avid;
+  } else {
+    body['bvid'] = bvid;
+  }
+  await bilibiliRequest(
+    'POST',
+    'https://api.bilibili.com/x/click-interface/web/heartbeat',
+    contentType: Headers.formUrlEncodedContentType,
+    body: body,
+  );
+}

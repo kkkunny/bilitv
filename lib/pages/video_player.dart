@@ -388,10 +388,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   FocusNode screenFocusNode = FocusNode();
   final ValueNotifier<bool> displayControl = ValueNotifier(false);
 
+  Timer? heartbeatTimer; // 播放心跳timer
+
   @override
   void initState() {
     currentCid.addListener(_onEpisodeChanged);
     currentQuality.addListener(_onQualityChange);
+    controller.player.stream.completed.listen((v) {
+      if (v) _onPlayCompleted();
+    });
     _loadSettings();
     super.initState();
     _onEpisodeChanged();
@@ -399,6 +404,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void dispose() {
+    if (heartbeatTimer != null) heartbeatTimer!.cancel();
     currentCid.dispose();
     currentQuality.dispose();
     screenFocusNode.dispose();
@@ -418,7 +424,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   void _onBack() {
     final now = DateTime.now();
     if (_lastBackTime != null && now.difference(_lastBackTime!).inSeconds < 2) {
-      // 若已登陆，上报播放进度
+      // 上报播放进度
       if (loginInfoNotifier.value.isLogin) {
         reportPlayProgress(
           widget.video.avid,
@@ -438,7 +444,19 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   Future<void> _onEpisodeChanged() async {
-    // 上报播放开始
+    // 结束心跳
+    if (heartbeatTimer != null) {
+      heartbeatTimer!.cancel();
+    }
+    // 上报播放进度
+    if (loginInfoNotifier.value.isLogin &&
+        controller.player.state.position.inSeconds > 0) {
+      reportPlayProgress(
+        widget.video.avid,
+        currentCid.value,
+        controller.player.state.position,
+      );
+    }
     reportPlayStart(widget.video.avid, currentCid.value);
 
     MediaPlayInfo? playInfo;
@@ -464,6 +482,18 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         start: playInfo?.lastPlayTime,
       ),
     );
+
+    // 开始心跳
+    heartbeatTimer = Timer(Duration(seconds: 15), _onHeartbeat);
+  }
+
+  void _onHeartbeat() {
+    if (!loginInfoNotifier.value.isLogin) return;
+    reportPlayHeartbeat(
+      avid: widget.video.avid,
+      cid: currentCid.value,
+      progress: controller.player.state.position,
+    );
   }
 
   Future<void> _onQualityChange() async {
@@ -479,6 +509,17 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         start: controller.player.state.position,
       ),
     );
+  }
+
+  void _onPlayCompleted() {
+    // 上报播放进度
+    if (loginInfoNotifier.value.isLogin) {
+      reportPlayProgress(
+        widget.video.avid,
+        currentCid.value,
+        controller.player.state.position,
+      );
+    }
   }
 
   @override
