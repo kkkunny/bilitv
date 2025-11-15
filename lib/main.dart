@@ -1,14 +1,25 @@
+import 'dart:io';
+
 import 'package:bilitv/utils/scroll_behavior.dart';
 import 'package:flutter/material.dart' hide Page;
 import 'package:flutter/services.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:media_kit/media_kit.dart';
 import 'consts/color.dart';
 import 'pages/page.dart';
 import 'pages/splash.dart';
 
-void main() {
+Future<void> main() async {
+  // 初始化播放器
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
+
+  if (Platform.isAndroid){
+    // 设置所支持的最高刷新频率
+    await FlutterDisplayMode.setHighRefreshRate();
+  }
+
+  // 开启app
   runApp(const BiliTVApp());
 }
 
