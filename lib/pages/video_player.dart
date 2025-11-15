@@ -416,7 +416,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   void _loadSettings() {
     Settings.getBool(Settings.pathDanmuSwitch).then((v) {
-      danmakuCtl.enabled = v;
+      danmakuCtl.enabled = v ?? true;
     });
   }
 

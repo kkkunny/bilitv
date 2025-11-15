@@ -12,8 +12,8 @@ class Settings {
     prefs.setBool(_getKey(path), v);
   }
 
-  static Future<bool> getBool(List<String> path) async {
+  static Future<bool?> getBool(List<String> path) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_getKey(path))!;
+    return prefs.getBool(_getKey(path));
   }
 }
