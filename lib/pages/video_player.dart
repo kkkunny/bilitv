@@ -14,6 +14,7 @@ import 'package:bilitv/widgets/bilibili_danmaku_wall.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:toastification/toastification.dart';
@@ -154,13 +155,8 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
 
   @override
   void initState() {
-    widget.displayListener.addListener(_onDisplayChanged);
     player.stream.completed.listen(_onCompleted);
     super.initState();
-  }
-
-  void _onDisplayChanged() {
-    setState(() {});
   }
 
   void _onDanmakuSwitchTapped() {
@@ -239,126 +235,129 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.displayListener.value) {
-      return Container();
-    }
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.only(left: 20, right: 20, top: 20),
-          child: Text(
-            pageState.widget.video.title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
+    return ValueListenableBuilder(
+      valueListenable: widget.displayListener,
+      builder: (context, _, child) {
+        return widget.displayListener.value ? child! : Container();
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 20, right: 20, top: 20),
+            child: Text(
+              pageState.widget.video.title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
-            overflow: TextOverflow.ellipsis,
           ),
-        ),
-        Container(
-          color: Colors.black.withValues(alpha: 0.5),
-          padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
-          child: FocusScope(
-            autofocus: true,
-            child: Column(
-              children: [
-                StreamBuilder<Duration>(
-                  stream: player.stream.position,
-                  builder: (context, snap) {
-                    return ProgressBar(
-                      progress: snap.data ?? player.state.position,
-                      buffered: player.state.buffer,
-                      total: player.state.duration,
-                      progressBarColor: lightPink,
-                      bufferedBarColor: lightPink.withValues(alpha: 0.3),
-                      thumbColor: lightPink,
-                      timeLabelTextStyle: TextStyle(),
-                    );
-                  },
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      focusColor: Colors.grey.withValues(alpha: 0.2),
-                      onPressed: _onPrevTapped,
-                      icon: Icon(
-                        Icons.skip_previous_rounded,
-                        color: Colors.white,
-                        size: 44,
-                      ),
-                    ),
-                    StreamBuilder<bool>(
-                      stream: player.stream.playing,
-                      builder: (context, playing) => IconButton(
-                        autofocus: true,
+          Container(
+            color: Colors.black.withValues(alpha: 0.5),
+            padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
+            child: FocusScope(
+              autofocus: true,
+              child: Column(
+                children: [
+                  StreamBuilder<Duration>(
+                    stream: player.stream.position,
+                    builder: (context, snap) {
+                      return ProgressBar(
+                        progress: snap.data ?? player.state.position,
+                        buffered: player.state.buffer,
+                        total: player.state.duration,
+                        progressBarColor: lightPink,
+                        bufferedBarColor: lightPink.withValues(alpha: 0.3),
+                        thumbColor: lightPink,
+                        timeLabelTextStyle: TextStyle(),
+                      );
+                    },
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
                         focusColor: Colors.grey.withValues(alpha: 0.2),
-                        onPressed: _onPlayOrPauseTapped,
+                        onPressed: _onPrevTapped,
                         icon: Icon(
-                          playing.data == false
-                              ? Icons.play_arrow_rounded
-                              : Icons.pause_rounded,
+                          Icons.skip_previous_rounded,
                           color: Colors.white,
                           size: 44,
                         ),
                       ),
-                    ),
-                    IconButton(
-                      focusColor: Colors.grey.withValues(alpha: 0.2),
-                      onPressed: _onNextTapped,
-                      icon: Icon(
-                        Icons.skip_next_rounded,
-                        color: Colors.white,
-                        size: 44,
-                      ),
-                    ),
-                    Spacer(),
-                    IconButton(
-                      focusColor: Colors.grey.withValues(alpha: 0.2),
-                      onPressed: _onDanmakuSwitchTapped,
-                      icon: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 5.0),
-                        child: ValueListenableBuilder(
-                          valueListenable: pageState.danmakuCtl.enableNotifier,
-                          builder: (context, isEnabled, _) => Icon(
-                            isEnabled
-                                ? IconFont.danmukai
-                                : IconFont.danmuguanbi,
+                      StreamBuilder<bool>(
+                        stream: player.stream.playing,
+                        builder: (context, playing) => IconButton(
+                          autofocus: true,
+                          focusColor: Colors.grey.withValues(alpha: 0.2),
+                          onPressed: _onPlayOrPauseTapped,
+                          icon: Icon(
+                            playing.data == false
+                                ? Icons.play_arrow_rounded
+                                : Icons.pause_rounded,
                             color: Colors.white,
+                            size: 44,
                           ),
                         ),
                       ),
-                    ),
-                    IconButton(
-                      focusColor: Colors.grey.withValues(alpha: 0.2),
-                      onPressed: _onSelectQuality,
-                      icon: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 5.0),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.high_quality_rounded,
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: 5),
-                            Text(
-                              pageState.currentQuality.value.name,
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
+                      IconButton(
+                        focusColor: Colors.grey.withValues(alpha: 0.2),
+                        onPressed: _onNextTapped,
+                        icon: Icon(
+                          Icons.skip_next_rounded,
+                          color: Colors.white,
+                          size: 44,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      Spacer(),
+                      IconButton(
+                        focusColor: Colors.grey.withValues(alpha: 0.2),
+                        onPressed: _onDanmakuSwitchTapped,
+                        icon: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 5.0),
+                          child: ValueListenableBuilder(
+                            valueListenable:
+                                pageState.danmakuCtl.enableNotifier,
+                            builder: (context, isEnabled, _) => Icon(
+                              isEnabled
+                                  ? IconFont.danmukai
+                                  : IconFont.danmuguanbi,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        focusColor: Colors.grey.withValues(alpha: 0.2),
+                        onPressed: _onSelectQuality,
+                        icon: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 5.0),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.high_quality_rounded,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: 5),
+                              Text(
+                                pageState.currentQuality.value.name,
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -420,6 +419,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   DateTime? _lastBackTime;
+
   void _onBack() {
     final now = DateTime.now();
     if (_lastBackTime != null && now.difference(_lastBackTime!).inSeconds < 2) {
@@ -431,7 +431,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
           controller.player.state.position,
         );
       }
-      return Navigator.of(context).pop();
+      return Get.back();
     }
     _lastBackTime = now;
 
@@ -585,6 +585,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   static const _step = Duration(seconds: 5);
   static const _danmakuWaitDurationOnStep = Duration(seconds: 10);
+
   void _onStepForward(bool forward) {
     if (forward) {
       if (controller.player.state.duration - controller.player.state.position <

@@ -3,6 +3,7 @@ import 'package:bilitv/models/video.dart';
 import 'package:bilitv/widgets/video_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 
 class _VideoGridViewController
     with AnimatedInfinitePaginationController<MediaCardInfo> {
@@ -39,7 +40,9 @@ class VideoGridViewProvider {
   operator [](int index) => _videos[index];
 
   int get length => _videos.length;
+
   bool get isEmpty => _videos.isEmpty;
+
   bool get isNotEmpty => _videos.isNotEmpty;
 
   void addAll(Iterable<MediaCardInfo> iterable) {
@@ -143,7 +146,7 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
                 MaterialButton(
                   autofocus: index == 0,
                   onPressed: () {
-                    Navigator.of(bottomCtx).pop();
+                    Get.back();
                     item.action(media);
                   },
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),

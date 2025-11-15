@@ -33,9 +33,10 @@ class FixedLineAdaptiveText extends StatelessWidget {
         final base = style ?? DefaultTextStyle.of(context).style;
         final resolved = base.copyWith(fontSize: fs, height: lineHeight);
 
-        final media = MediaQuery.of(context);
         return MediaQuery(
-          data: media.copyWith(textScaler: TextScaler.linear(1.0)),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(1.0)),
           child: Text(
             text,
             maxLines: line,

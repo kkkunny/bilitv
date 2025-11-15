@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bilitv/apis/bilibili/rcmd.dart';
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
@@ -6,8 +8,8 @@ import 'package:bilitv/storages/cookie.dart';
 import 'package:bilitv/widgets/loading.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class RecommendPage extends StatefulWidget {
   final ValueNotifier<int> _tappedListener;
@@ -38,6 +40,7 @@ class _RecommendPageState extends State<RecommendPage> {
   }
 
   DateTime? _lastRefresh;
+
   void _onRefresh() {
     if (_isLoading.value) return;
 
@@ -58,16 +61,12 @@ class _RecommendPageState extends State<RecommendPage> {
   }
 
   void _onVideoTapped(_, MediaCardInfo video) {
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (context) => VideoDetailPageWrap(avid: video.avid),
-      ),
-    );
+    Get.to(VideoDetailPageWrap(avid: video.avid));
   }
 
   bool _isFetchingMore = false;
   DateTime? _lastFetchMore;
+
   Future<void> _onVideoFocused(int index, MediaCardInfo _) async {
     final lastLine = (index / 5).floor() == ((_videos.length - 1) / 5).floor();
     if (!lastLine || _isFetchingMore) return;

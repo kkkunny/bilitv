@@ -1,17 +1,19 @@
 import 'package:bilitv/icons/iconfont.dart';
+import 'package:bilitv/pages/recommend.dart';
 import 'package:bilitv/pages/to_view.dart';
 import 'package:bilitv/pages/user.dart';
-import 'package:bilitv/pages/recommend.dart';
 import 'package:bilitv/storages/cookie.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/keep_alive.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class _PageItem {
   final IconData icon;
   late final Widget child;
   final onTappedListener = ValueNotifier(0);
+
   _PageItem({
     required this.icon,
     required Widget Function(ValueNotifier<int>) child,
@@ -120,9 +122,7 @@ class _PageState extends State<Page> with SingleTickerProviderStateMixin {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          vertical: MediaQuery.of(context).size.height / 4,
-                        ),
+                        padding: EdgeInsets.symmetric(vertical: Get.height / 4),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: _tabs

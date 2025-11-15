@@ -1,6 +1,8 @@
 import 'package:bilitv/utils/scroll_behavior.dart';
 import 'package:flutter/material.dart' hide Page;
 import 'package:flutter_displaymode/flutter_displaymode.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:get/get_navigation/src/routes/get_route.dart';
 import 'package:media_kit/media_kit.dart';
 
 import 'consts/color.dart';
@@ -24,7 +26,7 @@ class BiliTVApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: '哔哩哔哩TV',
       theme: ThemeData(
         useMaterial3: true,
@@ -38,10 +40,10 @@ class BiliTVApp extends StatelessWidget {
         // ),
       ),
       initialRoute: '/',
-      routes: {
-        '/': (ctx) => const SplashPage(),
-        '/home': (ctx) => const Page(),
-      },
+      getPages: [
+        GetPage(name: '/', page: () => const SplashPage()),
+        GetPage(name: '/home', page: () => const Page()),
+      ],
       debugShowCheckedModeBanner: false,
       scrollBehavior: NoThumbScrollBehavior().copyWith(scrollbars: false),
     );

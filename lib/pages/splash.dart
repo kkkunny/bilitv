@@ -1,8 +1,8 @@
-import 'package:bilitv/apis/bilibili/media.dart' show getDanmaku;
 import 'package:bilitv/apis/bilibili/user.dart' show getMySelfInfo;
 import 'package:bilitv/consts/assets.dart';
 import 'package:bilitv/storages/cookie.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -22,7 +22,7 @@ class _SplashPageState extends State<SplashPage> {
     await _onAppInit();
 
     if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed('/home');
+    Get.offAllNamed('/home');
   }
 
   static Future<void> _onAppInit() async {

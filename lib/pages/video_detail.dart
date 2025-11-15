@@ -13,6 +13,7 @@ import 'package:bilitv/widgets/text.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class VideoDetailPageWrap extends StatelessWidget {
   final int? avid;
@@ -84,22 +85,11 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   void _onCoverTapped() {
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (context) =>
-            VideoPlayerPage(video: widget.video, cid: _currentEpisodeCid.value),
-      ),
-    );
+    Get.to(VideoPlayerPage(video: widget.video, cid: _currentEpisodeCid.value));
   }
 
   void _onVideoTapped(int _, MediaCardInfo video) {
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (context) => VideoDetailPageWrap(avid: video.avid),
-      ),
-    );
+    Get.to(VideoDetailPageWrap(avid: video.avid));
   }
 
   @override
