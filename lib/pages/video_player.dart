@@ -105,7 +105,7 @@ class _SelectQualityWidgetState extends State<_SelectQualityWidget> {
   }
 
   KeyEventResult _onKeyEvent(focusNode, event) {
-    if (event is KeyUpEvent) {
+    if (event is! KeyUpEvent) {
       return KeyEventResult.ignored;
     }
 
@@ -420,7 +420,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   DateTime? _lastBackTime;
 
-  void _onBack() {
+  void _onBack(didPop) {
+    if (didPop || !mounted || displayControl.value) return;
+
     final now = DateTime.now();
     if (_lastBackTime != null && now.difference(_lastBackTime!).inSeconds < 2) {
       // 上报播放进度
@@ -525,6 +527,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
+      onPopInvoked: _onBack,
       child: Scaffold(
         body: KeyboardListener(
           autofocus: true,
@@ -551,14 +554,17 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   void _onKeyEvent(KeyEvent value) {
-    if (value.runtimeType == KeyUpEvent) {
+    if (value is! KeyUpEvent) {
       return;
     }
 
     if (displayControl.value) {
       switch (value.logicalKey) {
         case LogicalKeyboardKey.goBack:
-          displayControl.value = false;
+          // 延迟50ms是为了确保_onBack先被调用，这样_onBack里才能拿到此时的displayControl.value的值而不是这里修改后的
+          Future.delayed(Duration(milliseconds: 10)).then((_) {
+            displayControl.value = false;
+          });
           break;
       }
       return;
@@ -570,9 +576,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         break;
       case LogicalKeyboardKey.contextMenu:
         displayControl.value = true;
-        break;
-      case LogicalKeyboardKey.goBack:
-        _onBack();
         break;
       case LogicalKeyboardKey.arrowLeft:
         _onStepForward(false);
