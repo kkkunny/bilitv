@@ -380,7 +380,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   final allowQualities = VideoQuality.values
       .where((e) => !e.needLogin || loginInfoNotifier.value.isLogin)
       .toList();
-  late final currentQuality = ValueNotifier(allowQualities.last);
+  late final currentQuality = ValueNotifier(VideoQuality.vq1080P);
 
   late final controller = VideoController(Player());
   final danmakuCtl = BilibiliDanmakuWallController();
