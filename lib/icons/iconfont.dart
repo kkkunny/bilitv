@@ -5,12 +5,18 @@ import 'package:flutter/material.dart';
 
 class IconFont {
   static const String _family = 'iconfont';
-  
+
   IconFont._();
-  
-  static const IconData playlist = IconData(0xe6d2, fontFamily: _family); // playlist
+
+  static const IconData playlist = IconData(
+    0xe6d2,
+    fontFamily: _family,
+  ); // playlist
   static const IconData danmukai = IconData(0xe8dc, fontFamily: _family); // 弹幕开
-  static const IconData danmuguanbi = IconData(0xe600, fontFamily: _family); // 弹幕关闭-copy
+  static const IconData danmuguanbi = IconData(
+    0xe600,
+    fontFamily: _family,
+  ); // 弹幕关闭-copy
   static const IconData share = IconData(0xe63e, fontFamily: _family); // share
   static const IconData coin = IconData(0xe615, fontFamily: _family); // coin
 }
@@ -24,7 +30,7 @@ class _PreviewIcon {
 }
 
 class IconFontPreview extends StatelessWidget {
-  const IconFontPreview({Key? key}) : super(key: key);
+  const IconFontPreview({super.key});
 
   static const iconList = <_PreviewIcon>[
     _PreviewIcon(IconFont.playlist, "playlist", "playlist"),
@@ -37,9 +43,7 @@ class IconFontPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('IconFont'),
-      ),
+      appBar: AppBar(title: const Text('IconFont')),
       body: GridView.count(
         shrinkWrap: true,
         crossAxisCount: 4,
@@ -55,8 +59,18 @@ class IconFontPreview extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 8),
                   child: Icon(e.icon),
                 ),
-                Text(e.name, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis, maxLines: 1),
-                Text(e.propName, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis, maxLines: 1),
+                Text(
+                  e.name,
+                  style: const TextStyle(fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                Text(
+                  e.propName,
+                  style: const TextStyle(fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
               ],
             ),
           );

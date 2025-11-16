@@ -22,7 +22,6 @@ class BilibiliDanmakuWallController {
   late final Function() _clearFunc;
 
   void clear() {
-    if (_clearFunc == null) return;
     _clearFunc();
   }
 
@@ -30,7 +29,6 @@ class BilibiliDanmakuWallController {
   late final Function(Duration duration) _waitFunc;
 
   void wait(Duration duration) {
-    if (_waitFunc == null) return;
     _waitFunc(duration);
   }
 }
