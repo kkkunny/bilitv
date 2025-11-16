@@ -1,8 +1,7 @@
 import 'package:bilitv/utils/scroll_behavior.dart';
 import 'package:flutter/material.dart' hide Page;
 import 'package:flutter_displaymode/flutter_displaymode.dart';
-import 'package:get/get_navigation/src/root/get_material_app.dart';
-import 'package:get/get_navigation/src/routes/get_route.dart';
+import 'package:get/get.dart';
 import 'package:media_kit/media_kit.dart';
 
 import 'consts/color.dart';
@@ -14,7 +13,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
 
-  // 设置所支持的最高刷新频率
+  // 设置所支持的最高刷新率
   await FlutterDisplayMode.setHighRefreshRate();
 
   // 开启app
@@ -32,6 +31,7 @@ class BiliTVApp extends StatelessWidget {
         useMaterial3: true,
         canvasColor: lightPink,
         scaffoldBackgroundColor: lightPink,
+        applyElevationOverlayColor: true,
         focusColor: Colors.blue.shade100,
         hoverColor: Colors.blue.shade100,
         // colorScheme: ColorScheme.fromSeed(

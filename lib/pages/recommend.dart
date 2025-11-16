@@ -56,7 +56,6 @@ class _RecommendPageState extends State<RecommendPage> {
       count: pageVideoCount,
       removeAvids: _provider.toList().map((e) => e.avid).toList(),
     );
-
     return (videos, true);
   }
 

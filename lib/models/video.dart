@@ -76,6 +76,26 @@ class MediaCardInfo {
     );
   }
 
+  factory MediaCardInfo.fromToViewJson(Map<String, dynamic> json) {
+    return MediaCardInfo(
+      type: MediaType.video,
+      avid: json['aid'],
+      bvid: json['bvid'],
+      cid: json['cid'],
+      title: json['title'],
+      cover: json['pic'],
+      duration: Duration(seconds: json['duration']),
+      progress: json['progress'] == null ? null : PlayProgress.fromJson(json),
+      stat: Stat.fromJson(json['stat'] ?? {}),
+      userMid: json['owner']['mid'],
+      userName: json['owner']['name'],
+      userAvatar: json['owner']['face'],
+      publishTime: DateTime.fromMillisecondsSinceEpoch(
+        json['pubdate'] * Duration.millisecondsPerSecond,
+      ),
+    );
+  }
+
   factory MediaCardInfo.fromHistoryJson(Map<String, dynamic> json) {
     return MediaCardInfo(
       type: json['goto'] == 'av'

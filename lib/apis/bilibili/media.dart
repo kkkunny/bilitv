@@ -4,6 +4,7 @@ import 'package:bilitv/storages/cookie.dart' show loadCookie;
 import 'package:dio/dio.dart';
 
 import 'client.dart';
+import 'dynamic.dart';
 
 // 获取视频播放地址
 Future<List<VideoPlayInfo>> getVideoPlayURL({
@@ -103,22 +104,39 @@ Future<DmSegMobileReply> getDanmaku(int cid, int segmentIndex) async {
   return DmSegMobileReply.fromBuffer(response.data);
 }
 
+// // 点赞
+// // 该接口会报-403 账号异常,操作失败 https://github.com/SocialSisterYi/bilibili-API-collect/issues/1251
+// Future<void> likeMedia({int? avid, String? bvid, required bool like}) async {
+//   final csrf = (await loadCookie())
+//       .firstWhere((c) => c.name == 'bili_jct')
+//       .value;
+//   Map<String, dynamic> body = {'like': like ? 1 : 2, 'csrf': csrf};
+//   if (avid != null) {
+//     body['aid'] = avid;
+//   } else {
+//     body['bvid'] = bvid;
+//   }
+//   await bilibiliRequest(
+//     'POST',
+//     'https://api.bilibili.com/x/web-interface/archive/like',
+//     contentType: Headers.formUrlEncodedContentType,
+//     body: body,
+//   );
+// }
+
 // 点赞
-Future<void> likeMedia({int? avid, String? bvid, required bool like}) async {
+Future<void> likeMedia(int avid, {required bool like}) async {
+  final dynamicId = await avidToDynamicId(avid);
+
   final csrf = (await loadCookie())
       .firstWhere((c) => c.name == 'bili_jct')
       .value;
-  Map<String, dynamic> body = {'like': like ? 1 : 2, 'csrf': csrf};
-  if (avid != null) {
-    body['aid'] = avid;
-  } else {
-    body['bvid'] = bvid;
-  }
   await bilibiliRequest(
     'POST',
-    'https://api.bilibili.com/x/web-interface/archive/like',
-    contentType: Headers.formUrlEncodedContentType,
-    body: body,
+    "https://api.bilibili.com/x/dynamic/feed/dyn/thumb",
+    contentType: Headers.jsonContentType,
+    queries: {'csrf': csrf},
+    body: {'dyn_id_str': dynamicId, 'up': like ? 1 : 2},
   );
 }
 
@@ -127,14 +145,14 @@ Future<void> insertCoin({
   int? avid,
   String? bvid,
   int count = 1,
-  bool selectLike = false,
+  bool like = false,
 }) async {
   final csrf = (await loadCookie())
       .firstWhere((c) => c.name == 'bili_jct')
       .value;
   Map<String, dynamic> body = {
     'multiply': count,
-    'select_like': selectLike ? 1 : 0,
+    'select_like': like ? 1 : 0,
     'csrf': csrf,
   };
   if (avid != null) {

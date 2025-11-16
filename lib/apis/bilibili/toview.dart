@@ -5,13 +5,14 @@ import 'package:dio/dio.dart' show Headers;
 import 'client.dart';
 
 // 获取稍后再看列表
-Future<List<MediaCardInfo>> listToView() async {
+Future<List<MediaCardInfo>> listToView({int count = 30, int page = 1}) async {
   final data = await bilibiliRequest(
     'GET',
-    'https://api.bilibili.com/x/v2/history/toview',
+    'https://api.bilibili.com/x/v2/history/toview/web',
+    queries: {'pn': page, 'ps': count, 'viewed': 0, 'asc': false},
   );
   return ((data['list'] ?? []) as List<dynamic>)
-      .map((item) => MediaCardInfo.fromJson(item))
+      .map((item) => MediaCardInfo.fromToViewJson(item))
       .toList();
 }
 

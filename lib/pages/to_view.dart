@@ -21,20 +21,27 @@ class ToViewPage extends StatefulWidget {
 }
 
 class _ToViewPageState extends State<ToViewPage> {
+  int page = 0;
+  final pageVideoCount = 20;
   final _provider = VideoGridViewProvider();
 
   @override
   void initState() {
-    widget._tappedListener.addListener(_provider.refresh);
+    widget._tappedListener.addListener(_onRefresh);
     _provider.onLoad = _onLoad;
     super.initState();
   }
 
   @override
   void dispose() {
-    widget._tappedListener.removeListener(_provider.refresh);
+    widget._tappedListener.removeListener(_onRefresh);
     super.dispose();
     _provider.dispose();
+  }
+
+  Future<void> _onRefresh() async {
+    page = 0;
+    await _provider.refresh();
   }
 
   Future<(List<MediaCardInfo>, bool)> _onLoad({
@@ -44,13 +51,10 @@ class _ToViewPageState extends State<ToViewPage> {
       return ([] as List<MediaCardInfo>, false);
     }
 
-    final videos = await listToView();
-    return (videos, false);
-  }
+    page++;
 
-  Future<void> _refreshFromData(List<MediaCardInfo> medias) async {
-    _provider.clear();
-    _provider.addAll(medias);
+    final videos = await listToView(page: page, count: pageVideoCount);
+    return (videos, false);
   }
 
   void _onVideoTapped(_, MediaCardInfo video) {
@@ -73,9 +77,11 @@ class _ToViewPageState extends State<ToViewPage> {
 
               deleteToView(media.avid);
               pushTooltipInfo(context, '已从稍后再看中移除：${media.title}');
-              final newVideos = _provider.toList();
-              newVideos.removeWhere((video) => video.avid == media.avid);
-              _refreshFromData(newVideos);
+
+              // 避免服务器主从延迟
+              Future.delayed(const Duration(seconds: 1), () {
+                _onRefresh();
+              });
             },
           ),
         ],

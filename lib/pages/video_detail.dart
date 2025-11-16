@@ -1,5 +1,6 @@
+import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/apis/bilibili/media.dart'
-    show getVideoInfo, getArchiveRelation, ArchiveRelation;
+    show getVideoInfo, getArchiveRelation, ArchiveRelation, likeMedia;
 import 'package:bilitv/apis/bilibili/recommend.dart' show fetchRelatedVideos;
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/icons/iconfont.dart';
@@ -78,13 +79,24 @@ class VideoDetailPage extends StatefulWidget {
 }
 
 class _VideoDetailPageState extends State<VideoDetailPage> {
-  late final _currentEpisodeCid = ValueNotifier(widget.video.cid);
-  final _relatedVideosProvider = VideoGridViewProvider();
+  late final _currentEpisodeCid = ValueNotifier(widget.video.cid); // 当前分P
+  final _relatedVideosProvider = VideoGridViewProvider(); // 相关视频提供方
+  late final ValueNotifier<bool> _like = ValueNotifier(
+    widget.relation.like,
+  ); // 点赞
 
   @override
   void initState() {
     _relatedVideosProvider.addAll(widget.relatedVideos);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _currentEpisodeCid.dispose();
+    _relatedVideosProvider.dispose();
+    _like.dispose();
   }
 
   void _onCoverTapped() {
@@ -187,18 +199,40 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            onPressed: () => pushTooltipWarning(context, '暂不支持该功能！'),
+            onPressed: () =>
+                likeMedia(widget.video.avid, like: !widget.relation.like).then(
+                  (_) {
+                    if (!mounted) return;
+                    pushTooltipInfo(
+                      context,
+                      '${widget.relation.like ? '取消' : ''}点赞成功！',
+                    );
+                    widget.relation.like = !widget.relation.like;
+                    _like.value = widget.relation.like;
+                  },
+                  onError: (e) {
+                    if (!mounted) return;
+                    if (e is BilibiliError) {
+                      pushTooltipError(context, e.message);
+                    } else {
+                      pushTooltipError(context, '未知的错误');
+                    }
+                  },
+                ),
             child: Column(
               children: [
                 Expanded(
                   flex: 2,
                   child: FittedBox(
                     fit: BoxFit.contain,
-                    child: Icon(
-                      Icons.thumb_up_rounded,
-                      color: widget.relation.like
-                          ? Colors.pinkAccent
-                          : Colors.grey,
+                    child: ValueListenableBuilder(
+                      valueListenable: _like,
+                      builder: (context, like, _) {
+                        return Icon(
+                          Icons.thumb_up_rounded,
+                          color: like ? Colors.pinkAccent : Colors.grey,
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -220,7 +254,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            onPressed: () => pushTooltipWarning(context, '暂不支持该功能！'),
+            onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
             child: Column(
               children: [
                 Expanded(
@@ -256,7 +290,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            onPressed: () => pushTooltipWarning(context, '暂不支持该功能！'),
+            onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
             child: Column(
               children: [
                 Expanded(
@@ -289,7 +323,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            onPressed: () => pushTooltipWarning(context, '暂不支持该功能！'),
+            onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
             child: Column(
               children: [
                 Expanded(
