@@ -32,7 +32,7 @@ jobs:
       - name: Create release drafter
         uses: softprops/action-gh-release@v2.4.2
         env:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
           draft: true
           body: |
             新功能：
