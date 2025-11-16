@@ -1,0 +1,46 @@
+name: Release Drafter
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create_release_drafter:
+    permissions:
+      contents: write
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2.21.0
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --split-per-abi
+
+      - run: mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk $APP_NAME-${{ github.ref }}-arm64-v8a.apk
+      - run: mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk $APP_NAME-${{ github.ref }}-armeabi-v7a.apk
+      - run: mv build/app/outputs/flutter-apk/app-x86_64-release.apk $APP_NAME-${{ github.ref }}-x86_64.apk
+
+      - name: Create release drafter
+        uses: softprops/action-gh-release@v2.4.2
+        env:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
+          body: |
+            新功能：
+
+            功能优化：
+            
+            Bug Fixes：
+          files: |
+            $APP_NAME-${{ github.ref }}-arm64-v8a.apk
+            $APP_NAME-${{ github.ref }}-armeabi-v7a.apk
+            $APP_NAME-${{ github.ref }}-x86_64.apk
