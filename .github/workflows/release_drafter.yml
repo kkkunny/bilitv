@@ -18,6 +18,9 @@ jobs:
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2.21.0
+        with:
+          channel: stable
+          flutter-version: ${{ vars.FLUTTER_VERSION }}
 
       - name: Install dependencies
         run: flutter pub get
@@ -25,9 +28,9 @@ jobs:
       - name: Build APK
         run: flutter build apk --split-per-abi
 
-      - run: mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk $APP_NAME-${{ github.ref }}-arm64-v8a.apk
-      - run: mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk $APP_NAME-${{ github.ref }}-armeabi-v7a.apk
-      - run: mv build/app/outputs/flutter-apk/app-x86_64-release.apk $APP_NAME-${{ github.ref }}-x86_64.apk
+      - run: mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ${{ vars.APP_NAME }}-${{ github.ref_name }}-arm64-v8a.apk
+      - run: mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ${{ vars.APP_NAME }}-${{ github.ref_name }}-armeabi-v7a.apk
+      - run: mv build/app/outputs/flutter-apk/app-x86_64-release.apk ${{ vars.APP_NAME }}-${{ github.ref_name }}-x86_64.apk
 
       - name: Create release drafter
         uses: softprops/action-gh-release@v2.4.2
@@ -41,6 +44,6 @@ jobs:
             
             Bug Fixes：
           files: |
-            $APP_NAME-${{ github.ref }}-arm64-v8a.apk
-            $APP_NAME-${{ github.ref }}-armeabi-v7a.apk
-            $APP_NAME-${{ github.ref }}-x86_64.apk
+            ${{ vars.APP_NAME }}-${{ github.ref_name }}-arm64-v8a.apk
+            ${{ vars.APP_NAME }}-${{ github.ref_name }}-armeabi-v7a.apk
+            ${{ vars.APP_NAME }}-${{ github.ref_name }}-x86_64.apk
