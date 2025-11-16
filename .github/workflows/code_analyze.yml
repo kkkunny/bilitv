@@ -1,17 +1,22 @@
-name: CodeAnalyze
+name: Code Analyze
 
 on:
   pull_request:
     branches: [ "master" ]
 
 jobs:
-  build:
+  code_analyse:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Clone repository
+        uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2.14.0
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2.21.0
+        with:
+          channel: stable
+          flutter-version: ${{ vars.FLUTTER_VERSION }}
 
       - name: Install dependencies
         run: flutter pub get
