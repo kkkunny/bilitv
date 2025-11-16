@@ -34,9 +34,10 @@ jobs:
 
       - name: Create release drafter
         uses: softprops/action-gh-release@v2.4.2
-        env:
+        with:
           token: ${{ secrets.GH_TOKEN }}
           draft: true
+          make_latest: false
           body: |
             新功能：
 
