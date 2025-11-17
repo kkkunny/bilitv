@@ -55,6 +55,7 @@ dependencies:
   canvas_danmaku: ^0.2.7 # 弹幕绘制
   flutter_displaymode: ^0.7.0 # 高刷
   get: ^4.7.2 # 路由
+  logger: ^2.6.2 # 日志
 
 dev_dependencies:
   flutter_test:

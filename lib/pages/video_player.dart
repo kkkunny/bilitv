@@ -19,55 +19,30 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:toastification/toastification.dart';
 
+const _step = Duration(seconds: 5);
+const _danmakuWaitDuration = Duration(seconds: 10);
+
 // 清晰度选择组件
-class _SelectQualityWidget extends StatefulWidget {
+class _SelectQualityWidget extends StatelessWidget {
   final OverlayEntry overlayEntry;
   final _VideoPlayerPageState pageState;
 
   const _SelectQualityWidget(this.overlayEntry, this.pageState);
 
-  @override
-  State<_SelectQualityWidget> createState() => _SelectQualityWidgetState();
-}
-
-class _SelectQualityWidgetState extends State<_SelectQualityWidget> {
-  late List<FocusNode> qualityFocusNodes = widget.pageState.allowQualities
-      .map((e) => FocusNode())
-      .toList();
-
-  @override
-  void initState() {
-    super.initState();
-    final currentQualityIndex = widget.pageState.allowQualities.indexOf(
-      widget.pageState.currentQuality.value,
-    );
-    qualityFocusNodes[currentQualityIndex].requestFocus();
-  }
-
-  @override
-  void dispose() {
-    for (var e in qualityFocusNodes) {
-      e.dispose();
-    }
-    super.dispose();
-  }
-
   void _onSelectQuality(VideoQuality quality) {
-    widget.pageState.currentQuality.value = quality;
-    widget.overlayEntry.remove();
+    pageState.currentQuality.value = quality;
+    overlayEntry.remove();
   }
 
   @override
   Widget build(BuildContext context) {
-    int index = 0;
-    final selects = widget.pageState.allowQualities
+    final selects = pageState.allowQualities
         .map(
           (e) => Container(
             padding: EdgeInsets.symmetric(vertical: 4),
             width: 320,
             child: ElevatedButton(
-              autofocus: e == widget.pageState.currentQuality.value,
-              focusNode: qualityFocusNodes[index++],
+              autofocus: e == pageState.currentQuality.value,
               onPressed: () => _onSelectQuality(e),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white10,
@@ -96,43 +71,11 @@ class _SelectQualityWidgetState extends State<_SelectQualityWidget> {
           padding: EdgeInsets.all(24),
           child: FocusScope(
             autofocus: true,
-            onKeyEvent: _onKeyEvent,
             child: Column(mainAxisSize: MainAxisSize.min, children: children),
           ),
         ),
       ),
     );
-  }
-
-  KeyEventResult _onKeyEvent(focusNode, event) {
-    if (event is! KeyUpEvent) {
-      return KeyEventResult.ignored;
-    }
-
-    switch (event.logicalKey) {
-      case LogicalKeyboardKey.goBack:
-        widget.overlayEntry.remove();
-        return KeyEventResult.handled;
-      case LogicalKeyboardKey.arrowUp:
-        final focusIndex = qualityFocusNodes.indexWhere((e) => e.hasFocus);
-        if (focusIndex > 0) {
-          FocusScope.of(
-            context,
-          ).requestFocus(qualityFocusNodes[focusIndex - 1]);
-          return KeyEventResult.handled;
-        }
-        break;
-      case LogicalKeyboardKey.arrowDown:
-        final focusIndex = qualityFocusNodes.indexWhere((e) => e.hasFocus);
-        if (focusIndex < qualityFocusNodes.length - 1) {
-          FocusScope.of(
-            context,
-          ).requestFocus(qualityFocusNodes[focusIndex + 1]);
-          return KeyEventResult.handled;
-        }
-        break;
-    }
-    return KeyEventResult.ignored;
   }
 }
 
@@ -459,6 +402,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       );
     }
     reportPlayStart(widget.video.avid, currentCid.value);
+    // 暂停弹幕
+    final danmakuEnabled = danmakuCtl.enabled;
+    danmakuCtl.enabled = false;
 
     MediaPlayInfo? playInfo;
     // 若已登陆，获取播放进度
@@ -486,6 +432,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
     // 开始心跳
     heartbeatTimer = Timer(Duration(seconds: 15), _onHeartbeat);
+    // 恢复弹幕
+    danmakuCtl.enabled = danmakuEnabled;
   }
 
   void _onHeartbeat() {
@@ -498,6 +446,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   Future<void> _onQualityChange() async {
+    // 暂停弹幕
+    final danmakuEnabled = danmakuCtl.enabled;
+    danmakuCtl.enabled = false;
+
     final infos = await getVideoPlayURL(
       avid: widget.video.avid,
       cid: currentCid.value,
@@ -510,6 +462,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         start: controller.player.state.position,
       ),
     );
+
+    // 恢复弹幕
+    danmakuCtl.enabled = danmakuEnabled;
   }
 
   void _onPlayCompleted() {
@@ -590,9 +545,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     }
   }
 
-  static const _step = Duration(seconds: 5);
-  static const _danmakuWaitDurationOnStep = Duration(seconds: 10);
-
   void _onStepForward(bool forward) {
     if (forward) {
       if (controller.player.state.duration - controller.player.state.position <
@@ -608,7 +560,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         controller.player.seek(controller.player.state.position - _step);
       }
     }
-    danmakuCtl.wait(_danmakuWaitDurationOnStep);
+    danmakuCtl.wait(_danmakuWaitDuration);
     danmakuCtl.clear();
   }
 }

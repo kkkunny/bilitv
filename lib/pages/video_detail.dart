@@ -1,11 +1,6 @@
 import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/apis/bilibili/media.dart'
-    show
-        getVideoInfo,
-        getArchiveRelation,
-        ArchiveRelation,
-        likeMedia,
-        insertCoin;
+    show getVideoInfo, getArchiveRelation, ArchiveRelation, likeMedia;
 import 'package:bilitv/apis/bilibili/recommend.dart' show fetchRelatedVideos;
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/icons/iconfont.dart';
