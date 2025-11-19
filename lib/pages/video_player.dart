@@ -8,7 +8,7 @@ import 'package:bilitv/consts/bilibili.dart' show VideoQuality;
 import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart' as model;
-import 'package:bilitv/storages/cookie.dart';
+import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/storages/settings.dart';
 import 'package:bilitv/widgets/bilibili_danmaku_wall.dart';
 import 'package:bilitv/widgets/tooltip.dart';

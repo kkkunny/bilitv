@@ -56,6 +56,8 @@ dependencies:
   flutter_displaymode: ^0.7.0 # 高刷
   get: ^4.7.2 # 路由
   logger: ^2.6.2 # 日志
+  html: ^0.15.6
+  xpath_selector_html_parser: ^3.0.1 # xpath
 
 dev_dependencies:
   flutter_test:

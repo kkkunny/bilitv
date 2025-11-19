@@ -1,6 +1,6 @@
 import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/apis/bilibili/user.dart';
-import 'package:bilitv/storages/cookie.dart'
+import 'package:bilitv/storages/auth.dart'
     show clearCookie, loginInfoNotifier, LoginInfo;
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:flutter/material.dart';

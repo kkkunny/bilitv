@@ -6,7 +6,7 @@ import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/pages/video_player.dart';
-import 'package:bilitv/storages/cookie.dart' show loginInfoNotifier;
+import 'package:bilitv/storages/auth.dart' show loginInfoNotifier;
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/loading.dart';

@@ -1,5 +1,5 @@
 import 'package:bilitv/apis/bilibili/error.dart';
-import 'package:bilitv/storages/cookie.dart' show loadCookie;
+import 'package:bilitv/storages/auth.dart' show loadCookie;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 

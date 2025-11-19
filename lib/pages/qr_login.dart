@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:bilitv/apis/bilibili/auth.dart';
-import 'package:bilitv/storages/cookie.dart' show saveCookie;
+import 'package:bilitv/storages/auth.dart' show saveCookie;
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -71,7 +71,7 @@ class _QRLoginPageState extends State<QRLoginPage> {
   }
 
   Future<void> _onLoginSuccess(QRStatus status) async {
-    await saveCookie(status.cookies);
+    await saveCookie(status.cookies, refreshToken: status.refreshToken ?? '');
     widget.loginNotifier.value = true;
   }
 

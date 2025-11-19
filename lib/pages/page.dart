@@ -3,7 +3,7 @@ import 'package:bilitv/pages/history.dart';
 import 'package:bilitv/pages/recommend.dart';
 import 'package:bilitv/pages/to_view.dart';
 import 'package:bilitv/pages/user.dart';
-import 'package:bilitv/storages/cookie.dart';
+import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/keep_alive.dart';
 import 'package:bilitv/widgets/tooltip.dart';

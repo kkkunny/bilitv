@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:bilitv/apis/bilibili/history.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
-import 'package:bilitv/storages/cookie.dart';
+import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/widgets/loading.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
