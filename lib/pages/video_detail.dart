@@ -86,16 +86,12 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   late final _currentEpisodeCid = ValueNotifier(
     widget.cid ?? widget.video.cid,
   ); // 当前分P
-  final _relatedVideosProvider = VideoGridViewProvider(); // 相关视频提供方
+  late final _relatedVideosProvider = VideoGridViewProvider(
+    initVideos: widget.relatedVideos,
+  ); // 相关视频提供方
   late final ValueNotifier<bool> _like = ValueNotifier(
     widget.relation.like,
   ); // 点赞
-
-  @override
-  void initState() {
-    _relatedVideosProvider.addAll(widget.relatedVideos);
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -110,7 +106,13 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   void _onVideoTapped(int _, MediaCardInfo video) {
-    Get.to(VideoDetailPageWrap(avid: video.avid, cid: video.cid));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) =>
+            VideoDetailPageWrap(avid: video.avid, cid: video.cid),
+      ),
+    );
+    // Get.off(VideoDetailPageWrap(avid: video.avid, cid: video.cid));
   }
 
   @override
@@ -609,6 +611,18 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         scrollDirection: Axis.horizontal,
         onItemTap: _onVideoTapped,
         crossAxisCount: 1,
+        itemMenuActions: [
+          ItemMenuAction(
+            title: '稍后再看',
+            icon: Icons.playlist_add_rounded,
+            action: (media) {
+              if (!loginInfoNotifier.value.isLogin) return;
+
+              addToView(avid: media.avid);
+              pushTooltipInfo(context, '已加入稍后再看：${media.title}');
+            },
+          ),
+        ],
       ),
     );
   }

@@ -38,12 +38,13 @@ class VideoGridViewProvider {
     hasMore: () => hasMore,
     onLoad: fetchData,
   );
+  final List<MediaCardInfo> initVideos;
   final List<MediaCardInfo> _videos = [];
   Future<(List<MediaCardInfo>, bool)> Function({bool isFetchMore})? onLoad;
   late bool _hasMore = onLoad == null;
   final _refreshing = ValueNotifier(false);
 
-  VideoGridViewProvider({this.onLoad});
+  VideoGridViewProvider({this.initVideos = const [], this.onLoad});
 
   void dispose() {
     _refreshing.dispose();
@@ -72,11 +73,12 @@ class VideoGridViewProvider {
     _ctl.refresh();
   }
 
-  Future<void> refresh() async {
+  Future<void> refresh({saveInitData = true}) async {
     if (_refreshing.value) return;
 
     _refreshing.value = true;
     clear();
+    if (saveInitData && initVideos.isNotEmpty) addAll(initVideos);
     await fetchData(isFetchMore: false);
     _refreshing.value = false;
   }
@@ -204,6 +206,7 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
   }
 
   void _onItemMenu(int _, MediaCardInfo media) {
+    if (widget.itemMenuActions.isEmpty) return;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
