@@ -4,7 +4,7 @@ import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/consts/assets.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
-import 'package:bilitv/storages/cookie.dart';
+import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/widgets/loading.dart' show buildLoadingStyle1;
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
@@ -53,12 +53,14 @@ class _ToViewPageState extends State<ToViewPage> {
 
     page++;
 
-    final videos = await listToView(page: page, count: pageVideoCount);
-    return (videos, false);
+    final videos = await listToView(page: page, count: pageVideoCount + 1);
+    final hasMore = videos.length > pageVideoCount;
+    if (hasMore) videos.removeLast();
+    return (videos, hasMore);
   }
 
   void _onVideoTapped(_, MediaCardInfo video) {
-    Get.to(VideoDetailPageWrap(avid: video.avid));
+    Get.to(VideoDetailPageWrap(avid: video.avid, cid: video.cid));
   }
 
   @override

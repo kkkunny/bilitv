@@ -5,18 +5,15 @@ import 'package:flutter/material.dart';
 
 class IconFont {
   static const String _family = 'iconfont';
-
+  
   IconFont._();
-
-  static const IconData playlist = IconData(
-    0xe6d2,
-    fontFamily: _family,
-  ); // playlist
-  static const IconData danmukai = IconData(0xe8dc, fontFamily: _family); // 弹幕开
-  static const IconData danmuguanbi = IconData(
-    0xe600,
-    fontFamily: _family,
-  ); // 弹幕关闭-copy
+  
+  static const IconData danmukai = IconData(0xe602, fontFamily: _family); // 弹幕开
+  static const IconData danmushezhi = IconData(0xe608, fontFamily: _family); // 弹幕设置
+  static const IconData ha = IconData(0xe672, fontFamily: _family); // 硬解码设置- icon
+  static const IconData trends = IconData(0xe601, fontFamily: _family); // 动态
+  static const IconData playlist = IconData(0xe6d2, fontFamily: _family); // playlist
+  static const IconData danmuguanbi = IconData(0xe600, fontFamily: _family); // 弹幕关闭-copy
   static const IconData share = IconData(0xe63e, fontFamily: _family); // share
   static const IconData coin = IconData(0xe615, fontFamily: _family); // coin
 }
@@ -30,11 +27,14 @@ class _PreviewIcon {
 }
 
 class IconFontPreview extends StatelessWidget {
-  const IconFontPreview({super.key});
+  const IconFontPreview({Key? key}) : super(key: key);
 
   static const iconList = <_PreviewIcon>[
-    _PreviewIcon(IconFont.playlist, "playlist", "playlist"),
     _PreviewIcon(IconFont.danmukai, "danmukai", "弹幕开"),
+    _PreviewIcon(IconFont.danmushezhi, "danmushezhi", "弹幕设置"),
+    _PreviewIcon(IconFont.ha, "ha", "硬解码设置- icon"),
+    _PreviewIcon(IconFont.trends, "trends", "动态"),
+    _PreviewIcon(IconFont.playlist, "playlist", "playlist"),
     _PreviewIcon(IconFont.danmuguanbi, "danmuguanbi", "弹幕关闭-copy"),
     _PreviewIcon(IconFont.share, "share", "share"),
     _PreviewIcon(IconFont.coin, "coin", "coin"),
@@ -43,7 +43,9 @@ class IconFontPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('IconFont')),
+      appBar: AppBar(
+        title: const Text('IconFont'),
+      ),
       body: GridView.count(
         shrinkWrap: true,
         crossAxisCount: 4,
@@ -59,18 +61,8 @@ class IconFontPreview extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 8),
                   child: Icon(e.icon),
                 ),
-                Text(
-                  e.name,
-                  style: const TextStyle(fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                Text(
-                  e.propName,
-                  style: const TextStyle(fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
+                Text(e.name, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis, maxLines: 1),
+                Text(e.propName, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis, maxLines: 1),
               ],
             ),
           );

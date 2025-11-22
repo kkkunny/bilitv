@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:media_kit/media_kit.dart';
 
 import 'consts/color.dart';
-import 'pages/page.dart';
+import 'pages/pages.dart';
 import 'pages/splash.dart';
 
 Future<void> main() async {

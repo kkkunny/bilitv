@@ -1,6 +1,6 @@
 import 'package:bilitv/pages/qr_login.dart';
 import 'package:bilitv/pages/user_info.dart';
-import 'package:bilitv/storages/cookie.dart';
+import 'package:bilitv/storages/auth.dart';
 import 'package:flutter/material.dart';
 
 class UserEntryPage extends StatefulWidget {

@@ -3,10 +3,12 @@ import 'package:bilitv/apis/bilibili/media.dart'
     show getVideoInfo, getArchiveRelation, ArchiveRelation, likeMedia;
 import 'package:bilitv/apis/bilibili/recommend.dart' show fetchRelatedVideos;
 import 'package:bilitv/apis/bilibili/toview.dart';
+import 'package:bilitv/consts/settings.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/pages/video_player.dart';
-import 'package:bilitv/storages/cookie.dart' show loginInfoNotifier;
+import 'package:bilitv/storages/auth.dart' show loginInfoNotifier;
+import 'package:bilitv/storages/settings.dart';
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/loading.dart';
@@ -19,8 +21,9 @@ import 'package:get/get.dart';
 class VideoDetailPageWrap extends StatelessWidget {
   final int? avid;
   final String? bvid;
+  final int? cid;
 
-  const VideoDetailPageWrap({super.key, this.avid, this.bvid});
+  const VideoDetailPageWrap({super.key, this.avid, this.bvid, this.cid});
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +47,7 @@ class VideoDetailPageWrap extends StatelessWidget {
         builder: (context, input) {
           return VideoDetailPage(
             video: input.video,
+            cid: cid,
             relation: input.relation,
             relatedVideos: input.relatedVideos,
           );
@@ -64,12 +68,14 @@ class VideoDetailPageInput {
 
 class VideoDetailPage extends StatefulWidget {
   final Video video;
+  final int? cid;
   final ArchiveRelation relation;
   final List<MediaCardInfo> relatedVideos;
 
   const VideoDetailPage({
     super.key,
     required this.video,
+    this.cid,
     required this.relation,
     this.relatedVideos = const [],
   });
@@ -79,17 +85,15 @@ class VideoDetailPage extends StatefulWidget {
 }
 
 class _VideoDetailPageState extends State<VideoDetailPage> {
-  late final _currentEpisodeCid = ValueNotifier(widget.video.cid); // 当前分P
-  final _relatedVideosProvider = VideoGridViewProvider(); // 相关视频提供方
+  late final _currentEpisodeCid = ValueNotifier(
+    widget.cid ?? widget.video.cid,
+  ); // 当前分P
+  late final _relatedVideosProvider = VideoGridViewProvider(
+    initVideos: widget.relatedVideos,
+  ); // 相关视频提供方
   late final ValueNotifier<bool> _like = ValueNotifier(
     widget.relation.like,
   ); // 点赞
-
-  @override
-  void initState() {
-    _relatedVideosProvider.addAll(widget.relatedVideos);
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -99,12 +103,37 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     _like.dispose();
   }
 
-  void _onCoverTapped() {
-    Get.to(VideoPlayerPage(video: widget.video, cid: _currentEpisodeCid.value));
+  Future<void> _onCoverTapped() async {
+    Get.to(
+      VideoPlayerPage(
+        video: widget.video,
+        cid: _currentEpisodeCid.value,
+        danmu: await Settings.getBool(Settings.pathDanmuSwitch) ?? true,
+        ha: await Settings.getBool(Settings.pathHASwitch) ?? true,
+        vo:
+            VideoOutputDrivers.parse(
+              await Settings.getString(Settings.pathVOSwitch) ??
+                  VideoOutputDrivers.gpu.value,
+            ) ??
+            VideoOutputDrivers.gpu,
+        hwdec:
+            HardwareVideoDecoder.parse(
+              await Settings.getString(Settings.pathHwdecSwitch) ??
+                  HardwareVideoDecoder.autoSafe.value,
+            ) ??
+            HardwareVideoDecoder.autoSafe,
+      ),
+    );
   }
 
   void _onVideoTapped(int _, MediaCardInfo video) {
-    Get.to(VideoDetailPageWrap(avid: video.avid));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) =>
+            VideoDetailPageWrap(avid: video.avid, cid: video.cid),
+      ),
+    );
+    // Get.off(VideoDetailPageWrap(avid: video.avid, cid: video.cid));
   }
 
   @override
@@ -603,6 +632,18 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         scrollDirection: Axis.horizontal,
         onItemTap: _onVideoTapped,
         crossAxisCount: 1,
+        itemMenuActions: [
+          ItemMenuAction(
+            title: '稍后再看',
+            icon: Icons.playlist_add_rounded,
+            action: (media) {
+              if (!loginInfoNotifier.value.isLogin) return;
+
+              addToView(avid: media.avid);
+              pushTooltipInfo(context, '已加入稍后再看：${media.title}');
+            },
+          ),
+        ],
       ),
     );
   }

@@ -1,12 +1,13 @@
 import 'package:bilitv/icons/iconfont.dart';
+import 'package:bilitv/pages/dynamic.dart';
 import 'package:bilitv/pages/history.dart';
 import 'package:bilitv/pages/recommend.dart';
+import 'package:bilitv/pages/setting.dart';
 import 'package:bilitv/pages/to_view.dart';
 import 'package:bilitv/pages/user.dart';
-import 'package:bilitv/storages/cookie.dart';
+import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/keep_alive.dart';
-import 'package:bilitv/widgets/tooltip.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -45,6 +46,10 @@ class _PageState extends State<Page> with SingleTickerProviderStateMixin {
       child: (listener) => HistoryPage(listener),
     ),
     _PageItem(
+      icon: IconFont.trends,
+      child: (listener) => DynamicPage(listener),
+    ),
+    _PageItem(
       icon: IconFont.playlist,
       child: (listener) => ToViewPage(listener),
     ),
@@ -58,7 +63,7 @@ class _PageState extends State<Page> with SingleTickerProviderStateMixin {
 
   @override
   void initState() {
-    _pageController = PageController(initialPage: 3);
+    _pageController = PageController(initialPage: 4);
     _pageFocusNodes = _tabs.map((e) => FocusNode()).toList();
     super.initState();
   }
@@ -127,7 +132,7 @@ class _PageState extends State<Page> with SingleTickerProviderStateMixin {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: Get.height / 4),
+                        padding: EdgeInsets.symmetric(vertical: Get.height / 5),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: _tabs
@@ -156,7 +161,7 @@ class _PageState extends State<Page> with SingleTickerProviderStateMixin {
                       ),
                     ),
                     IconButton(
-                      onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
+                      onPressed: () => Get.to(const SettingPage()),
                       icon: Icon(Icons.settings, size: 40),
                     ),
                   ],

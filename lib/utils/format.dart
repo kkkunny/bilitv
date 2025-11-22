@@ -8,6 +8,14 @@ String videoDurationString(Duration duration) {
   return '${duration.inHours}:$ms:$ss';
 }
 
+// 视频时长格式化
+Duration fromVideoDurationString(String duration) {
+  final res = duration.split(':');
+  final m = int.parse(res[0]);
+  final s = int.parse(res[1]);
+  return Duration(minutes: m, seconds: s);
+}
+
 // 数量格式化
 String amountString(int viewCount) {
   if (viewCount > 100000000) {

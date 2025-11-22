@@ -1,3 +1,5 @@
+import 'package:bilitv/utils/format.dart' show fromVideoDurationString;
+
 enum MediaType {
   unknown,
   video, // 视频
@@ -25,7 +27,7 @@ class MediaCardInfo {
   final MediaType type;
   final int avid;
   final String bvid;
-  final int cid;
+  final int? cid;
   final String title;
   final String cover;
   final Duration duration;
@@ -40,7 +42,7 @@ class MediaCardInfo {
     required this.type,
     required this.avid,
     required this.bvid,
-    required this.cid,
+    this.cid,
     required this.title,
     required this.cover,
     required this.duration,
@@ -115,6 +117,28 @@ class MediaCardInfo {
       userAvatar: json['author_face'],
       publishTime: DateTime.fromMillisecondsSinceEpoch(
         json['view_at'] * Duration.millisecondsPerSecond,
+      ),
+    );
+  }
+
+  factory MediaCardInfo.fromDynamicJson(Map<String, dynamic> json) {
+    return MediaCardInfo(
+      type: MediaType.video,
+      avid: int.parse(
+        json['modules']['module_dynamic']['major']['archive']['aid'],
+      ),
+      bvid: json['modules']['module_dynamic']['major']['archive']['bvid'],
+      title: json['modules']['module_dynamic']['major']['archive']['title'],
+      cover: json['modules']['module_dynamic']['major']['archive']['cover'],
+      duration: fromVideoDurationString(
+        json['modules']['module_dynamic']['major']['archive']['duration_text'],
+      ),
+      userMid: json['modules']['module_author']['mid'],
+      userName: json['modules']['module_author']['name'],
+      userAvatar: json['modules']['module_author']['face'],
+      publishTime: DateTime.fromMillisecondsSinceEpoch(
+        json['modules']['module_author']['pub_ts'] *
+            Duration.millisecondsPerSecond,
       ),
     );
   }

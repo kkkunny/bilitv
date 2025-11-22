@@ -1,6 +1,6 @@
 import 'package:bilitv/models/pbs/dm.pb.dart';
 import 'package:bilitv/models/video.dart' show VideoPlayInfo, Video;
-import 'package:bilitv/storages/cookie.dart' show loadCookie;
+import 'package:bilitv/storages/auth.dart' show loadCookie;
 import 'package:dio/dio.dart';
 
 import 'client.dart';

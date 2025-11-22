@@ -1,5 +1,5 @@
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
-import 'package:bilitv/storages/cookie.dart' show loadCookie, loginInfoNotifier;
+import 'package:bilitv/storages/auth.dart' show loadCookie, loginInfoNotifier;
 import 'package:dio/dio.dart';
 
 import 'client.dart';

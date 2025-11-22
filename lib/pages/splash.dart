@@ -1,6 +1,7 @@
+import 'package:bilitv/apis/bilibili/auth.dart';
 import 'package:bilitv/apis/bilibili/user.dart' show getMySelfInfo;
 import 'package:bilitv/consts/assets.dart';
-import 'package:bilitv/storages/cookie.dart';
+import 'package:bilitv/storages/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -38,12 +39,29 @@ class _SplashPageState extends State<SplashPage> {
     if (cookies.isEmpty) {
       return;
     }
+
+    // 获取用户信息
     final info = await getMySelfInfo();
     loginInfoNotifier.value = LoginInfo.login(
       mid: info.mid,
       nickname: info.name,
       avatar: info.avatar,
     );
+
+    // 刷新cookie
+    final oldRefreshToken = await loadRefreshToken();
+    if (oldRefreshToken == null) return;
+    final resp = await isNeedRefreshCookie();
+    if (!resp.needRefresh) return;
+
+    final correspondPath = generateCorrespondPath(resp.timestamp);
+    final refreshCsrf = await getRefreshCsrf(correspondPath);
+    final (newCookies, newRefreshToken) = await refreshCookie(
+      refreshCsrf,
+      oldRefreshToken,
+    );
+    await saveCookie(newCookies, refreshToken: newRefreshToken);
+    await confirmRefreshCookie(oldRefreshToken);
   }
 
   @override

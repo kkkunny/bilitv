@@ -1,8 +1,8 @@
 - icons:
-    - url: //at.alicdn.com/t/c/font_5055255_ty6b4c4qaep.css
+    - url: //at.alicdn.com/t/c/font_5055255_zdzevojixsn.css
       icon_name: iconfont # 字体文件名，Dart文件名
       icon_class: IconFont # Dart类名
       font_family: iconfont # 指定字体的 Font Family
-#      package: iconfont # 可指定包名
+  #      package: iconfont # 可指定包名
   font_assets_path: assets/icons/ # 生成.ttf字体文件的保存路径
   icon_class_path: lib/icons/ # 生成Dart代码文件的保存路径

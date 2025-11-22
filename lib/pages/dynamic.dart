@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:bilitv/apis/bilibili/recommend.dart';
+import 'package:bilitv/apis/bilibili/dynamic.dart';
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
@@ -13,18 +13,18 @@ import 'package:get/get.dart';
 
 import '../consts/assets.dart';
 
-class RecommendPage extends StatefulWidget {
+class DynamicPage extends StatefulWidget {
   final ValueNotifier<int> _tappedListener;
 
-  const RecommendPage(this._tappedListener, {super.key});
+  const DynamicPage(this._tappedListener, {super.key});
 
   @override
-  State<RecommendPage> createState() => _RecommendPageState();
+  State<DynamicPage> createState() => _DynamicPageState();
 }
 
-class _RecommendPageState extends State<RecommendPage> {
-  int page = 0;
-  final pageVideoCount = 20;
+class _DynamicPageState extends State<DynamicPage> {
+  int offset = 0;
+  final pageVideoCount = 19;
   final _provider = VideoGridViewProvider();
 
   @override
@@ -42,25 +42,24 @@ class _RecommendPageState extends State<RecommendPage> {
   }
 
   Future<void> _onRefresh() async {
-    page = 0;
+    offset = 0;
     await _provider.refresh();
   }
 
   Future<(List<MediaCardInfo>, bool)> _onLoad({
     bool isFetchMore = false,
   }) async {
-    page++;
+    if (!loginInfoNotifier.value.isLogin) {
+      return ([] as List<MediaCardInfo>, false);
+    }
 
-    final videos = await listRecommendVideos(
-      page: page,
-      count: pageVideoCount,
-      removeAvids: _provider.toList().map((e) => e.avid).toList(),
-    );
-    return (videos, true);
+    final resp = await listDynamic(offset);
+    offset = resp.offset;
+    return (resp.medias, resp.hasMore);
   }
 
   void _onVideoTapped(_, MediaCardInfo video) {
-    Get.to(VideoDetailPageWrap(avid: video.avid, cid: video.cid));
+    Get.to(VideoDetailPageWrap(avid: video.avid));
   }
 
   @override
