@@ -8,9 +8,11 @@ class IconFont {
   
   IconFont._();
   
+  static const IconData danmukai = IconData(0xe602, fontFamily: _family); // 弹幕开
+  static const IconData danmushezhi = IconData(0xe608, fontFamily: _family); // 弹幕设置
+  static const IconData ha = IconData(0xe672, fontFamily: _family); // 硬解码设置- icon
   static const IconData trends = IconData(0xe601, fontFamily: _family); // 动态
   static const IconData playlist = IconData(0xe6d2, fontFamily: _family); // playlist
-  static const IconData danmukai = IconData(0xe8dc, fontFamily: _family); // 弹幕开
   static const IconData danmuguanbi = IconData(0xe600, fontFamily: _family); // 弹幕关闭-copy
   static const IconData share = IconData(0xe63e, fontFamily: _family); // share
   static const IconData coin = IconData(0xe615, fontFamily: _family); // coin
@@ -28,9 +30,11 @@ class IconFontPreview extends StatelessWidget {
   const IconFontPreview({Key? key}) : super(key: key);
 
   static const iconList = <_PreviewIcon>[
+    _PreviewIcon(IconFont.danmukai, "danmukai", "弹幕开"),
+    _PreviewIcon(IconFont.danmushezhi, "danmushezhi", "弹幕设置"),
+    _PreviewIcon(IconFont.ha, "ha", "硬解码设置- icon"),
     _PreviewIcon(IconFont.trends, "trends", "动态"),
     _PreviewIcon(IconFont.playlist, "playlist", "playlist"),
-    _PreviewIcon(IconFont.danmukai, "danmukai", "弹幕开"),
     _PreviewIcon(IconFont.danmuguanbi, "danmuguanbi", "弹幕关闭-copy"),
     _PreviewIcon(IconFont.share, "share", "share"),
     _PreviewIcon(IconFont.coin, "coin", "coin"),

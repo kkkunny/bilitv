@@ -3,10 +3,12 @@ import 'package:bilitv/apis/bilibili/media.dart'
     show getVideoInfo, getArchiveRelation, ArchiveRelation, likeMedia;
 import 'package:bilitv/apis/bilibili/recommend.dart' show fetchRelatedVideos;
 import 'package:bilitv/apis/bilibili/toview.dart';
+import 'package:bilitv/consts/settings.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/pages/video_player.dart';
 import 'package:bilitv/storages/auth.dart' show loginInfoNotifier;
+import 'package:bilitv/storages/settings.dart';
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/loading.dart';
@@ -101,8 +103,27 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     _like.dispose();
   }
 
-  void _onCoverTapped() {
-    Get.to(VideoPlayerPage(video: widget.video, cid: _currentEpisodeCid.value));
+  Future<void> _onCoverTapped() async {
+    Get.to(
+      VideoPlayerPage(
+        video: widget.video,
+        cid: _currentEpisodeCid.value,
+        danmu: await Settings.getBool(Settings.pathDanmuSwitch) ?? true,
+        ha: await Settings.getBool(Settings.pathHASwitch) ?? true,
+        vo:
+            VideoOutputDrivers.parse(
+              await Settings.getString(Settings.pathVOSwitch) ??
+                  VideoOutputDrivers.gpu.value,
+            ) ??
+            VideoOutputDrivers.gpu,
+        hwdec:
+            HardwareVideoDecoder.parse(
+              await Settings.getString(Settings.pathHwdecSwitch) ??
+                  HardwareVideoDecoder.autoSafe.value,
+            ) ??
+            HardwareVideoDecoder.autoSafe,
+      ),
+    );
   }
 
   void _onVideoTapped(int _, MediaCardInfo video) {

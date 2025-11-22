@@ -6,6 +6,7 @@ import 'package:bilitv/apis/bilibili/history.dart';
 import 'package:bilitv/apis/bilibili/media.dart' show getVideoPlayURL;
 import 'package:bilitv/consts/bilibili.dart' show VideoQuality;
 import 'package:bilitv/consts/color.dart';
+import 'package:bilitv/consts/settings.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart' as model;
 import 'package:bilitv/storages/auth.dart';
@@ -310,7 +311,20 @@ class VideoPlayerPage extends StatefulWidget {
   final model.Video video;
   final int cid;
 
-  const VideoPlayerPage({super.key, required this.video, required this.cid});
+  final bool danmu;
+  final bool ha;
+  final VideoOutputDrivers vo;
+  final HardwareVideoDecoder hwdec;
+
+  const VideoPlayerPage({
+    super.key,
+    required this.video,
+    required this.cid,
+    required this.danmu,
+    required this.ha,
+    required this.vo,
+    required this.hwdec,
+  });
 
   @override
   State<VideoPlayerPage> createState() => _VideoPlayerPageState();
@@ -323,8 +337,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       .toList();
   late final currentQuality = ValueNotifier(VideoQuality.vq1080P);
 
-  late final controller = VideoController(Player());
-  final danmakuCtl = BilibiliDanmakuWallController();
+  late final controller = VideoController(
+    Player(),
+    configuration: VideoControllerConfiguration(
+      vo: widget.vo.value,
+      hwdec: widget.hwdec.value,
+      enableHardwareAcceleration: widget.ha,
+    ),
+  );
+  late final danmakuCtl = BilibiliDanmakuWallController(widget.danmu);
 
   FocusNode screenFocusNode = FocusNode();
   final ValueNotifier<bool> displayControl = ValueNotifier(false);
@@ -338,7 +359,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     controller.player.stream.completed.listen((v) {
       if (v) _onPlayCompleted();
     });
-    _loadSettings();
     super.initState();
     _onEpisodeChanged();
   }
@@ -353,12 +373,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     danmakuCtl.dispose();
     displayControl.dispose();
     super.dispose();
-  }
-
-  void _loadSettings() {
-    Settings.getBool(Settings.pathDanmuSwitch).then((v) {
-      danmakuCtl.enabled = v ?? true;
-    });
   }
 
   DateTime? _lastBackTime;

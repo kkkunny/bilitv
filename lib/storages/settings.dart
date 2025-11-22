@@ -3,7 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _settingsKey = 'settings';
 
 class Settings {
-  static const pathDanmuSwitch = ['danmu', 'switch'];
+  static const pathDanmuSwitch = ['setting', 'danmu', 'switch'];
+  static const pathHASwitch = ['setting', 'player', 'ha'];
+  static const pathVOSwitch = ['setting', 'player', 'vo'];
+  static const pathHwdecSwitch = ['setting', 'player', 'hwdec'];
 
   static String _getKey(List<String> path) => '$_settingsKey.${path.join('.')}';
 
@@ -15,5 +18,15 @@ class Settings {
   static Future<bool?> getBool(List<String> path) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_getKey(path));
+  }
+
+  static Future<void> setString(List<String> path, String v) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString(_getKey(path), v);
+  }
+
+  static Future<String?> getString(List<String> path) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_getKey(path));
   }
 }

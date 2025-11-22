@@ -58,6 +58,7 @@ dependencies:
   logger: ^2.6.2 # 日志
   html: ^0.15.6
   xpath_selector_html_parser: ^3.0.1 # xpath
+  settings_ui: ^2.0.2 # 设置页ui
 
 dev_dependencies:
   flutter_test:

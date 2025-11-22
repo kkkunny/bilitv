@@ -8,9 +8,10 @@ import 'package:flutter/material.dart';
 
 class BilibiliDanmakuWallController {
   late final DanmakuController _controller;
-  final enableNotifier = ValueNotifier(true);
+  late final ValueNotifier<bool> enableNotifier;
 
-  BilibiliDanmakuWallController();
+  BilibiliDanmakuWallController(bool enable)
+    : enableNotifier = ValueNotifier(enable);
 
   void dispose() => enableNotifier.dispose();
 

@@ -2,12 +2,12 @@ import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/pages/dynamic.dart';
 import 'package:bilitv/pages/history.dart';
 import 'package:bilitv/pages/recommend.dart';
+import 'package:bilitv/pages/setting.dart';
 import 'package:bilitv/pages/to_view.dart';
 import 'package:bilitv/pages/user.dart';
 import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/keep_alive.dart';
-import 'package:bilitv/widgets/tooltip.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -161,7 +161,7 @@ class _PageState extends State<Page> with SingleTickerProviderStateMixin {
                       ),
                     ),
                     IconButton(
-                      onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
+                      onPressed: () => Get.to(const SettingPage()),
                       icon: Icon(Icons.settings, size: 40),
                     ),
                   ],
