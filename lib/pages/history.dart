@@ -49,7 +49,7 @@ class _HistoryPageState extends State<HistoryPage> {
     bool isFetchMore = false,
   }) async {
     if (!loginInfoNotifier.value.isLogin) {
-      return ([] as List<MediaCardInfo>, false);
+      return (List<MediaCardInfo>.empty(growable: false), false);
     }
 
     final (nextCursor, videos) = await listHistory(

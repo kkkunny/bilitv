@@ -48,7 +48,7 @@ class _ToViewPageState extends State<ToViewPage> {
     bool isFetchMore = false,
   }) async {
     if (!loginInfoNotifier.value.isLogin) {
-      return ([] as List<MediaCardInfo>, false);
+      return (List<MediaCardInfo>.empty(growable: false), false);
     }
 
     page++;

@@ -34,10 +34,6 @@ class BiliTVApp extends StatelessWidget {
         applyElevationOverlayColor: true,
         focusColor: Colors.blue.shade100,
         hoverColor: Colors.blue.shade100,
-        // colorScheme: ColorScheme.fromSeed(
-        //   seedColor: const Color(0xFF00A1D6),
-        //   brightness: Brightness.light,
-        // ),
       ),
       initialRoute: '/',
       getPages: [
