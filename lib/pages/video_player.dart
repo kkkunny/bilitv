@@ -526,6 +526,17 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   void _onKeyEvent(KeyEvent value) {
+    if (!displayControl.value) {
+      switch (value.logicalKey) {
+        case LogicalKeyboardKey.arrowLeft:
+          _onStepForward(false);
+          break;
+        case LogicalKeyboardKey.arrowRight:
+          _onStepForward(true);
+          break;
+      }
+    }
+
     if (value is! KeyUpEvent) {
       return;
     }
@@ -552,12 +563,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         break;
       case LogicalKeyboardKey.contextMenu:
         displayControl.value = true;
-        break;
-      case LogicalKeyboardKey.arrowLeft:
-        _onStepForward(false);
-        break;
-      case LogicalKeyboardKey.arrowRight:
-        _onStepForward(true);
         break;
     }
   }
