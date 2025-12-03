@@ -1,17 +1,16 @@
 import 'dart:async';
 
-import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:bilitv/apis/bilibili/client.dart' show bilibiliHttpClient;
 import 'package:bilitv/apis/bilibili/history.dart';
 import 'package:bilitv/apis/bilibili/media.dart' show getVideoPlayURL;
 import 'package:bilitv/consts/bilibili.dart' show VideoQuality;
-import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/consts/settings.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart' as model;
 import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/storages/settings.dart';
 import 'package:bilitv/widgets/bilibili_danmaku_wall.dart';
+import 'package:bilitv/widgets/focus_progress_bar.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -203,20 +202,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
             padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
             child: Column(
               children: [
-                StreamBuilder<Duration>(
-                  stream: widget.player.stream.position,
-                  builder: (context, position) {
-                    return ProgressBar(
-                      progress: position.data ?? widget.player.state.position,
-                      buffered: widget.player.state.buffer,
-                      total: widget.player.state.duration,
-                      progressBarColor: lightPink,
-                      bufferedBarColor: lightPink.withValues(alpha: 0.3),
-                      thumbColor: lightPink,
-                      timeLabelTextStyle: TextStyle(),
-                    );
-                  },
-                ),
+                FocusProgressBar(widget.player),
                 Row(
                   children: [
                     IconButton(
