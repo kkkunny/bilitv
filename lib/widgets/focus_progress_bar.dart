@@ -94,36 +94,34 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
   }
 
   KeyEventResult _onKeyEvent(FocusNode _, KeyEvent value) {
-    switch (value.logicalKey) {
-      case LogicalKeyboardKey.arrowLeft:
-        _currentPosition.value =
-            (_currentPosition.value ?? widget.player.state.position) -
-            const Duration(seconds: 5);
-        break;
-      case LogicalKeyboardKey.arrowRight:
-        _currentPosition.value =
-            (_currentPosition.value ?? widget.player.state.position) +
-            const Duration(seconds: 5);
-        break;
-    }
-
-    if (value is! KeyUpEvent) {
-      return KeyEventResult.ignored;
-    }
-
-    switch (value.logicalKey) {
-      case LogicalKeyboardKey.arrowDown:
-        FocusScope.of(context).nextFocus();
-        return KeyEventResult.handled;
-      case LogicalKeyboardKey.select:
-      case LogicalKeyboardKey.enter:
-        if (_currentPosition.value != null &&
-            _currentPosition.value != widget.player.state.position) {
-          widget.player.seek(_currentPosition.value!);
-          _currentPosition.value = null;
+    if (value is KeyDownEvent || value is KeyRepeatEvent) {
+      switch (value.logicalKey) {
+        case LogicalKeyboardKey.arrowLeft:
+          _currentPosition.value =
+              (_currentPosition.value ?? widget.player.state.position) -
+              const Duration(seconds: 5);
+          break;
+        case LogicalKeyboardKey.arrowRight:
+          _currentPosition.value =
+              (_currentPosition.value ?? widget.player.state.position) +
+              const Duration(seconds: 5);
+          break;
+      }
+    } else if (value is KeyUpEvent) {
+      switch (value.logicalKey) {
+        case LogicalKeyboardKey.arrowDown:
+          FocusScope.of(context).nextFocus();
           return KeyEventResult.handled;
-        }
-        break;
+        case LogicalKeyboardKey.select:
+        case LogicalKeyboardKey.enter:
+          if (_currentPosition.value != null &&
+              _currentPosition.value != widget.player.state.position) {
+            widget.player.seek(_currentPosition.value!);
+            _currentPosition.value = null;
+            return KeyEventResult.handled;
+          }
+          break;
+      }
     }
     return KeyEventResult.ignored;
   }

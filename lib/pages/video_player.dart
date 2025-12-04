@@ -527,13 +527,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   void _onKeyEvent(KeyEvent value) {
     if (!_displayControl.value) {
-      switch (value.logicalKey) {
-        case LogicalKeyboardKey.arrowLeft:
-          _onStepForward(false);
-          break;
-        case LogicalKeyboardKey.arrowRight:
-          _onStepForward(true);
-          break;
+      if (value is KeyDownEvent || value is KeyRepeatEvent) {
+        switch (value.logicalKey) {
+          case LogicalKeyboardKey.arrowLeft:
+            _onStepForward(false);
+            break;
+          case LogicalKeyboardKey.arrowRight:
+            _onStepForward(true);
+            break;
+        }
       }
     }
 
