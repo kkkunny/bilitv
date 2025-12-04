@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bilitv/apis/bilibili/dynamic.dart';
 import 'package:bilitv/apis/bilibili/toview.dart';
+import 'package:bilitv/consts/assets.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
 import 'package:bilitv/storages/auth.dart';
@@ -10,8 +11,6 @@ import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../consts/assets.dart';
 
 class DynamicPage extends StatefulWidget {
   final ValueNotifier<int> _tappedListener;
@@ -23,26 +22,25 @@ class DynamicPage extends StatefulWidget {
 }
 
 class _DynamicPageState extends State<DynamicPage> {
-  int offset = 0;
-  final pageVideoCount = 19;
-  final _provider = VideoGridViewProvider();
+  int _offset = 0;
+  late final VideoGridViewProvider _provider;
 
   @override
   void initState() {
-    widget._tappedListener.addListener(_onRefresh);
-    _provider.onLoad = _onLoad;
     super.initState();
+    _provider = VideoGridViewProvider(onLoad: _onLoad);
+    widget._tappedListener.addListener(_onRefresh);
   }
 
   @override
   void dispose() {
     widget._tappedListener.removeListener(_onRefresh);
-    super.dispose();
     _provider.dispose();
+    super.dispose();
   }
 
   Future<void> _onRefresh() async {
-    offset = 0;
+    _offset = 0;
     await _provider.refresh();
   }
 
@@ -50,11 +48,11 @@ class _DynamicPageState extends State<DynamicPage> {
     bool isFetchMore = false,
   }) async {
     if (!loginInfoNotifier.value.isLogin) {
-      return ([] as List<MediaCardInfo>, false);
+      return (List<MediaCardInfo>.empty(growable: false), false);
     }
 
-    final resp = await listDynamic(offset);
-    offset = resp.offset;
+    final resp = await listDynamic(_offset);
+    _offset = resp.offset;
     return (resp.medias, resp.hasMore);
   }
 

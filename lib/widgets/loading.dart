@@ -35,13 +35,13 @@ class LoadingWidget<T> extends StatefulWidget {
 }
 
 class _LoadingWidgetState<T> extends State<LoadingWidget<T>> {
-  late final ValueNotifier<bool> _isLoading =
-      widget.isLoading ?? ValueNotifier(true);
+  late final ValueNotifier<bool> _isLoading;
   late T _data;
 
   @override
   void initState() {
     super.initState();
+    _isLoading = widget.isLoading ?? ValueNotifier(true);
     widget.loader().then((data) {
       _data = data;
       _isLoading.value = false;

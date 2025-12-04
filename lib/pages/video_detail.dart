@@ -85,22 +85,26 @@ class VideoDetailPage extends StatefulWidget {
 }
 
 class _VideoDetailPageState extends State<VideoDetailPage> {
-  late final _currentEpisodeCid = ValueNotifier(
-    widget.cid ?? widget.video.cid,
-  ); // 当前分P
-  late final _relatedVideosProvider = VideoGridViewProvider(
-    initVideos: widget.relatedVideos,
-  ); // 相关视频提供方
-  late final ValueNotifier<bool> _like = ValueNotifier(
-    widget.relation.like,
-  ); // 点赞
+  late final ValueNotifier<int> _currentEpisodeCid; // 当前分P
+  late final VideoGridViewProvider _relatedVideosProvider; // 相关视频提供方
+  late final ValueNotifier<bool> _like; // 点赞
+
+  @override
+  void initState() {
+    super.initState();
+    _currentEpisodeCid = ValueNotifier(widget.cid ?? widget.video.cid);
+    _relatedVideosProvider = VideoGridViewProvider(
+      initVideos: widget.relatedVideos,
+    );
+    _like = ValueNotifier(widget.relation.like);
+  }
 
   @override
   void dispose() {
-    super.dispose();
-    _currentEpisodeCid.dispose();
-    _relatedVideosProvider.dispose();
     _like.dispose();
+    _relatedVideosProvider.dispose();
+    _currentEpisodeCid.dispose();
+    super.dispose();
   }
 
   Future<void> _onCoverTapped() async {

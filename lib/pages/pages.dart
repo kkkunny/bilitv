@@ -36,47 +36,53 @@ class Page extends StatefulWidget {
 }
 
 class _PageState extends State<Page> with SingleTickerProviderStateMixin {
-  final _tabs = [
-    _PageItem(
-      icon: Icons.account_circle_rounded,
-      child: (listener) => UserEntryPage(listener),
-    ),
-    _PageItem(
-      icon: Icons.history_rounded,
-      child: (listener) => HistoryPage(listener),
-    ),
-    _PageItem(
-      icon: IconFont.trends,
-      child: (listener) => DynamicPage(listener),
-    ),
-    _PageItem(
-      icon: IconFont.playlist,
-      child: (listener) => ToViewPage(listener),
-    ),
-    _PageItem(
-      icon: Icons.home_max_rounded,
-      child: (listener) => KeepAliveWidget(child: RecommendPage(listener)),
-    ),
-  ];
+  late final List<_PageItem> _tabs;
   late PageController _pageController;
   late List<FocusNode> _pageFocusNodes;
 
   @override
   void initState() {
-    _pageController = PageController(initialPage: 4);
-    _pageFocusNodes = _tabs.map((e) => FocusNode()).toList();
     super.initState();
+    _pageController = PageController(initialPage: 4);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _tabs = [
+      _PageItem(
+        icon: Icons.account_circle_rounded,
+        child: (listener) => UserEntryPage(listener),
+      ),
+      _PageItem(
+        icon: Icons.history_rounded,
+        child: (listener) => HistoryPage(listener),
+      ),
+      _PageItem(
+        icon: IconFont.trends,
+        child: (listener) => DynamicPage(listener),
+      ),
+      _PageItem(
+        icon: IconFont.playlist,
+        child: (listener) => ToViewPage(listener),
+      ),
+      _PageItem(
+        icon: Icons.home_max_rounded,
+        child: (listener) => KeepAliveWidget(child: RecommendPage(listener)),
+      ),
+    ];
+    _pageFocusNodes = _tabs.map((e) => FocusNode()).toList();
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
-    for (var tab in _tabs) {
-      tab.dispose();
-    }
     for (var node in _pageFocusNodes) {
       node.dispose();
     }
+    for (var tab in _tabs) {
+      tab.dispose();
+    }
+    _pageController.dispose();
     super.dispose();
   }
 

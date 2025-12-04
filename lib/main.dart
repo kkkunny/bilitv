@@ -1,12 +1,11 @@
+import 'package:bilitv/consts/color.dart';
+import 'package:bilitv/pages/pages.dart';
+import 'package:bilitv/pages/splash.dart';
 import 'package:bilitv/utils/scroll_behavior.dart';
 import 'package:flutter/material.dart' hide Page;
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:get/get.dart';
 import 'package:media_kit/media_kit.dart';
-
-import 'consts/color.dart';
-import 'pages/pages.dart';
-import 'pages/splash.dart';
 
 Future<void> main() async {
   // 初始化播放器
@@ -34,10 +33,6 @@ class BiliTVApp extends StatelessWidget {
         applyElevationOverlayColor: true,
         focusColor: Colors.blue.shade100,
         hoverColor: Colors.blue.shade100,
-        // colorScheme: ColorScheme.fromSeed(
-        //   seedColor: const Color(0xFF00A1D6),
-        //   brightness: Brightness.light,
-        // ),
       ),
       initialRoute: '/',
       getPages: [

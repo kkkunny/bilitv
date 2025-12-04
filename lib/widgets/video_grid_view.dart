@@ -74,13 +74,15 @@ class VideoGridViewProvider {
   }
 
   Future<void> refresh({saveInitData = true}) async {
-    if (_refreshing.value) return;
+    try {
+      if (_refreshing.value) return;
 
-    _refreshing.value = true;
-    clear();
-    if (saveInitData && initVideos.isNotEmpty) addAll(initVideos);
-    await fetchData(isFetchMore: false);
-    _refreshing.value = false;
+      _refreshing.value = true;
+      clear();
+      if (saveInitData && initVideos.isNotEmpty) addAll(initVideos);
+      await fetchData(isFetchMore: false);
+      _refreshing.value = false;
+    } catch (_) {}
   }
 
   Future<void> fetchData({bool isFetchMore = false}) async {
@@ -131,26 +133,27 @@ class VideoGridView<T> extends StatefulWidget {
 const _defaultMaxCrossAxisExtent = 400.0;
 
 class _VideoGridViewState<T> extends State<VideoGridView<T>> {
-  int focusIndex = 0;
-  final _keyboardListenerFocusNode = FocusNode(canRequestFocus: false);
+  int _focusIndex = 0;
+  late final FocusNode _keyboardListenerFocusNode;
 
   @override
   void initState() {
     super.initState();
+    _keyboardListenerFocusNode = FocusNode(canRequestFocus: false);
     widget.provider.refresh();
   }
 
   @override
   void dispose() {
-    super.dispose();
     _keyboardListenerFocusNode.dispose();
+    super.dispose();
   }
 
   bool _isFetchingMore = false;
   DateTime? _lastRefresh;
 
   void _onItemFocus(int index, MediaCardInfo item) {
-    focusIndex = index;
+    _focusIndex = index;
     widget.onItemFocus?.call(index, item);
 
     // 焦点在最后一行时拉取更多数据
@@ -200,7 +203,7 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
     if (event is! KeyUpEvent) return;
     switch (event.logicalKey) {
       case LogicalKeyboardKey.contextMenu:
-        _onItemMenu(focusIndex, widget.provider[focusIndex]);
+        _onItemMenu(_focusIndex, widget.provider[_focusIndex]);
         break;
     }
   }

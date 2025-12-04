@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bilitv/apis/bilibili/history.dart';
+import 'package:bilitv/consts/assets.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
 import 'package:bilitv/storages/auth.dart';
@@ -9,8 +10,6 @@ import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../consts/assets.dart';
 
 class HistoryPage extends StatefulWidget {
   final ValueNotifier<int> _tappedListener;
@@ -22,26 +21,26 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  HistoryCursor? cursor;
-  final pageVideoCount = 20;
-  final _provider = VideoGridViewProvider();
+  HistoryCursor? _cursor;
+  final _pageVideoCount = 20;
+  late final VideoGridViewProvider _provider;
 
   @override
   void initState() {
-    widget._tappedListener.addListener(_onRefresh);
-    _provider.onLoad = _onLoad;
     super.initState();
+    _provider = VideoGridViewProvider(onLoad: _onLoad);
+    widget._tappedListener.addListener(_onRefresh);
   }
 
   @override
   void dispose() {
     widget._tappedListener.removeListener(_onRefresh);
-    super.dispose();
     _provider.dispose();
+    super.dispose();
   }
 
   Future<void> _onRefresh() async {
-    cursor = null;
+    _cursor = null;
     await _provider.refresh();
   }
 
@@ -49,17 +48,17 @@ class _HistoryPageState extends State<HistoryPage> {
     bool isFetchMore = false,
   }) async {
     if (!loginInfoNotifier.value.isLogin) {
-      return ([] as List<MediaCardInfo>, false);
+      return (List<MediaCardInfo>.empty(growable: false), false);
     }
 
     final (nextCursor, videos) = await listHistory(
-      cursor: cursor,
-      count: pageVideoCount,
+      cursor: _cursor,
+      count: _pageVideoCount,
     );
     if (nextCursor.max != 0) {
-      cursor = nextCursor;
+      _cursor = nextCursor;
     }
-    return (videos, videos.length == pageVideoCount);
+    return (videos, videos.length == _pageVideoCount);
   }
 
   Future<void> _refreshFromData(List<MediaCardInfo> medias) async {

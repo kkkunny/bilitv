@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bilitv/apis/bilibili/recommend.dart';
 import 'package:bilitv/apis/bilibili/toview.dart';
+import 'package:bilitv/consts/assets.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
 import 'package:bilitv/storages/auth.dart';
@@ -10,8 +11,6 @@ import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../consts/assets.dart';
 
 class RecommendPage extends StatefulWidget {
   final ValueNotifier<int> _tappedListener;
@@ -23,37 +22,37 @@ class RecommendPage extends StatefulWidget {
 }
 
 class _RecommendPageState extends State<RecommendPage> {
-  int page = 0;
-  final pageVideoCount = 20;
-  final _provider = VideoGridViewProvider();
+  int _page = 0;
+  final _pageVideoCount = 20;
+  late final VideoGridViewProvider _provider;
 
   @override
   void initState() {
-    widget._tappedListener.addListener(_onRefresh);
-    _provider.onLoad = _onLoad;
     super.initState();
+    _provider = VideoGridViewProvider(onLoad: _onLoad);
+    widget._tappedListener.addListener(_onRefresh);
   }
 
   @override
   void dispose() {
     widget._tappedListener.removeListener(_onRefresh);
-    super.dispose();
     _provider.dispose();
+    super.dispose();
   }
 
   Future<void> _onRefresh() async {
-    page = 0;
+    _page = 0;
     await _provider.refresh();
   }
 
   Future<(List<MediaCardInfo>, bool)> _onLoad({
     bool isFetchMore = false,
   }) async {
-    page++;
+    _page++;
 
     final videos = await listRecommendVideos(
-      page: page,
-      count: pageVideoCount,
+      page: _page,
+      count: _pageVideoCount,
       removeAvids: _provider.toList().map((e) => e.avid).toList(),
     );
     return (videos, true);
