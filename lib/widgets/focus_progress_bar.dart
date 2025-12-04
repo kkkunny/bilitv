@@ -15,27 +15,27 @@ class FocusProgressBar extends StatefulWidget {
 }
 
 class _FocusProgressBarState extends State<FocusProgressBar> {
-  late final FocusScopeNode focusScopeNode;
-  late final ValueNotifier<Duration?> currentPosition = ValueNotifier(null);
+  late final FocusScopeNode _focusScopeNode;
+  late final ValueNotifier<Duration?> _currentPosition = ValueNotifier(null);
 
   @override
   void initState() {
-    focusScopeNode = FocusScopeNode();
-    focusScopeNode.addListener(_onFocusChanged);
     super.initState();
+    _focusScopeNode = FocusScopeNode();
+    _focusScopeNode.addListener(_onFocusChanged);
   }
 
   @override
   void dispose() {
-    focusScopeNode.removeListener(_onFocusChanged);
-    focusScopeNode.dispose();
+    _focusScopeNode.removeListener(_onFocusChanged);
+    _focusScopeNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return FocusScope(
-      node: focusScopeNode,
+      node: _focusScopeNode,
       onKeyEvent: _onKeyEvent,
       child: DpadFocusable(
         builder: FocusEffects.glow(glowColor: Colors.blue),
@@ -58,7 +58,7 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
             ),
             // 该bar用于用户拖动进度
             ValueListenableBuilder(
-              valueListenable: currentPosition,
+              valueListenable: _currentPosition,
               builder: (context, value, _) {
                 if (value == null) {
                   return StreamBuilder<Duration>(
@@ -90,19 +90,19 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
   }
 
   void _onFocusChanged() {
-    currentPosition.value = null;
+    _currentPosition.value = null;
   }
 
   KeyEventResult _onKeyEvent(FocusNode _, KeyEvent value) {
     switch (value.logicalKey) {
       case LogicalKeyboardKey.arrowLeft:
-        currentPosition.value =
-            (currentPosition.value ?? widget.player.state.position) -
+        _currentPosition.value =
+            (_currentPosition.value ?? widget.player.state.position) -
             const Duration(seconds: 5);
         break;
       case LogicalKeyboardKey.arrowRight:
-        currentPosition.value =
-            (currentPosition.value ?? widget.player.state.position) +
+        _currentPosition.value =
+            (_currentPosition.value ?? widget.player.state.position) +
             const Duration(seconds: 5);
         break;
     }
@@ -117,10 +117,10 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
         return KeyEventResult.handled;
       case LogicalKeyboardKey.select:
       case LogicalKeyboardKey.enter:
-        if (currentPosition.value != null &&
-            currentPosition.value != widget.player.state.position) {
-          widget.player.seek(currentPosition.value!);
-          currentPosition.value = null;
+        if (_currentPosition.value != null &&
+            _currentPosition.value != widget.player.state.position) {
+          widget.player.seek(_currentPosition.value!);
+          _currentPosition.value = null;
           return KeyEventResult.handled;
         }
         break;

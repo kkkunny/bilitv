@@ -30,19 +30,19 @@ class _SelectQualityWidget extends StatelessWidget {
   const _SelectQualityWidget(this.overlayEntry, this.pageState);
 
   void _onSelectQuality(VideoQuality quality) {
-    pageState.currentQuality.value = quality;
+    pageState._currentQuality.value = quality;
     overlayEntry.remove();
   }
 
   @override
   Widget build(BuildContext context) {
-    final selects = pageState.allowQualities
+    final selects = pageState._allowQualities
         .map(
           (e) => Container(
             padding: EdgeInsets.symmetric(vertical: 4),
             width: 320,
             child: ElevatedButton(
-              autofocus: e == pageState.currentQuality.value,
+              autofocus: e == pageState._currentQuality.value,
               onPressed: () => _onSelectQuality(e),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white10,
@@ -90,19 +90,24 @@ class _VideoControlWidget extends StatefulWidget {
 }
 
 class _VideoControlWidgetState extends State<_VideoControlWidget> {
-  late _VideoPlayerPageState pageState = context
-      .findAncestorStateOfType<_VideoPlayerPageState>()!;
+  late _VideoPlayerPageState _pageState;
   Timer? _nextTimer; // 播放下一个视频的计时器
 
   @override
   void initState() {
-    widget.player.stream.completed.listen(_onCompleted);
     super.initState();
+    widget.player.stream.completed.listen(_onCompleted);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _pageState = context.findAncestorStateOfType<_VideoPlayerPageState>()!;
   }
 
   void _onDanmakuSwitchTapped() {
-    pageState.danmakuCtl.enabled = !pageState.danmakuCtl.enabled;
-    Settings.setBool(Settings.pathDanmuSwitch, pageState.danmakuCtl.enabled);
+    _pageState._danmakuCtl.enabled = !_pageState._danmakuCtl.enabled;
+    Settings.setBool(Settings.pathDanmuSwitch, _pageState._danmakuCtl.enabled);
   }
 
   void _onSelectQuality() {
@@ -110,19 +115,20 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     late OverlayEntry overlayEntry;
     overlayEntry = OverlayEntry(
       builder: (BuildContext context) {
-        return _SelectQualityWidget(overlayEntry, pageState);
+        return _SelectQualityWidget(overlayEntry, _pageState);
       },
     );
     overlayState.insert(overlayEntry);
   }
 
   void _onPrevTapped() {
-    final index = pageState.widget.video.episodes.indexWhere(
-      (e) => e.cid == pageState.currentCid.value,
+    final index = _pageState.widget.video.episodes.indexWhere(
+      (e) => e.cid == _pageState._currentCid.value,
     );
     if (index == 0) return;
 
-    pageState.currentCid.value = pageState.widget.video.episodes[index - 1].cid;
+    _pageState._currentCid.value =
+        _pageState.widget.video.episodes[index - 1].cid;
   }
 
   void _onPlayOrPauseTapped() {
@@ -130,12 +136,13 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
   }
 
   void _onNextTapped() {
-    final index = pageState.widget.video.episodes.indexWhere(
-      (e) => e.cid == pageState.currentCid.value,
+    final index = _pageState.widget.video.episodes.indexWhere(
+      (e) => e.cid == _pageState._currentCid.value,
     );
-    if (index == pageState.widget.video.episodes.length - 1) return;
+    if (index == _pageState.widget.video.episodes.length - 1) return;
 
-    pageState.currentCid.value = pageState.widget.video.episodes[index + 1].cid;
+    _pageState._currentCid.value =
+        _pageState.widget.video.episodes[index + 1].cid;
   }
 
   void _onCompleted(bool completed) {
@@ -147,18 +154,18 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
       return;
     }
 
-    final index = pageState.widget.video.episodes.indexWhere(
-      (e) => e.cid == pageState.currentCid.value,
+    final index = _pageState.widget.video.episodes.indexWhere(
+      (e) => e.cid == _pageState._currentCid.value,
     );
-    if (index == pageState.widget.video.episodes.length - 1) return;
+    if (index == _pageState.widget.video.episodes.length - 1) return;
 
     _nextTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (_nextTimer != null) {
         _nextTimer!.cancel();
         _nextTimer = null;
       }
-      pageState.currentCid.value =
-          pageState.widget.video.episodes[index + 1].cid;
+      _pageState._currentCid.value =
+          _pageState.widget.video.episodes[index + 1].cid;
     });
 
     if (!mounted) {
@@ -188,7 +195,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
           Padding(
             padding: EdgeInsets.only(left: 20, right: 20, top: 20),
             child: Text(
-              pageState.widget.video.title,
+              _pageState.widget.video.title,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 26,
@@ -245,7 +252,8 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                       icon: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 5.0),
                         child: ValueListenableBuilder(
-                          valueListenable: pageState.danmakuCtl.enableNotifier,
+                          valueListenable:
+                              _pageState._danmakuCtl.enableNotifier,
                           builder: (context, isEnabled, _) => Icon(
                             isEnabled
                                 ? IconFont.danmukai
@@ -268,7 +276,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                             ),
                             SizedBox(width: 5),
                             Text(
-                              pageState.currentQuality.value.name,
+                              _pageState._currentQuality.value.name,
                               style: TextStyle(color: Colors.white),
                             ),
                           ],
@@ -311,54 +319,60 @@ class VideoPlayerPage extends StatefulWidget {
 }
 
 class _VideoPlayerPageState extends State<VideoPlayerPage> {
-  late final currentCid = ValueNotifier(widget.cid);
-  final allowQualities = VideoQuality.values
+  late final ValueNotifier<int> _currentCid;
+  final _allowQualities = VideoQuality.values
       .where((e) => !e.needLogin || loginInfoNotifier.value.isLogin)
       .toList();
-  late final currentQuality = ValueNotifier(VideoQuality.vq1080P);
+  late final ValueNotifier<VideoQuality> _currentQuality;
 
-  late final controller = VideoController(
-    Player(),
-    configuration: VideoControllerConfiguration(
-      vo: widget.vo.value,
-      hwdec: widget.hwdec.value,
-      enableHardwareAcceleration: widget.ha,
-    ),
-  );
-  late final danmakuCtl = BilibiliDanmakuWallController(widget.danmu);
+  late final VideoController _controller;
+  late final BilibiliDanmakuWallController _danmakuCtl;
 
-  FocusNode screenFocusNode = FocusNode();
-  final ValueNotifier<bool> displayControl = ValueNotifier(false);
+  late final FocusNode _screenFocusNode;
+  late final ValueNotifier<bool> _displayControl;
 
-  Timer? heartbeatTimer; // 播放心跳timer
+  Timer? _heartbeatTimer; // 播放心跳timer
 
   @override
   void initState() {
-    currentCid.addListener(_onEpisodeChanged);
-    currentQuality.addListener(_onQualityChange);
-    controller.player.stream.completed.listen((v) {
+    super.initState();
+    _currentCid = ValueNotifier(widget.cid);
+    _currentCid.addListener(_onEpisodeChanged);
+    _currentQuality = ValueNotifier(VideoQuality.vq1080P);
+    _currentQuality.addListener(_onQualityChange);
+    _controller = VideoController(
+      Player(),
+      configuration: VideoControllerConfiguration(
+        vo: widget.vo.value,
+        hwdec: widget.hwdec.value,
+        enableHardwareAcceleration: widget.ha,
+      ),
+    );
+    _controller.player.stream.completed.listen((v) {
       if (v) _onPlayCompleted();
     });
-    super.initState();
+    _danmakuCtl = BilibiliDanmakuWallController(widget.danmu);
+    _screenFocusNode = FocusNode();
+    _displayControl = ValueNotifier(false);
     _onEpisodeChanged();
   }
 
   @override
   void dispose() {
-    if (heartbeatTimer != null) heartbeatTimer!.cancel();
-    currentCid.dispose();
-    currentQuality.dispose();
-    screenFocusNode.dispose();
-    controller.player.dispose();
-    danmakuCtl.dispose();
-    displayControl.dispose();
+    if (_heartbeatTimer != null) _heartbeatTimer!.cancel();
+    _displayControl.dispose();
+    _screenFocusNode.dispose();
+    _danmakuCtl.dispose();
+    _controller.player.dispose();
+    _currentQuality.dispose();
+    _currentCid.dispose();
     super.dispose();
   }
 
   DateTime? _lastBackTime;
 
   void _onBack(didPop) {
-    if (didPop || !mounted || displayControl.value) return;
+    if (didPop || !mounted || _displayControl.value) return;
 
     final now = DateTime.now();
     if (_lastBackTime != null && now.difference(_lastBackTime!).inSeconds < 2) {
@@ -366,8 +380,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       if (loginInfoNotifier.value.isLogin) {
         reportPlayProgress(
           widget.video.avid,
-          currentCid.value,
-          controller.player.state.position,
+          _currentCid.value,
+          _controller.player.state.position,
         );
       }
       return Get.back();
@@ -383,22 +397,22 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   Future<void> _onEpisodeChanged() async {
     // 结束心跳
-    if (heartbeatTimer != null) {
-      heartbeatTimer!.cancel();
+    if (_heartbeatTimer != null) {
+      _heartbeatTimer!.cancel();
     }
     // 上报播放进度
     if (loginInfoNotifier.value.isLogin &&
-        controller.player.state.position.inSeconds > 0) {
+        _controller.player.state.position.inSeconds > 0) {
       reportPlayProgress(
         widget.video.avid,
-        currentCid.value,
-        controller.player.state.position,
+        _currentCid.value,
+        _controller.player.state.position,
       );
     }
-    reportPlayStart(widget.video.avid, currentCid.value);
+    reportPlayStart(widget.video.avid, _currentCid.value);
     // 暂停弹幕
-    final danmakuEnabled = danmakuCtl.enabled;
-    danmakuCtl.enabled = false;
+    final danmakuEnabled = _danmakuCtl.enabled;
+    _danmakuCtl.enabled = false;
 
     MediaPlayInfo? playInfo;
     // 若已登陆，获取播放进度
@@ -406,9 +420,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       try {
         final lastPlayInfo = await getMediaPlayInfo(
           avid: widget.video.avid,
-          cid: currentCid.value,
+          cid: _currentCid.value,
         );
-        if (currentCid.value == lastPlayInfo.lastPlayCid) {
+        if (_currentCid.value == lastPlayInfo.lastPlayCid) {
           playInfo = lastPlayInfo;
         }
       } catch (_) {}
@@ -416,10 +430,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
     final infos = await getVideoPlayURL(
       avid: widget.video.avid,
-      cid: currentCid.value,
-      quality: currentQuality.value.index,
+      cid: _currentCid.value,
+      quality: _currentQuality.value.index,
     );
-    await controller.player.open(
+    await _controller.player.open(
       Media(
         infos.first.urls.first,
         httpHeaders: bilibiliHttpClient.options.headers.cast<String, String>(),
@@ -428,40 +442,40 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     );
 
     // 开始心跳
-    heartbeatTimer = Timer(Duration(seconds: 15), _onHeartbeat);
+    _heartbeatTimer = Timer(Duration(seconds: 15), _onHeartbeat);
     // 恢复弹幕
-    danmakuCtl.enabled = danmakuEnabled;
+    _danmakuCtl.enabled = danmakuEnabled;
   }
 
   void _onHeartbeat() {
     if (!loginInfoNotifier.value.isLogin) return;
     reportPlayHeartbeat(
       avid: widget.video.avid,
-      cid: currentCid.value,
-      progress: controller.player.state.position,
+      cid: _currentCid.value,
+      progress: _controller.player.state.position,
     );
   }
 
   Future<void> _onQualityChange() async {
     // 暂停弹幕
-    final danmakuEnabled = danmakuCtl.enabled;
-    danmakuCtl.enabled = false;
+    final danmakuEnabled = _danmakuCtl.enabled;
+    _danmakuCtl.enabled = false;
 
     final infos = await getVideoPlayURL(
       avid: widget.video.avid,
-      cid: currentCid.value,
-      quality: currentQuality.value.index,
+      cid: _currentCid.value,
+      quality: _currentQuality.value.index,
     );
-    await controller.player.open(
+    await _controller.player.open(
       Media(
         infos.first.urls.first,
         httpHeaders: bilibiliHttpClient.options.headers.cast<String, String>(),
-        start: controller.player.state.position,
+        start: _controller.player.state.position,
       ),
     );
 
     // 恢复弹幕
-    danmakuCtl.enabled = danmakuEnabled;
+    _danmakuCtl.enabled = danmakuEnabled;
   }
 
   void _onPlayCompleted() {
@@ -469,8 +483,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     if (loginInfoNotifier.value.isLogin) {
       reportPlayProgress(
         widget.video.avid,
-        currentCid.value,
-        controller.player.state.position,
+        _currentCid.value,
+        _controller.player.state.position,
       );
     }
   }
@@ -483,26 +497,26 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       child: Scaffold(
         body: KeyboardListener(
           autofocus: true,
-          focusNode: screenFocusNode,
+          focusNode: _screenFocusNode,
           onKeyEvent: _onKeyEvent,
           child: Stack(
             children: [
-              Video(controller: controller, controls: NoVideoControls),
+              Video(controller: _controller, controls: NoVideoControls),
               ValueListenableBuilder(
-                valueListenable: currentCid,
+                valueListenable: _currentCid,
                 builder: (context, cid, child) => BilibiliDanmakuWall(
-                  controller: danmakuCtl,
+                  controller: _danmakuCtl,
                   cid: cid,
-                  timeline: controller.player.stream.position,
-                  playing: controller.player.stream.playing,
+                  timeline: _controller.player.stream.position,
+                  playing: _controller.player.stream.playing,
                 ),
               ),
               ValueListenableBuilder(
-                valueListenable: displayControl,
+                valueListenable: _displayControl,
                 builder: (context, display, child) {
                   return display ? child! : Container();
                 },
-                child: _VideoControlWidget(controller.player),
+                child: _VideoControlWidget(_controller.player),
               ),
             ],
           ),
@@ -512,7 +526,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   void _onKeyEvent(KeyEvent value) {
-    if (!displayControl.value) {
+    if (!_displayControl.value) {
       switch (value.logicalKey) {
         case LogicalKeyboardKey.arrowLeft:
           _onStepForward(false);
@@ -527,16 +541,16 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       return;
     }
 
-    if (displayControl.value) {
+    if (_displayControl.value) {
       switch (value.logicalKey) {
         case LogicalKeyboardKey.goBack:
           // 延迟50ms是为了确保_onBack先被调用，这样_onBack里才能拿到此时的displayControl.value的值而不是这里修改后的
           Future.delayed(Duration(milliseconds: 10)).then((_) {
-            displayControl.value = false;
+            _displayControl.value = false;
           });
           break;
         case LogicalKeyboardKey.contextMenu:
-          displayControl.value = false;
+          _displayControl.value = false;
           break;
       }
       return;
@@ -545,30 +559,31 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     switch (value.logicalKey) {
       case LogicalKeyboardKey.select:
       case LogicalKeyboardKey.enter:
-        controller.player.playOrPause();
+        _controller.player.playOrPause();
         break;
       case LogicalKeyboardKey.contextMenu:
-        displayControl.value = true;
+        _displayControl.value = true;
         break;
     }
   }
 
   void _onStepForward(bool forward) {
     if (forward) {
-      if (controller.player.state.duration - controller.player.state.position <
+      if (_controller.player.state.duration -
+              _controller.player.state.position <
           _step) {
-        controller.player.seek(controller.player.state.duration);
+        _controller.player.seek(_controller.player.state.duration);
       } else {
-        controller.player.seek(controller.player.state.position + _step);
+        _controller.player.seek(_controller.player.state.position + _step);
       }
     } else {
-      if (controller.player.state.position < _step) {
-        controller.player.seek(Duration(seconds: 0));
+      if (_controller.player.state.position < _step) {
+        _controller.player.seek(Duration(seconds: 0));
       } else {
-        controller.player.seek(controller.player.state.position - _step);
+        _controller.player.seek(_controller.player.state.position - _step);
       }
     }
-    danmakuCtl.wait(_danmakuWaitDuration);
-    danmakuCtl.clear();
+    _danmakuCtl.wait(_danmakuWaitDuration);
+    _danmakuCtl.clear();
   }
 }

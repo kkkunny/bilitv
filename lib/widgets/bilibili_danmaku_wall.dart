@@ -59,12 +59,12 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
 
   @override
   void initState() {
+    super.initState();
     widget.timeline.listen(_onPosition);
     widget.playing.listen(_onPlayingChanged);
     widget.controller.enableNotifier.addListener(_onEnableChanged);
     widget.controller._clearFunc = _onClear;
     widget.controller._waitFunc = _onWait;
-    super.initState();
   }
 
   // 时间变化

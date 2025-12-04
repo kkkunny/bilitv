@@ -13,13 +13,14 @@ class UserEntryPage extends StatefulWidget {
 }
 
 class _UserEntryPageState extends State<UserEntryPage> {
-  final _loginNotifier = ValueNotifier(loginInfoNotifier.value.isLogin);
+  late final ValueNotifier<bool> _loginNotifier;
 
   @override
   void initState() {
-    widget._tappedListener.addListener(_onRefresh);
     super.initState();
+    _loginNotifier = ValueNotifier(loginInfoNotifier.value.isLogin);
     _loginNotifier.addListener(_onLoginChanged);
+    widget._tappedListener.addListener(_onRefresh);
   }
 
   @override

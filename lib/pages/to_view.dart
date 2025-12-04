@@ -21,26 +21,26 @@ class ToViewPage extends StatefulWidget {
 }
 
 class _ToViewPageState extends State<ToViewPage> {
-  int page = 0;
-  final pageVideoCount = 20;
-  final _provider = VideoGridViewProvider();
+  int _page = 0;
+  final _pageVideoCount = 20;
+  late final VideoGridViewProvider _provider;
 
   @override
   void initState() {
-    widget._tappedListener.addListener(_onRefresh);
-    _provider.onLoad = _onLoad;
     super.initState();
+    _provider = VideoGridViewProvider(onLoad: _onLoad);
+    widget._tappedListener.addListener(_onRefresh);
   }
 
   @override
   void dispose() {
     widget._tappedListener.removeListener(_onRefresh);
-    super.dispose();
     _provider.dispose();
+    super.dispose();
   }
 
   Future<void> _onRefresh() async {
-    page = 0;
+    _page = 0;
     await _provider.refresh();
   }
 
@@ -51,10 +51,10 @@ class _ToViewPageState extends State<ToViewPage> {
       return (List<MediaCardInfo>.empty(growable: false), false);
     }
 
-    page++;
+    _page++;
 
-    final videos = await listToView(page: page, count: pageVideoCount + 1);
-    final hasMore = videos.length > pageVideoCount;
+    final videos = await listToView(page: _page, count: _pageVideoCount + 1);
+    final hasMore = videos.length > _pageVideoCount;
     if (hasMore) videos.removeLast();
     return (videos, hasMore);
   }

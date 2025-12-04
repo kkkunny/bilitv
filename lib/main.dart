@@ -1,12 +1,11 @@
+import 'package:bilitv/consts/color.dart';
+import 'package:bilitv/pages/pages.dart';
+import 'package:bilitv/pages/splash.dart';
 import 'package:bilitv/utils/scroll_behavior.dart';
 import 'package:flutter/material.dart' hide Page;
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:get/get.dart';
 import 'package:media_kit/media_kit.dart';
-
-import 'consts/color.dart';
-import 'pages/pages.dart';
-import 'pages/splash.dart';
 
 Future<void> main() async {
   // 初始化播放器
