@@ -53,7 +53,7 @@ class _SelectQualityWidget extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white10,
                 foregroundColor: Colors.white,
-                overlayColor: Colors.blue,
+                overlayColor: Colors.pinkAccent.withValues(alpha: 0.5),
                 padding: EdgeInsets.symmetric(vertical: 14),
                 textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
@@ -232,7 +232,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                 Row(
                   children: [
                     IconButton(
-                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                       onPressed: _onPrevTapped,
                       icon: Icon(
                         Icons.skip_previous_rounded,
@@ -244,7 +244,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                       stream: widget.player.stream.playing,
                       builder: (context, playing) => IconButton(
                         autofocus: true,
-                        focusColor: Colors.grey.withValues(alpha: 0.2),
+                        focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                         onPressed: _onPlayOrPauseTapped,
                         icon: Icon(
                           playing.data ?? widget.player.state.playing
@@ -256,7 +256,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                       ),
                     ),
                     IconButton(
-                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                       onPressed: _onNextTapped,
                       icon: Icon(
                         Icons.skip_next_rounded,
@@ -266,7 +266,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                     ),
                     Spacer(),
                     IconButton(
-                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                       onPressed: _onDanmakuSwitchTapped,
                       icon: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 5.0),
@@ -283,7 +283,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                       ),
                     ),
                     IconButton(
-                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                       onPressed: _onSelectQuality,
                       icon: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 5.0),
