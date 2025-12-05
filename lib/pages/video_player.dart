@@ -36,13 +36,19 @@ class _SelectQualityWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    late VideoQuality focusQuality;
+    if (pageState._allowQualities.contains(pageState._currentQuality.value)) {
+      focusQuality = pageState._currentQuality.value;
+    } else {
+      focusQuality = pageState._allowQualities.first;
+    }
     final selects = pageState._allowQualities
         .map(
           (e) => Container(
             padding: EdgeInsets.symmetric(vertical: 4),
             width: 320,
             child: ElevatedButton(
-              autofocus: e == pageState._currentQuality.value,
+              autofocus: e == focusQuality,
               onPressed: () => _onSelectQuality(e),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white10,
@@ -71,11 +77,24 @@ class _SelectQualityWidget extends StatelessWidget {
           padding: EdgeInsets.all(24),
           child: FocusScope(
             autofocus: true,
+            onKeyEvent: _onKeyEvent,
             child: Column(mainAxisSize: MainAxisSize.min, children: children),
           ),
         ),
       ),
     );
+  }
+
+  KeyEventResult _onKeyEvent(FocusNode _, KeyEvent value) {
+    if (value is! KeyUpEvent) {
+      return KeyEventResult.ignored;
+    }
+    switch (value.logicalKey) {
+      case LogicalKeyboardKey.goBack:
+        overlayEntry.remove();
+        return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
   }
 }
 

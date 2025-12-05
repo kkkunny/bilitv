@@ -22,12 +22,10 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
   void initState() {
     super.initState();
     _focusScopeNode = FocusScopeNode();
-    _focusScopeNode.addListener(_onFocusChanged);
   }
 
   @override
   void dispose() {
-    _focusScopeNode.removeListener(_onFocusChanged);
     _focusScopeNode.dispose();
     super.dispose();
   }
@@ -36,6 +34,7 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
   Widget build(BuildContext context) {
     return FocusScope(
       node: _focusScopeNode,
+      onFocusChange: _onFocusChanged,
       onKeyEvent: _onKeyEvent,
       child: DpadFocusable(
         builder: FocusEffects.glow(glowColor: Colors.blue),
@@ -89,7 +88,7 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
     );
   }
 
-  void _onFocusChanged() {
+  void _onFocusChanged(bool focus) {
     _currentPosition.value = null;
   }
 
