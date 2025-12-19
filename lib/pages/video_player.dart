@@ -3,13 +3,14 @@ import 'dart:async';
 import 'package:bilitv/apis/bilibili/client.dart' show bilibiliHttpClient;
 import 'package:bilitv/apis/bilibili/history.dart';
 import 'package:bilitv/apis/bilibili/media.dart'
-    show getVideoPlayURL, GetVideoPlayURLResponse, SupportFormat;
+    show getVideoPlayURL, GetVideoPlayURLResponse, SupportFormat, DashData;
 import 'package:bilitv/consts/settings.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart' as model;
 import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/storages/settings.dart';
 import 'package:bilitv/widgets/bilibili_danmaku_wall.dart';
+import 'package:bilitv/widgets/focus_dropdown_button.dart';
 import 'package:bilitv/widgets/focus_progress_bar.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:flutter/material.dart';
@@ -21,85 +22,6 @@ import 'package:toastification/toastification.dart';
 
 const _step = Duration(seconds: 5);
 const _danmakuWaitDuration = Duration(seconds: 10);
-
-// 清晰度选择组件
-class _SelectQualityWidget extends StatelessWidget {
-  final OverlayEntry overlayEntry;
-  final _VideoPlayerPageState pageState;
-
-  const _SelectQualityWidget(this.overlayEntry, this.pageState);
-
-  void _onSelectQuality(SupportFormat sf) {
-    pageState._currentQuality = sf;
-    overlayEntry.remove();
-    pageState._onQualityChange();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    late int focusQuality;
-    if (pageState._videoPlayURLInfo.supportFormats.any(
-      (e) => e.quality == pageState._currentQuality.quality,
-    )) {
-      focusQuality = pageState._currentQuality.quality;
-    } else {
-      focusQuality = pageState._videoPlayURLInfo.supportFormats.last.quality;
-    }
-    final selects = pageState._videoPlayURLInfo.supportFormats
-        .map(
-          (e) => Container(
-            padding: EdgeInsets.symmetric(vertical: 4),
-            width: 320,
-            child: ElevatedButton(
-              autofocus: e.quality == focusQuality,
-              onPressed: () => _onSelectQuality(e),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white10,
-                foregroundColor: Colors.white,
-                overlayColor: Colors.pinkAccent.withValues(alpha: 0.5),
-                padding: EdgeInsets.symmetric(vertical: 14),
-                textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-              ),
-              child: Text(e.description),
-            ),
-          ),
-        )
-        .toList();
-
-    final children = [
-      Text('选择清晰度', style: TextStyle(color: Colors.white70, fontSize: 20)),
-      SizedBox(height: 8),
-    ];
-    children.addAll(selects);
-
-    return Center(
-      child: Material(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: FocusScope(
-            autofocus: true,
-            onKeyEvent: _onKeyEvent,
-            child: Column(mainAxisSize: MainAxisSize.min, children: children),
-          ),
-        ),
-      ),
-    );
-  }
-
-  KeyEventResult _onKeyEvent(FocusNode _, KeyEvent value) {
-    if (value is! KeyUpEvent) {
-      return KeyEventResult.ignored;
-    }
-    switch (value.logicalKey) {
-      case LogicalKeyboardKey.goBack:
-        overlayEntry.remove();
-        return KeyEventResult.handled;
-    }
-    return KeyEventResult.ignored;
-  }
-}
 
 // 视频控件
 class _VideoControlWidget extends StatefulWidget {
@@ -132,15 +54,13 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     Settings.setBool(Settings.pathDanmuSwitch, _pageState._danmakuCtl.enabled);
   }
 
-  void _onSelectQuality() {
-    OverlayState? overlayState = Overlay.of(context);
-    late OverlayEntry overlayEntry;
-    overlayEntry = OverlayEntry(
-      builder: (BuildContext context) {
-        return _SelectQualityWidget(overlayEntry, _pageState);
-      },
-    );
-    overlayState.insert(overlayEntry);
+  void _onSelectQuality(SupportFormat? sf) {
+    if (sf == null) {
+      return;
+    }
+    setState(() {
+      _pageState._onQualityChange(sf);
+    });
   }
 
   void _onPrevTapped() {
@@ -285,25 +205,27 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                         ),
                       ),
                     ),
-                    IconButton(
-                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
-                      onPressed: _onSelectQuality,
-                      icon: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 5.0),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.high_quality_rounded,
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: 5),
-                            Text(
-                              _pageState._currentQuality.description,
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
+                    FocusDropdownButton<SupportFormat>(
+                      icon: Icon(
+                        Icons.high_quality_outlined,
+                        color: Colors.white,
+                        size: 28,
                       ),
+                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
+                      dropdownColor: Colors.pinkAccent.shade100,
+                      initialValue: _pageState._currentQuality,
+                      allowValues: _pageState._videoPlayURLInfo.supportFormats
+                          .map(
+                            (e) => DropdownMenuItem<SupportFormat>(
+                              value: e,
+                              child: Text(
+                                e.description,
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: _onSelectQuality,
                     ),
                   ],
                 ),
@@ -452,21 +374,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     _currentQuality = _videoPlayURLInfo.supportFormats.firstWhere(
       (e) => e.quality == _videoPlayURLInfo.defaultQuality,
     );
-    final audioUrl = _videoPlayURLInfo.dashData.audio.first.baseUrl.replaceAll(
-      ':',
-      '\\:',
-    );
-    final platformPlayer = _controller.player.platform! as NativePlayer;
-    platformPlayer.setProperty("audio-files", audioUrl);
-    final videoUrl = _videoPlayURLInfo.dashData.video
-        .firstWhere((e) => e.quality == _currentQuality.quality)
-        .baseUrl;
-    await _controller.player.open(
-      Media(
-        videoUrl,
-        httpHeaders: bilibiliHttpClient.options.headers.cast<String, String>(),
-        start: playInfo?.lastPlayTime,
-      ),
+    await _playDashMedia(
+      _videoPlayURLInfo.dashData,
+      start: playInfo?.lastPlayTime,
     );
 
     // 开始心跳
@@ -484,11 +394,24 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     );
   }
 
-  Future<void> _onQualityChange() async {
+  Future<void> _onQualityChange(SupportFormat sf) async {
+    if (_currentQuality.quality == sf.quality) return;
+    _currentQuality = sf;
+
     // 暂停弹幕
     final danmakuEnabled = _danmakuCtl.enabled;
     _danmakuCtl.enabled = false;
 
+    await _playDashMedia(
+      _videoPlayURLInfo.dashData,
+      start: _controller.player.state.position,
+    );
+
+    // 恢复弹幕
+    _danmakuCtl.enabled = danmakuEnabled;
+  }
+
+  Future<void> _playDashMedia(DashData media, {Duration? start}) async {
     final audioUrl = _videoPlayURLInfo.dashData.audio.first.baseUrl.replaceAll(
       ':',
       '\\:',
@@ -502,12 +425,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       Media(
         videoUrl,
         httpHeaders: bilibiliHttpClient.options.headers.cast<String, String>(),
-        start: _controller.player.state.position,
+        start: start,
       ),
     );
-
-    // 恢复弹幕
-    _danmakuCtl.enabled = danmakuEnabled;
   }
 
   void _onPlayCompleted() {
