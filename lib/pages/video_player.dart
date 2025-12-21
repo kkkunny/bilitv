@@ -2,15 +2,17 @@ import 'dart:async';
 
 import 'package:bilitv/apis/bilibili/client.dart' show bilibiliHttpClient;
 import 'package:bilitv/apis/bilibili/history.dart';
-import 'package:bilitv/apis/bilibili/media.dart' show getVideoPlayURL;
-import 'package:bilitv/consts/bilibili.dart' show VideoQuality;
+import 'package:bilitv/apis/bilibili/media.dart'
+    show getVideoPlayURL, GetVideoPlayURLResponse, Quality, DashData;
 import 'package:bilitv/consts/settings.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart' as model;
 import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/storages/settings.dart';
 import 'package:bilitv/widgets/bilibili_danmaku_wall.dart';
+import 'package:bilitv/widgets/focus_dropdown_button.dart';
 import 'package:bilitv/widgets/focus_progress_bar.dart';
+import 'package:bilitv/widgets/loading.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,63 +23,6 @@ import 'package:toastification/toastification.dart';
 
 const _step = Duration(seconds: 5);
 const _danmakuWaitDuration = Duration(seconds: 10);
-
-// 清晰度选择组件
-class _SelectQualityWidget extends StatelessWidget {
-  final OverlayEntry overlayEntry;
-  final _VideoPlayerPageState pageState;
-
-  const _SelectQualityWidget(this.overlayEntry, this.pageState);
-
-  void _onSelectQuality(VideoQuality quality) {
-    pageState._currentQuality.value = quality;
-    overlayEntry.remove();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final selects = pageState._allowQualities
-        .map(
-          (e) => Container(
-            padding: EdgeInsets.symmetric(vertical: 4),
-            width: 320,
-            child: ElevatedButton(
-              autofocus: e == pageState._currentQuality.value,
-              onPressed: () => _onSelectQuality(e),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white10,
-                foregroundColor: Colors.white,
-                overlayColor: Colors.blue,
-                padding: EdgeInsets.symmetric(vertical: 14),
-                textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-              ),
-              child: Text(e.name),
-            ),
-          ),
-        )
-        .toList();
-
-    final children = [
-      Text('选择清晰度', style: TextStyle(color: Colors.white70, fontSize: 20)),
-      SizedBox(height: 8),
-    ];
-    children.addAll(selects);
-
-    return Center(
-      child: Material(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: FocusScope(
-            autofocus: true,
-            child: Column(mainAxisSize: MainAxisSize.min, children: children),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // 视频控件
 class _VideoControlWidget extends StatefulWidget {
@@ -110,15 +55,14 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     Settings.setBool(Settings.pathDanmuSwitch, _pageState._danmakuCtl.enabled);
   }
 
-  void _onSelectQuality() {
-    OverlayState? overlayState = Overlay.of(context);
-    late OverlayEntry overlayEntry;
-    overlayEntry = OverlayEntry(
-      builder: (BuildContext context) {
-        return _SelectQualityWidget(overlayEntry, _pageState);
-      },
-    );
-    overlayState.insert(overlayEntry);
+  void _onSelectQuality(Quality? sf) {
+    if (sf == null) {
+      return;
+    }
+    Settings.setInt(Settings.pathQualitySwitch, sf.id);
+    setState(() {
+      _pageState._onQualityChange(sf);
+    });
   }
 
   void _onPrevTapped() {
@@ -213,7 +157,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                 Row(
                   children: [
                     IconButton(
-                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                       onPressed: _onPrevTapped,
                       icon: Icon(
                         Icons.skip_previous_rounded,
@@ -225,7 +169,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                       stream: widget.player.stream.playing,
                       builder: (context, playing) => IconButton(
                         autofocus: true,
-                        focusColor: Colors.grey.withValues(alpha: 0.2),
+                        focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                         onPressed: _onPlayOrPauseTapped,
                         icon: Icon(
                           playing.data ?? widget.player.state.playing
@@ -237,7 +181,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                       ),
                     ),
                     IconButton(
-                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                       onPressed: _onNextTapped,
                       icon: Icon(
                         Icons.skip_next_rounded,
@@ -245,9 +189,9 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                         size: 44,
                       ),
                     ),
-                    Spacer(),
+                    const Spacer(),
                     IconButton(
-                      focusColor: Colors.grey.withValues(alpha: 0.2),
+                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                       onPressed: _onDanmakuSwitchTapped,
                       icon: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 5.0),
@@ -263,25 +207,27 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                         ),
                       ),
                     ),
-                    IconButton(
-                      focusColor: Colors.grey.withValues(alpha: 0.2),
-                      onPressed: _onSelectQuality,
-                      icon: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 5.0),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.high_quality_rounded,
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: 5),
-                            Text(
-                              _pageState._currentQuality.value.name,
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
+                    FocusDropdownButton<Quality>(
+                      icon: Icon(
+                        Icons.high_quality_outlined,
+                        color: Colors.white,
+                        size: 28,
                       ),
+                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
+                      dropdownColor: Colors.pinkAccent.shade100,
+                      initialValue: _pageState._currentQuality,
+                      allowValues: _pageState._videoPlayURLInfo.supportFormats
+                          .map(
+                            (e) => DropdownMenuItem<Quality>(
+                              value: e,
+                              child: Text(
+                                e.description,
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: _onSelectQuality,
                     ),
                   ],
                 ),
@@ -320,10 +266,8 @@ class VideoPlayerPage extends StatefulWidget {
 
 class _VideoPlayerPageState extends State<VideoPlayerPage> {
   late final ValueNotifier<int> _currentCid;
-  final _allowQualities = VideoQuality.values
-      .where((e) => !e.needLogin || loginInfoNotifier.value.isLogin)
-      .toList();
-  late final ValueNotifier<VideoQuality> _currentQuality;
+  late GetVideoPlayURLResponse _videoPlayURLInfo;
+  late Quality _currentQuality;
 
   late final VideoController _controller;
   late final BilibiliDanmakuWallController _danmakuCtl;
@@ -338,8 +282,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     super.initState();
     _currentCid = ValueNotifier(widget.cid);
     _currentCid.addListener(_onEpisodeChanged);
-    _currentQuality = ValueNotifier(VideoQuality.vq1080P);
-    _currentQuality.addListener(_onQualityChange);
     _controller = VideoController(
       Player(),
       configuration: VideoControllerConfiguration(
@@ -364,7 +306,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     _screenFocusNode.dispose();
     _danmakuCtl.dispose();
     _controller.player.dispose();
-    _currentQuality.dispose();
     _currentCid.dispose();
     super.dispose();
   }
@@ -428,17 +369,20 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       } catch (_) {}
     }
 
-    final infos = await getVideoPlayURL(
+    _videoPlayURLInfo = await getVideoPlayURL(
       avid: widget.video.avid,
       cid: _currentCid.value,
-      quality: _currentQuality.value.index,
     );
-    await _controller.player.open(
-      Media(
-        infos.first.urls.first,
-        httpHeaders: bilibiliHttpClient.options.headers.cast<String, String>(),
-        start: playInfo?.lastPlayTime,
-      ),
+
+    final qualityID =
+        await Settings.getInt(Settings.pathQualitySwitch) ??
+        _videoPlayURLInfo.defaultQualityID;
+    _currentQuality = _videoPlayURLInfo.supportFormats.firstWhere(
+      (e) => e.id == qualityID,
+    );
+    await _playDashMedia(
+      _videoPlayURLInfo.dashData,
+      start: playInfo?.lastPlayTime,
     );
 
     // 开始心跳
@@ -456,26 +400,36 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     );
   }
 
-  Future<void> _onQualityChange() async {
+  Future<void> _onQualityChange(Quality sf) async {
+    if (_currentQuality.id == sf.id) return;
+    _currentQuality = sf;
+
     // 暂停弹幕
     final danmakuEnabled = _danmakuCtl.enabled;
     _danmakuCtl.enabled = false;
 
-    final infos = await getVideoPlayURL(
-      avid: widget.video.avid,
-      cid: _currentCid.value,
-      quality: _currentQuality.value.index,
-    );
-    await _controller.player.open(
-      Media(
-        infos.first.urls.first,
-        httpHeaders: bilibiliHttpClient.options.headers.cast<String, String>(),
-        start: _controller.player.state.position,
-      ),
+    await _playDashMedia(
+      _videoPlayURLInfo.dashData,
+      start: _controller.player.state.position,
     );
 
     // 恢复弹幕
     _danmakuCtl.enabled = danmakuEnabled;
+  }
+
+  Future<void> _playDashMedia(DashData media, {Duration? start}) async {
+    await _controller.player.open(
+      Media(
+        _videoPlayURLInfo.dashData.video
+            .firstWhere((e) => e.quality == _currentQuality.id)
+            .baseUrl,
+        httpHeaders: bilibiliHttpClient.options.headers.cast<String, String>(),
+        start: start,
+      ),
+    );
+    await _controller.player.setAudioTrack(
+      AudioTrack.uri(_videoPlayURLInfo.dashData.audio.first.baseUrl),
+    );
   }
 
   void _onPlayCompleted() {
@@ -502,6 +456,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
           child: Stack(
             children: [
               Video(controller: _controller, controls: NoVideoControls),
+              StreamBuilder<bool>(
+                stream: _controller.player.stream.buffering,
+                builder: (context, buffering) => (buffering.data ?? false)
+                    ? buildLoadingStyle3()
+                    : const SizedBox(),
+              ),
               ValueListenableBuilder(
                 valueListenable: _currentCid,
                 builder: (context, cid, child) => BilibiliDanmakuWall(
@@ -514,7 +474,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
               ValueListenableBuilder(
                 valueListenable: _displayControl,
                 builder: (context, display, child) {
-                  return display ? child! : Container();
+                  return display ? child! : const SizedBox();
                 },
                 child: _VideoControlWidget(_controller.player),
               ),

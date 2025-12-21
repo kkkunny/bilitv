@@ -1,19 +1,93 @@
 import 'package:bilitv/models/pbs/dm.pb.dart';
-import 'package:bilitv/models/video.dart' show VideoPlayInfo, Video;
+import 'package:bilitv/models/video.dart' show Video;
 import 'package:bilitv/storages/auth.dart' show loadCookie;
 import 'package:dio/dio.dart';
 
 import 'client.dart';
 import 'dynamic.dart';
 
+class Quality {
+  late final int id;
+  late final String description;
+
+  Quality({required this.id, required this.description});
+
+  factory Quality.fromJson(Map<String, dynamic> json) {
+    return Quality(id: json['quality'], description: json['new_description']);
+  }
+}
+
+class DashMediaData {
+  final int quality;
+  final String baseUrl;
+  final List<String> backupUrls;
+
+  const DashMediaData({
+    required this.quality,
+    required this.baseUrl,
+    required this.backupUrls,
+  });
+
+  factory DashMediaData.fromJson(Map<String, dynamic> json) {
+    return DashMediaData(
+      quality: json['id'],
+      baseUrl: json['base_url'],
+      backupUrls:
+          ((json['backup_url'] ?? List<dynamic>.empty()) as List<dynamic>)
+              .map((e) => e as String)
+              .toList(),
+    );
+  }
+}
+
+class DashData {
+  final List<DashMediaData> video;
+  final List<DashMediaData> audio;
+
+  const DashData({this.video = const [], this.audio = const []});
+
+  factory DashData.fromJson(Map<String, dynamic> json) {
+    return DashData(
+      video: ((json['video'] ?? List<dynamic>.empty()) as List<dynamic>)
+          .map((item) => DashMediaData.fromJson(item))
+          .toList(),
+      audio: ((json['audio'] ?? List<dynamic>.empty()) as List<dynamic>)
+          .map((item) => DashMediaData.fromJson(item))
+          .toList(),
+    );
+  }
+}
+
+class GetVideoPlayURLResponse {
+  late final int defaultQualityID;
+  late final List<Quality> supportFormats;
+  late final DashData dashData;
+
+  GetVideoPlayURLResponse({
+    required this.defaultQualityID,
+    this.supportFormats = const [],
+    this.dashData = const DashData(),
+  });
+
+  factory GetVideoPlayURLResponse.fromJson(Map<String, dynamic> json) {
+    return GetVideoPlayURLResponse(
+      defaultQualityID: json['quality'],
+      supportFormats:
+          ((json['support_formats'] ?? List<dynamic>.empty()) as List<dynamic>)
+              .map((item) => Quality.fromJson(item))
+              .toList(),
+      dashData: DashData.fromJson(json['dash']),
+    );
+  }
+}
+
 // 获取视频播放地址
-Future<List<VideoPlayInfo>> getVideoPlayURL({
+Future<GetVideoPlayURLResponse> getVideoPlayURL({
   int? avid,
   String? bvid,
   required int cid,
-  int quality = 32,
 }) async {
-  Map<String, dynamic> queryParams = {'cid': cid, 'qn': quality};
+  Map<String, dynamic> queryParams = {'cid': cid, 'fnval': 16};
   if (avid != null) {
     queryParams['avid'] = avid;
   } else {
@@ -24,11 +98,7 @@ Future<List<VideoPlayInfo>> getVideoPlayURL({
     'https://api.bilibili.com/x/player/wbi/playurl',
     queries: queryParams,
   );
-  final List<VideoPlayInfo> videos = [];
-  for (final item in data['durl']) {
-    videos.add(VideoPlayInfo.fromJson(item));
-  }
-  return videos;
+  return GetVideoPlayURLResponse.fromJson(data);
 }
 
 // 获取视频信息

@@ -463,7 +463,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             ),
           ),
         ),
-        Spacer(flex: 1),
+        const Spacer(flex: 1),
         Expanded(
           flex: 14,
           child: FixedLineAdaptiveText(
@@ -487,7 +487,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         const SizedBox(width: 12),
         Column(
           children: [
-            Spacer(flex: 1),
+            const Spacer(flex: 1),
             Expanded(
               flex: 3,
               child: FixedLineAdaptiveText(
@@ -499,7 +499,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                 ),
               ),
             ),
-            Spacer(flex: 1),
+            const Spacer(flex: 1),
             Expanded(
               flex: 2,
               child: FixedLineAdaptiveText(
@@ -508,14 +508,14 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ),
-            Spacer(flex: 1),
+            const Spacer(flex: 1),
           ],
         ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Spacer(flex: 3),
+              const Spacer(flex: 3),
               Expanded(
                 flex: 1,
                 child: FixedLineAdaptiveText(
@@ -572,7 +572,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                   padding: const EdgeInsets.all(4),
                   child: Column(
                     children: [
-                      Spacer(flex: 2),
+                      const Spacer(flex: 2),
                       Expanded(
                         flex: 2,
                         child: FixedLineAdaptiveText(
@@ -608,7 +608,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                           ),
                         ),
                       ),
-                      Spacer(flex: 2),
+                      const Spacer(flex: 2),
                     ],
                   ),
                 ),

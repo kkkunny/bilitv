@@ -16,6 +16,22 @@ Widget buildLoadingStyle1() {
   );
 }
 
+Widget buildLoadingStyle3() {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.asset("assets/images/loading/loading3.gif"),
+        const SizedBox(height: 16),
+        const Text(
+          '加载中...',
+          style: TextStyle(color: Colors.grey, fontSize: 16),
+        ),
+      ],
+    ),
+  );
+}
+
 class LoadingWidget<T> extends StatefulWidget {
   final ValueNotifier<bool>? isLoading;
   final Future<T> Function() loader;

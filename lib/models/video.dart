@@ -144,35 +144,6 @@ class MediaCardInfo {
   }
 }
 
-class VideoPlayInfo {
-  final int order;
-  final Duration length;
-  final int size; // byte
-  final List<String> urls;
-
-  VideoPlayInfo({
-    required this.order,
-    required this.length,
-    required this.size,
-    required this.urls,
-  });
-
-  factory VideoPlayInfo.fromJson(Map<String, dynamic> json) {
-    List<String> urls = [];
-    final url = json['url'] ?? "";
-    if (url == "") {
-      urls.add(url);
-    }
-    urls.addAll((json['backup_url'] ?? []).cast<String>());
-    return VideoPlayInfo(
-      order: json['order'] ?? 0,
-      length: Duration(milliseconds: json['length'] ?? 0),
-      size: json['size'] ?? 0,
-      urls: urls,
-    );
-  }
-}
-
 // 统计信息
 class Stat {
   final int viewCount;
