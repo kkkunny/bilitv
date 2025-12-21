@@ -109,7 +109,7 @@ class _PageState extends State<Page> with SingleTickerProviderStateMixin {
             future: Future.value(true),
             builder: (context, snap) {
               if (!snap.hasData) {
-                return Container();
+                return const SizedBox();
               }
 
               return Container(

@@ -188,7 +188,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                         size: 44,
                       ),
                     ),
-                    Spacer(),
+                    const Spacer(),
                     IconButton(
                       focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                       onPressed: _onDanmakuSwitchTapped,
@@ -455,7 +455,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
                 stream: _controller.player.stream.buffering,
                 builder: (context, buffering) => (buffering.data ?? false)
                     ? buildLoadingStyle3()
-                    : SizedBox(),
+                    : const SizedBox(),
               ),
               ValueListenableBuilder(
                 valueListenable: _currentCid,
@@ -469,7 +469,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
               ValueListenableBuilder(
                 valueListenable: _displayControl,
                 builder: (context, display, child) {
-                  return display ? child! : Container();
+                  return display ? child! : const SizedBox();
                 },
                 child: _VideoControlWidget(_controller.player),
               ),

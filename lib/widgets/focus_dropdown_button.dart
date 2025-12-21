@@ -67,11 +67,11 @@ class _FocusDropdownButtonState<T> extends State<FocusDropdownButton<T>> {
         padding: const EdgeInsets.symmetric(horizontal: 6),
         child: Row(
           children: [
-            widget.icon ?? SizedBox(),
+            widget.icon ?? const SizedBox(),
             DropdownButton<T>(
               focusNode: focusNode,
-              icon: SizedBox(),
-              underline: SizedBox(),
+              icon: const SizedBox(),
+              underline: const SizedBox(),
               onChanged: widget.onChanged,
               value: widget.initialValue,
               items: widget.allowValues,
