@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:bilitv/apis/bilibili/client.dart' show bilibiliHttpClient;
 import 'package:bilitv/apis/bilibili/history.dart';
 import 'package:bilitv/apis/bilibili/media.dart'
-    show getVideoPlayURL, GetVideoPlayURLResponse, SupportFormat, DashData;
+    show getVideoPlayURL, GetVideoPlayURLResponse, Quality, DashData;
 import 'package:bilitv/consts/settings.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart' as model;
@@ -55,10 +55,11 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     Settings.setBool(Settings.pathDanmuSwitch, _pageState._danmakuCtl.enabled);
   }
 
-  void _onSelectQuality(SupportFormat? sf) {
+  void _onSelectQuality(Quality? sf) {
     if (sf == null) {
       return;
     }
+    Settings.setInt(Settings.pathQualitySwitch, sf.id);
     setState(() {
       _pageState._onQualityChange(sf);
     });
@@ -206,7 +207,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                         ),
                       ),
                     ),
-                    FocusDropdownButton<SupportFormat>(
+                    FocusDropdownButton<Quality>(
                       icon: Icon(
                         Icons.high_quality_outlined,
                         color: Colors.white,
@@ -217,7 +218,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                       initialValue: _pageState._currentQuality,
                       allowValues: _pageState._videoPlayURLInfo.supportFormats
                           .map(
-                            (e) => DropdownMenuItem<SupportFormat>(
+                            (e) => DropdownMenuItem<Quality>(
                               value: e,
                               child: Text(
                                 e.description,
@@ -266,7 +267,7 @@ class VideoPlayerPage extends StatefulWidget {
 class _VideoPlayerPageState extends State<VideoPlayerPage> {
   late final ValueNotifier<int> _currentCid;
   late GetVideoPlayURLResponse _videoPlayURLInfo;
-  late SupportFormat _currentQuality;
+  late Quality _currentQuality;
 
   late final VideoController _controller;
   late final BilibiliDanmakuWallController _danmakuCtl;
@@ -372,8 +373,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       avid: widget.video.avid,
       cid: _currentCid.value,
     );
+
+    final qualityID =
+        await Settings.getInt(Settings.pathQualitySwitch) ??
+        _videoPlayURLInfo.defaultQualityID;
     _currentQuality = _videoPlayURLInfo.supportFormats.firstWhere(
-      (e) => e.quality == _videoPlayURLInfo.defaultQuality,
+      (e) => e.id == qualityID,
     );
     await _playDashMedia(
       _videoPlayURLInfo.dashData,
@@ -395,8 +400,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     );
   }
 
-  Future<void> _onQualityChange(SupportFormat sf) async {
-    if (_currentQuality.quality == sf.quality) return;
+  Future<void> _onQualityChange(Quality sf) async {
+    if (_currentQuality.id == sf.id) return;
     _currentQuality = sf;
 
     // 暂停弹幕
@@ -416,7 +421,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     await _controller.player.open(
       Media(
         _videoPlayURLInfo.dashData.video
-            .firstWhere((e) => e.quality == _currentQuality.quality)
+            .firstWhere((e) => e.quality == _currentQuality.id)
             .baseUrl,
         httpHeaders: bilibiliHttpClient.options.headers.cast<String, String>(),
         start: start,

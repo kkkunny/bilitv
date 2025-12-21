@@ -6,17 +6,14 @@ import 'package:dio/dio.dart';
 import 'client.dart';
 import 'dynamic.dart';
 
-class SupportFormat {
-  late final int quality;
+class Quality {
+  late final int id;
   late final String description;
 
-  SupportFormat({required this.quality, required this.description});
+  Quality({required this.id, required this.description});
 
-  factory SupportFormat.fromJson(Map<String, dynamic> json) {
-    return SupportFormat(
-      quality: json['quality'],
-      description: json['new_description'],
-    );
+  factory Quality.fromJson(Map<String, dynamic> json) {
+    return Quality(id: json['quality'], description: json['new_description']);
   }
 }
 
@@ -62,22 +59,22 @@ class DashData {
 }
 
 class GetVideoPlayURLResponse {
-  late final int defaultQuality;
-  late final List<SupportFormat> supportFormats;
+  late final int defaultQualityID;
+  late final List<Quality> supportFormats;
   late final DashData dashData;
 
   GetVideoPlayURLResponse({
-    required this.defaultQuality,
+    required this.defaultQualityID,
     this.supportFormats = const [],
     this.dashData = const DashData(),
   });
 
   factory GetVideoPlayURLResponse.fromJson(Map<String, dynamic> json) {
     return GetVideoPlayURLResponse(
-      defaultQuality: json['quality'],
+      defaultQualityID: json['quality'],
       supportFormats:
           ((json['support_formats'] ?? List<dynamic>.empty()) as List<dynamic>)
-              .map((item) => SupportFormat.fromJson(item))
+              .map((item) => Quality.fromJson(item))
               .toList(),
       dashData: DashData.fromJson(json['dash']),
     );
