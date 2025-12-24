@@ -474,9 +474,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
               ValueListenableBuilder(
                 valueListenable: _displayControl,
                 builder: (context, display, child) {
-                  return display ? child! : const SizedBox();
+                  return display
+                      ? _VideoControlWidget(_controller.player)
+                      : const SizedBox();
                 },
-                child: _VideoControlWidget(_controller.player),
               ),
             ],
           ),
