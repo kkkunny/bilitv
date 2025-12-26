@@ -72,31 +72,28 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: VideoGridView(
-        provider: _provider,
-        onItemTap: _onVideoTapped,
-        itemMenuActions: [
-          ItemMenuAction(
-            title: '历史记录',
-            icon: Icons.playlist_remove_rounded,
-            action: (media) {
-              if (!loginInfoNotifier.value.isLogin) return;
+    return VideoGridView(
+      provider: _provider,
+      onItemTap: _onVideoTapped,
+      itemMenuActions: [
+        ItemMenuAction(
+          title: '历史记录',
+          icon: Icons.playlist_remove_rounded,
+          action: (media) {
+            if (!loginInfoNotifier.value.isLogin) return;
 
-              deleteHistory(media.avid);
-              pushTooltipInfo(context, '已从历史记录中移除：${media.title}');
-              final newVideos = _provider.toList();
-              newVideos.removeWhere((video) => video.avid == media.avid);
-              _refreshFromData(newVideos);
-            },
-          ),
-        ],
-        refreshWidget: buildLoadingStyle1(),
-        noItemsWidget: FractionallySizedBox(
-          widthFactor: 0.2,
-          child: Image.asset(Images.empty, fit: BoxFit.contain),
+            deleteHistory(media.avid);
+            pushTooltipInfo(context, '已从历史记录中移除：${media.title}');
+            final newVideos = _provider.toList();
+            newVideos.removeWhere((video) => video.avid == media.avid);
+            _refreshFromData(newVideos);
+          },
         ),
+      ],
+      refreshWidget: buildLoadingStyle1(),
+      noItemsWidget: FractionallySizedBox(
+        widthFactor: 0.2,
+        child: Image.asset(Images.empty, fit: BoxFit.contain),
       ),
     );
   }

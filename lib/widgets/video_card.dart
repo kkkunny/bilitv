@@ -2,8 +2,8 @@ import 'package:bilitv/models/video.dart';
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/text.dart';
+import 'package:dpad/dpad.dart';
 import 'package:flutter/material.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 
 const videoCardAspectRatio = 1.2;
 
@@ -16,31 +16,24 @@ class VideoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return VisibilityDetector(
-      key: Key(video.avid.toString()),
-      onVisibilityChanged: null,
+    return DpadFocusable(
+      builder: FocusEffects.glow(
+        glowColor: Theme.of(context).highlightColor,
+        borderRadius: BorderRadius.circular(12),
+        spreadRadius: 10,
+      ),
+      onSelect: onTap,
+      onFocus: onFocus,
       child: AspectRatio(
         aspectRatio: videoCardAspectRatio,
-        child: InkWell(
-          onTap: onTap,
-          onFocusChange: (focus) {
-            if (!focus || onFocus == null) return;
-            onFocus!();
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCover(),
-                  ?_buildProgress(),
-                  _buildTitle(context),
-                ],
-              ),
-            ),
+        child: Material(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [_buildCover(), ?_buildProgress(), _buildTitle(context)],
           ),
         ),
       ),
@@ -74,12 +67,10 @@ class VideoCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                ClipOval(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: BilibiliAvatar(video.userAvatar),
-                  ),
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: BilibiliAvatar(video.userAvatar),
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -105,16 +96,16 @@ class VideoCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                     color: Colors.black.withValues(alpha: 0.3),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(top: 2),
+                        padding: EdgeInsets.only(top: 2),
                         child: Icon(Icons.done, size: 14, color: Colors.green),
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       Text(
                         "已看完",
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.green,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -141,8 +132,8 @@ class VideoCard extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 2),
                         child: Icon(
                           Icons.play_circle_outline_sharp,
                           size: 14,
@@ -169,8 +160,8 @@ class VideoCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
                   child: Icon(
                     Icons.access_time_sharp,
                     size: 14,

@@ -309,6 +309,14 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
                 _itemBuilder(context, index, item),
             primary: widget.shrinkWrap,
             noItemsWidget: widget.noItemsWidget,
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.scrollDirection == Axis.horizontal
+                  ? widget.mainAxisSpacing
+                  : widget.crossAxisSpacing,
+              vertical: widget.scrollDirection == Axis.vertical
+                  ? widget.mainAxisSpacing
+                  : widget.crossAxisSpacing,
+            ),
           ),
         ),
       ),

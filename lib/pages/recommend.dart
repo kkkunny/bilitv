@@ -64,28 +64,25 @@ class _RecommendPageState extends State<RecommendPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: VideoGridView(
-        provider: _provider,
-        onItemTap: _onVideoTapped,
-        itemMenuActions: [
-          ItemMenuAction(
-            title: '稍后再看',
-            icon: Icons.playlist_add_rounded,
-            action: (media) {
-              if (!loginInfoNotifier.value.isLogin) return;
+    return VideoGridView(
+      provider: _provider,
+      onItemTap: _onVideoTapped,
+      itemMenuActions: [
+        ItemMenuAction(
+          title: '稍后再看',
+          icon: Icons.playlist_add_rounded,
+          action: (media) {
+            if (!loginInfoNotifier.value.isLogin) return;
 
-              addToView(avid: media.avid);
-              pushTooltipInfo(context, '已加入稍后再看：${media.title}');
-            },
-          ),
-        ],
-        refreshWidget: buildLoadingStyle1(),
-        noItemsWidget: FractionallySizedBox(
-          widthFactor: 0.2,
-          child: Image.asset(Images.empty, fit: BoxFit.contain),
+            addToView(avid: media.avid);
+            pushTooltipInfo(context, '已加入稍后再看：${media.title}');
+          },
         ),
+      ],
+      refreshWidget: buildLoadingStyle1(),
+      noItemsWidget: FractionallySizedBox(
+        widthFactor: 0.2,
+        child: Image.asset(Images.empty, fit: BoxFit.contain),
       ),
     );
   }

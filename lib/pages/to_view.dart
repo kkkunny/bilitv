@@ -65,33 +65,30 @@ class _ToViewPageState extends State<ToViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: VideoGridView(
-        provider: _provider,
-        onItemTap: _onVideoTapped,
-        itemMenuActions: [
-          ItemMenuAction(
-            title: '移除',
-            icon: Icons.playlist_remove_rounded,
-            action: (media) {
-              if (!loginInfoNotifier.value.isLogin) return;
+    return VideoGridView(
+      provider: _provider,
+      onItemTap: _onVideoTapped,
+      itemMenuActions: [
+        ItemMenuAction(
+          title: '移除',
+          icon: Icons.playlist_remove_rounded,
+          action: (media) {
+            if (!loginInfoNotifier.value.isLogin) return;
 
-              deleteToView(media.avid);
-              pushTooltipInfo(context, '已从稍后再看中移除：${media.title}');
+            deleteToView(media.avid);
+            pushTooltipInfo(context, '已从稍后再看中移除：${media.title}');
 
-              // 避免服务器主从延迟
-              Future.delayed(const Duration(seconds: 1), () {
-                _onRefresh();
-              });
-            },
-          ),
-        ],
-        refreshWidget: buildLoadingStyle1(),
-        noItemsWidget: FractionallySizedBox(
-          widthFactor: 0.2,
-          child: Image.asset(Images.empty, fit: BoxFit.contain),
+            // 避免服务器主从延迟
+            Future.delayed(const Duration(seconds: 1), () {
+              _onRefresh();
+            });
+          },
         ),
+      ],
+      refreshWidget: buildLoadingStyle1(),
+      noItemsWidget: FractionallySizedBox(
+        widthFactor: 0.2,
+        child: Image.asset(Images.empty, fit: BoxFit.contain),
       ),
     );
   }

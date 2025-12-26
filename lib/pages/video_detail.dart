@@ -629,26 +629,23 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   Widget _buildRelatedVideos() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      child: VideoGridView(
-        provider: _relatedVideosProvider,
-        scrollDirection: Axis.horizontal,
-        onItemTap: _onVideoTapped,
-        crossAxisCount: 1,
-        itemMenuActions: [
-          ItemMenuAction(
-            title: '稍后再看',
-            icon: Icons.playlist_add_rounded,
-            action: (media) {
-              if (!loginInfoNotifier.value.isLogin) return;
+    return VideoGridView(
+      provider: _relatedVideosProvider,
+      scrollDirection: Axis.horizontal,
+      onItemTap: _onVideoTapped,
+      crossAxisCount: 1,
+      itemMenuActions: [
+        ItemMenuAction(
+          title: '稍后再看',
+          icon: Icons.playlist_add_rounded,
+          action: (media) {
+            if (!loginInfoNotifier.value.isLogin) return;
 
-              addToView(avid: media.avid);
-              pushTooltipInfo(context, '已加入稍后再看：${media.title}');
-            },
-          ),
-        ],
-      ),
+            addToView(avid: media.avid);
+            pushTooltipInfo(context, '已加入稍后再看：${media.title}');
+          },
+        ),
+      ],
     );
   }
 }
