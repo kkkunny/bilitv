@@ -60,6 +60,7 @@ dependencies:
   xpath_selector_html_parser: ^3.0.1 # xpath
   settings_ui: ^2.0.2 # 设置页ui
   dpad: ^2.0.2 # 方向键导航系统
+  flutter_lazy_indexed_stack: ^0.1.0 # 懒加载indexed_stack
 
 dev_dependencies:
   flutter_test:

@@ -270,6 +270,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.14.4"
+  flutter_lazy_indexed_stack:
+    dependency: "direct main"
+    description:
+      name: flutter_lazy_indexed_stack
+      sha256: e5a6c061a336dcb6f6758d63c7d3d40698a4581e766da6de00ed2b8822b15199
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.0"
   flutter_lints:
     dependency: "direct dev"
     description:

@@ -7,18 +7,21 @@ import 'package:bilitv/pages/to_view.dart';
 import 'package:bilitv/pages/user.dart';
 import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
-import 'package:bilitv/widgets/keep_alive.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_lazy_indexed_stack/flutter_lazy_indexed_stack.dart';
 import 'package:get/get.dart';
 
 class _PageItem {
   final IconData icon;
   late final Widget child;
+  late final bool homePage;
+
   final onTappedListener = ValueNotifier(0);
 
   _PageItem({
     required this.icon,
     required Widget Function(ValueNotifier<int>) child,
+    this.homePage = false,
   }) {
     this.child = child(onTappedListener);
   }
@@ -35,20 +38,14 @@ class Page extends StatefulWidget {
   State<Page> createState() => _PageState();
 }
 
-class _PageState extends State<Page> with SingleTickerProviderStateMixin {
+class _PageState extends State<Page> {
   late final List<_PageItem> _tabs;
-  late PageController _pageController;
+  late ValueNotifier<int> _currentPageIndex;
   late List<FocusNode> _pageFocusNodes;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 4);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
     _tabs = [
       _PageItem(
         icon: Icons.account_circle_rounded,
@@ -68,36 +65,33 @@ class _PageState extends State<Page> with SingleTickerProviderStateMixin {
       ),
       _PageItem(
         icon: Icons.home_max_rounded,
-        child: (listener) => KeepAliveWidget(child: RecommendPage(listener)),
+        child: (listener) => RecommendPage(listener),
+        homePage: true,
       ),
     ];
     _pageFocusNodes = _tabs.map((e) => FocusNode()).toList();
+    _currentPageIndex = ValueNotifier(_tabs.lastIndexWhere((e) => e.homePage));
   }
 
   @override
   void dispose() {
+    _currentPageIndex.dispose();
     for (var node in _pageFocusNodes) {
       node.dispose();
     }
     for (var tab in _tabs) {
       tab.dispose();
     }
-    _pageController.dispose();
     super.dispose();
   }
 
   _onTabTapped(_PageItem tab) {
     final index = _tabs.indexOf(tab);
-    if (_pageController.page != index) {
-      _pageController.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-      return;
+    if (_currentPageIndex.value != index) {
+      _currentPageIndex.value = index;
+    } else {
+      tab.onTappedListener.value = DateTime.now().microsecondsSinceEpoch;
     }
-
-    tab.onTappedListener.value = DateTime.now().microsecondsSinceEpoch;
   }
 
   @override
@@ -105,81 +99,73 @@ class _PageState extends State<Page> with SingleTickerProviderStateMixin {
     return Scaffold(
       body: Row(
         children: [
-          FutureBuilder(
-            future: Future.value(true),
-            builder: (context, snap) {
-              if (!snap.hasData) {
-                return const SizedBox();
-              }
-
-              return Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                width: 80,
-                decoration: BoxDecoration(
-                  border: Border(
-                    right: BorderSide(
-                      color: Colors.pink.withValues(alpha: 0.1),
-                      width: 1,
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            width: 80,
+            decoration: BoxDecoration(
+              border: Border(
+                right: BorderSide(
+                  color: Colors.pink.withValues(alpha: 0.1),
+                  width: 1,
+                ),
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ListenableBuilder(
+                  listenable: loginInfoNotifier,
+                  builder: (context, child) {
+                    return BilibiliAvatar(
+                      loginInfoNotifier.value.avatar,
+                      radius: 30,
+                    );
+                  },
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: Get.height / 5),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: _tabs
+                          .map(
+                            (tab) => IconButton(
+                              autofocus:
+                                  _tabs.indexOf(tab) == _currentPageIndex.value,
+                              onPressed: () => _onTabTapped(tab),
+                              icon: ValueListenableBuilder(
+                                valueListenable: _currentPageIndex,
+                                builder: (context, index, _) => Icon(
+                                  tab.icon,
+                                  color: _tabs.indexOf(tab) == index
+                                      ? Colors.pinkAccent
+                                      : Colors.grey.shade400,
+                                  size: 40,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
                     ),
                   ),
-                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ListenableBuilder(
-                      listenable: loginInfoNotifier,
-                      builder: (context, child) {
-                        return BilibiliAvatar(
-                          loginInfoNotifier.value.avatar,
-                          radius: 30,
-                        );
-                      },
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: Get.height / 5),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: _tabs
-                              .map(
-                                (tab) => IconButton(
-                                  autofocus:
-                                      _tabs.indexOf(tab) ==
-                                      _pageController.initialPage,
-                                  onPressed: () => _onTabTapped(tab),
-                                  icon: ListenableBuilder(
-                                    listenable: _pageController,
-                                    builder: (context, child) => Icon(
-                                      tab.icon,
-                                      color:
-                                          _pageController.page?.round() ==
-                                              _tabs.indexOf(tab)
-                                          ? Colors.pinkAccent
-                                          : Colors.grey.shade400,
-                                      size: 40,
-                                    ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Get.to(const SettingPage()),
-                      icon: Icon(Icons.settings, size: 40),
-                    ),
-                  ],
+                IconButton(
+                  onPressed: () => Get.to(const SettingPage()),
+                  icon: const Icon(Icons.settings, size: 40),
                 ),
-              );
-            },
+              ],
+            ),
           ),
           Expanded(
-            child: PageView(
-              controller: _pageController,
-              scrollDirection: Axis.vertical,
-              children: _tabs.map((tab) => tab.child).toList(),
+            child: ValueListenableBuilder(
+              valueListenable: _currentPageIndex,
+              builder: (context, index, _) {
+                return LazyIndexedStack(
+                  index: index,
+                  children: _tabs.map((tab) => tab.child).toList(),
+                );
+              },
             ),
           ),
         ],
