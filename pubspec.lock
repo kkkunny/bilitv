@@ -297,7 +297,7 @@ packages:
     source: sdk
     version: "0.0.0"
   flutterx_live_data:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutterx_live_data
       sha256: "0facc4085bfbfecb1f05a73caa95b015beaa81adc416f8316b641be9c724a6c7"

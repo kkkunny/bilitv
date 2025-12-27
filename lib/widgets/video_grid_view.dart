@@ -1,7 +1,9 @@
 import 'dart:math';
 
-import 'package:animated_infinite_scroll_pagination/animated_infinite_scroll_pagination.dart';
+import 'package:animated_infinite_scroll_pagination/animated_infinite_scroll_pagination.dart'
+    hide AnimatedInfiniteScrollView;
 import 'package:bilitv/models/video.dart';
+import 'package:bilitv/widgets/animated_infinite_scrollview.dart';
 import 'package:bilitv/widgets/video_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -43,11 +45,13 @@ class VideoGridViewProvider {
   Future<(List<MediaCardInfo>, bool)> Function({bool isFetchMore})? onLoad;
   late bool _hasMore = onLoad == null;
   final _refreshing = ValueNotifier(false);
+  late final ScrollController _scrollCtl = ScrollController();
 
   VideoGridViewProvider({this.initVideos = const [], this.onLoad});
 
   void dispose() {
     _refreshing.dispose();
+    _scrollCtl.dispose();
   }
 
   List<MediaCardInfo> toList() => _videos.map((e) => e).toList();
@@ -77,6 +81,13 @@ class VideoGridViewProvider {
     try {
       if (_refreshing.value) return;
 
+      if (_scrollCtl.hasClients && _scrollCtl.offset != 0) {
+        await _scrollCtl.animateTo(
+          0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+        );
+      }
       _refreshing.value = true;
       clear();
       if (saveInitData && initVideos.isNotEmpty) addAll(initVideos);
@@ -302,6 +313,7 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
         },
         child: AnimatedInfiniteScrollView<MediaCardInfo>(
           controller: widget.provider._ctl,
+          scrollController: widget.provider._scrollCtl,
           options: AnimatedInfinitePaginationOptions(
             scrollDirection: widget.scrollDirection,
             gridDelegate: gridDelegate,
