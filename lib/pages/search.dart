@@ -13,9 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class SearchPage extends StatefulWidget {
-  final ValueNotifier<int> _tappedListener;
-
-  const SearchPage(this._tappedListener, {super.key});
+  const SearchPage({super.key});
 
   @override
   State<SearchPage> createState() => _SearchPageState();

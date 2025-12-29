@@ -52,10 +52,7 @@ class _PageState extends State<Page> {
         icon: Icons.account_circle_rounded,
         child: (listener) => UserEntryPage(listener),
       ),
-      _PageItem(
-        icon: Icons.search_rounded,
-        child: (listener) => SearchPage(listener),
-      ),
+      _PageItem(icon: Icons.search_rounded, child: (listener) => SearchPage()),
       _PageItem(
         icon: Icons.history_rounded,
         child: (listener) => HistoryPage(listener),
