@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:bilitv/apis/bilibili/media.dart';
 import 'package:bilitv/consts/bilibili.dart';
 import 'package:bilitv/models/pbs/dm.pb.dart';
+import 'package:bilitv/storages/settings.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
 import 'package:flutter/material.dart';
 
@@ -70,7 +71,7 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
   // 时间变化
   Duration? _lastPushDanmakuTime;
 
-  void _onPosition(Duration pos) {
+  Future<void> _onPosition(Duration pos) async {
     // 禁用时不处理
     if (!widget.controller.enabled) return;
     // 没到开始拉取时间时不处理
@@ -91,9 +92,11 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
         ? pos.inMilliseconds
         : _lastPushDanmakuTime!.inMilliseconds;
     _lastPushDanmakuTime = pos;
+    var danmuBlockWeight =
+        await Settings.getInt(Settings.pathDanmuBlockWeightSwitch) ?? 6;
     final needPushDanmakuList = _danmakuCache!.$2.elems.where((e) {
       // 屏蔽权重
-      if (e.weight < 5) return false;
+      if (e.weight <= danmuBlockWeight) return false;
       return lastPushMS <= e.progress && e.progress < pos.inMilliseconds;
     }).toList();
     if (needPushDanmakuList.isEmpty) return;
