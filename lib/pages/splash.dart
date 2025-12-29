@@ -1,4 +1,5 @@
 import 'package:bilitv/apis/bilibili/auth.dart';
+import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/apis/bilibili/user.dart' show getMySelfInfo;
 import 'package:bilitv/consts/assets.dart';
 import 'package:bilitv/storages/auth.dart';
@@ -40,28 +41,42 @@ class _SplashPageState extends State<SplashPage> {
       return;
     }
 
-    // 获取用户信息
-    final info = await getMySelfInfo();
-    loginInfoNotifier.value = LoginInfo.login(
-      mid: info.mid,
-      nickname: info.name,
-      avatar: info.avatar,
-    );
+    try {
+      // 获取用户信息
+      final info = await getMySelfInfo();
+      loginInfoNotifier.value = LoginInfo.login(
+        mid: info.mid,
+        nickname: info.name,
+        avatar: info.avatar,
+      );
+    } on BilibiliError catch (e) {
+      if (e == BilibiliError.notLoggedIn) {
+        await clearCookie();
+        return;
+      }
+    } catch (e) {
+      return;
+    }
 
-    // 刷新cookie
-    final oldRefreshToken = await loadRefreshToken();
-    if (oldRefreshToken == null) return;
-    final resp = await isNeedRefreshCookie();
-    if (!resp.needRefresh) return;
+    try {
+      // 刷新cookie
+      final oldRefreshToken = await loadRefreshToken();
+      if (oldRefreshToken == null) return;
 
-    final correspondPath = generateCorrespondPath(resp.timestamp);
-    final refreshCsrf = await getRefreshCsrf(correspondPath);
-    final (newCookies, newRefreshToken) = await refreshCookie(
-      refreshCsrf,
-      oldRefreshToken,
-    );
-    await saveCookie(newCookies, refreshToken: newRefreshToken);
-    await confirmRefreshCookie(oldRefreshToken);
+      final resp = await isNeedRefreshCookie();
+      if (!resp.needRefresh) return;
+
+      final correspondPath = generateCorrespondPath(resp.timestamp);
+      final refreshCsrf = await getRefreshCsrf(correspondPath);
+      final (newCookies, newRefreshToken) = await refreshCookie(
+        refreshCsrf,
+        oldRefreshToken,
+      );
+      await saveCookie(newCookies, refreshToken: newRefreshToken);
+      await confirmRefreshCookie(oldRefreshToken);
+    } catch (e) {
+      // 刷新cookie失败不影响使用
+    }
   }
 
   @override

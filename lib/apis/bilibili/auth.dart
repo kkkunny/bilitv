@@ -92,9 +92,12 @@ Future<QRStatus> checkQRStatus(String key) async {
   );
   var qrStatus = QRStatus.fromJson(data);
   if (qrStatus.state == QRState.confirmed) {
-    qrStatus.cookies = respHeaders!['set-cookie']!.map((cookie) {
-      return Cookie.fromSetCookieValue(cookie);
-    }).toList();
+    final cookies = respHeaders?['set-cookie'];
+    qrStatus.cookies = cookies != null
+        ? cookies.map((cookie) {
+            return Cookie.fromSetCookieValue(cookie);
+          }).toList()
+        : const [];
     final (buvid3, buvid4) = await getBuvids();
     qrStatus.cookies.addAll([
       Cookie('buvid3', buvid3),

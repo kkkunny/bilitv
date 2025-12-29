@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:bilitv/apis/bilibili/auth.dart';
-import 'package:bilitv/storages/auth.dart' show saveCookie;
+import 'package:bilitv/storages/auth.dart'
+    show saveCookie;
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -31,19 +32,35 @@ class _QRLoginPageState extends State<QRLoginPage> {
     super.dispose();
   }
 
+  bool _isRefreshing = false;
+
   Future<void> _refreshQR() async {
-    _qr = null;
+    if (_isRefreshing) return;
+
+    setState(() {
+      _isRefreshing = true;
+      _qr = null;
+      _state = QRState.waiting;
+    });
+
+    _pollTimer?.cancel();
+
     try {
       final qr = await createQR();
+      if (!mounted) return;
+
       setState(() {
         _qr = qr;
         _state = QRState.waiting;
+        _isRefreshing = false;
       });
 
       _startPolling();
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _state = QRState.error;
+        _isRefreshing = false;
       });
     }
   }
@@ -57,6 +74,8 @@ class _QRLoginPageState extends State<QRLoginPage> {
     if (_qr == null) return;
     try {
       final status = await checkQRStatus(_qr!.key);
+      if (!mounted) return;
+
       setState(() => _state = status.state);
       switch (status.state) {
         case QRState.confirmed:
@@ -66,13 +85,35 @@ class _QRLoginPageState extends State<QRLoginPage> {
         default:
       }
     } catch (e) {
-      setState(() => _state = QRState.error);
+      if (!mounted) return;
+      setState(() {
+        _state = QRState.error;
+      });
     }
   }
 
   Future<void> _onLoginSuccess(QRStatus status) async {
-    await saveCookie(status.cookies, refreshToken: status.refreshToken ?? '');
-    widget.loginNotifier.value = true;
+    _pollTimer?.cancel();
+
+    try {
+      await saveCookie(status.cookies, refreshToken: status.refreshToken ?? '');
+
+      // final info = await getMySelfInfo();
+      // if (!mounted) return;
+      //
+      // loginInfoNotifier.value = LoginInfo.login(
+      //   mid: info.mid,
+      //   nickname: info.name,
+      //   avatar: info.avatar,
+      // );
+
+      widget.loginNotifier.value = true;
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _state = QRState.error;
+      });
+    }
   }
 
   Widget _buildQRBox() {
@@ -140,10 +181,14 @@ class _QRLoginPageState extends State<QRLoginPage> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () {
-                  _refreshQR();
-                },
-                child: const Text('刷新二维码'),
+                onPressed: _refreshQR,
+                child: _isRefreshing
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('刷新二维码'),
               ),
             ],
           ),

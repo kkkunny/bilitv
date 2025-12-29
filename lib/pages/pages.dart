@@ -50,7 +50,7 @@ class _PageState extends State<Page> {
     _tabs = [
       _PageItem(
         icon: Icons.account_circle_rounded,
-        child: (listener) => UserEntryPage(listener),
+        child: (listener) => UserEntryPage(),
       ),
       _PageItem(icon: Icons.search_rounded, child: (listener) => SearchPage()),
       _PageItem(
