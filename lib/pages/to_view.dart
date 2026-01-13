@@ -65,7 +65,7 @@ class _ToViewPageState extends State<ToViewPage> {
   }
 
   void _onVideoTapped(_, MediaCardInfo video) {
-    Get.to(VideoDetailPageWrap(avid: video.avid, cid: video.cid));
+    Get.to(() => VideoDetailPageWrap(avid: video.avid, cid: video.cid));
   }
 
   @override

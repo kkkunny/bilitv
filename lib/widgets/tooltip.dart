@@ -61,7 +61,7 @@ void pushTooltipWarning(
 void pushTooltipError(
   BuildContext context,
   String text, {
-  Duration duration = const Duration(milliseconds: 500),
+  Duration duration = const Duration(seconds: 1),
 }) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
@@ -85,4 +85,19 @@ void pushTooltipError(
       // duration: duration,
     ),
   );
+}
+
+Future<T> tooltipNetFetch<T>(
+  BuildContext context,
+  Future<T> Function() fetch,
+) async {
+  try {
+    return await fetch();
+  } catch (e) {
+    if (!context.mounted) {
+      rethrow;
+    }
+    pushTooltipError(context, e.toString());
+    rethrow;
+  }
 }

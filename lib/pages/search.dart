@@ -50,7 +50,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _onVideoTapped(_, MediaCardInfo video) {
-    Get.to(VideoDetailPageWrap(avid: video.avid, cid: video.cid));
+    Get.to(() => VideoDetailPageWrap(avid: video.avid, cid: video.cid));
   }
 
   Future<void> _onSearch(String input) async {

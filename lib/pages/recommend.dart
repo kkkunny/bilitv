@@ -59,7 +59,7 @@ class _RecommendPageState extends State<RecommendPage> {
   }
 
   void _onVideoTapped(_, MediaCardInfo video) {
-    Get.to(VideoDetailPageWrap(avid: video.avid, cid: video.cid));
+    Get.to(() => VideoDetailPageWrap(avid: video.avid, cid: video.cid));
   }
 
   @override

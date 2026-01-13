@@ -181,7 +181,7 @@ class _PageState extends State<Page> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () => Get.to(const SettingPage()),
+                  onPressed: () => Get.to(() => const SettingPage()),
                   icon: const Icon(Icons.settings, size: 40),
                 ),
               ],
