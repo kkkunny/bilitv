@@ -67,7 +67,7 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   void _onVideoTapped(_, MediaCardInfo video) {
-    Get.to(VideoDetailPageWrap(avid: video.avid, cid: video.cid));
+    Get.to(() => VideoDetailPageWrap(avid: video.avid, cid: video.cid));
   }
 
   @override
@@ -77,7 +77,7 @@ class _HistoryPageState extends State<HistoryPage> {
       onItemTap: _onVideoTapped,
       itemMenuActions: [
         ItemMenuAction(
-          title: '历史记录',
+          title: '移除',
           icon: Icons.playlist_remove_rounded,
           action: (media) {
             if (!loginInfoNotifier.value.isLogin) return;

@@ -7,6 +7,11 @@ class Settings {
   static const pathVOSwitch = ['setting', 'player', 'vo'];
   static const pathHwdecSwitch = ['setting', 'player', 'hwdec'];
   static const pathDanmuSwitch = ['setting', 'danmu', 'switch'];
+  static const pathDanmuBlockWeightSwitch = [
+    'setting',
+    'danmu',
+    'block_weight',
+  ];
   static const pathQualitySwitch = ['setting', 'player', 'quality'];
 
   static String _getKey(List<String> path) => '$_settingsKey.${path.join('.')}';

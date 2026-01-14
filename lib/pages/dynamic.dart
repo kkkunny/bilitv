@@ -57,7 +57,7 @@ class _DynamicPageState extends State<DynamicPage> {
   }
 
   void _onVideoTapped(_, MediaCardInfo video) {
-    Get.to(VideoDetailPageWrap(avid: video.avid));
+    Get.to(() => VideoDetailPageWrap(avid: video.avid));
   }
 
   @override

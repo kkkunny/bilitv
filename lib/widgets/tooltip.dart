@@ -11,9 +11,16 @@ void pushTooltipInfo(
       content: Row(
         children: [
           Icon(Icons.info_outline_rounded, color: Colors.white),
-          Text(
-            '  提示：$text',
-            style: TextStyle(color: Colors.white, fontSize: 20),
+          Expanded(
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: 10),
+              child: Text(
+                '提示：$text',
+                style: TextStyle(color: Colors.white, fontSize: 20),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ),
         ],
       ),
@@ -33,9 +40,16 @@ void pushTooltipWarning(
       content: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: Colors.black),
-          Text(
-            '  警告：$text',
-            style: TextStyle(color: Colors.black, fontSize: 20),
+          Expanded(
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: 10),
+              child: Text(
+                '警告：$text',
+                style: TextStyle(color: Colors.white, fontSize: 20),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ),
         ],
       ),
@@ -47,7 +61,7 @@ void pushTooltipWarning(
 void pushTooltipError(
   BuildContext context,
   String text, {
-  Duration duration = const Duration(milliseconds: 500),
+  Duration duration = const Duration(seconds: 1),
 }) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
@@ -55,10 +69,35 @@ void pushTooltipError(
       content: Row(
         children: [
           Icon(Icons.error_outline_rounded, color: Colors.white),
-          Text('  错误：$text', style: TextStyle(fontSize: 20)),
+          Expanded(
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: 10),
+              child: Text(
+                '错误：$text',
+                style: TextStyle(color: Colors.white, fontSize: 20),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
         ],
       ),
-      duration: duration,
+      // duration: duration,
     ),
   );
+}
+
+Future<T> tooltipNetFetch<T>(
+  BuildContext context,
+  Future<T> Function() fetch,
+) async {
+  try {
+    return await fetch();
+  } catch (e) {
+    if (!context.mounted) {
+      rethrow;
+    }
+    pushTooltipError(context, e.toString());
+    rethrow;
+  }
 }

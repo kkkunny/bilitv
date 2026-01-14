@@ -59,8 +59,13 @@ class _ToViewPageState extends State<ToViewPage> {
     return (videos, hasMore);
   }
 
+  Future<void> _refreshFromData(List<MediaCardInfo> medias) async {
+    _provider.clear();
+    _provider.addAll(medias);
+  }
+
   void _onVideoTapped(_, MediaCardInfo video) {
-    Get.to(VideoDetailPageWrap(avid: video.avid, cid: video.cid));
+    Get.to(() => VideoDetailPageWrap(avid: video.avid, cid: video.cid));
   }
 
   @override
@@ -77,11 +82,9 @@ class _ToViewPageState extends State<ToViewPage> {
 
             deleteToView(media.avid);
             pushTooltipInfo(context, '已从稍后再看中移除：${media.title}');
-
-            // 避免服务器主从延迟
-            Future.delayed(const Duration(seconds: 1), () {
-              _onRefresh();
-            });
+            final newVideos = _provider.toList();
+            newVideos.removeWhere((video) => video.avid == media.avid);
+            _refreshFromData(newVideos);
           },
         ),
       ],

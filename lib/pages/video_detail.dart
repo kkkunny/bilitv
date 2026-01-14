@@ -108,24 +108,28 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   Future<void> _onCoverTapped() async {
+    final danmu = await Settings.getBool(Settings.pathDanmuSwitch) ?? true;
+    final ha = await Settings.getBool(Settings.pathHASwitch) ?? true;
+    final vo =
+        VideoOutputDrivers.parse(
+          await Settings.getString(Settings.pathVOSwitch) ??
+              VideoOutputDrivers.gpu.value,
+        ) ??
+        VideoOutputDrivers.gpu;
+    final hwdec =
+        HardwareVideoDecoder.parse(
+          await Settings.getString(Settings.pathHwdecSwitch) ??
+              HardwareVideoDecoder.autoSafe.value,
+        ) ??
+        HardwareVideoDecoder.autoSafe;
     Get.to(
-      VideoPlayerPage(
+      () => VideoPlayerPage(
         video: widget.video,
         cid: _currentEpisodeCid.value,
-        danmu: await Settings.getBool(Settings.pathDanmuSwitch) ?? true,
-        ha: await Settings.getBool(Settings.pathHASwitch) ?? true,
-        vo:
-            VideoOutputDrivers.parse(
-              await Settings.getString(Settings.pathVOSwitch) ??
-                  VideoOutputDrivers.gpu.value,
-            ) ??
-            VideoOutputDrivers.gpu,
-        hwdec:
-            HardwareVideoDecoder.parse(
-              await Settings.getString(Settings.pathHwdecSwitch) ??
-                  HardwareVideoDecoder.autoSafe.value,
-            ) ??
-            HardwareVideoDecoder.autoSafe,
+        danmu: danmu,
+        ha: ha,
+        vo: vo,
+        hwdec: hwdec,
       ),
     );
   }

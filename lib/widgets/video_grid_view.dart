@@ -27,11 +27,11 @@ class _VideoGridViewController
   @override
   Future<void> fetchData(int page) async => onLoad(isFetchMore: page == 1);
 
-  @override
-  void refresh() {
+  void clear() {
     page = 1;
     total = 0;
     emptyList.postValue(false);
+    items.postValue(const []);
   }
 }
 
@@ -41,7 +41,6 @@ class VideoGridViewProvider {
     onLoad: fetchData,
   );
   final List<MediaCardInfo> initVideos;
-  final List<MediaCardInfo> _videos = [];
   Future<(List<MediaCardInfo>, bool)> Function({bool isFetchMore})? onLoad;
   late bool _hasMore = onLoad == null;
   final _refreshing = ValueNotifier(false);
@@ -54,30 +53,26 @@ class VideoGridViewProvider {
     _scrollCtl.dispose();
   }
 
-  List<MediaCardInfo> toList() => _videos.map((e) => e).toList();
+  List<MediaCardInfo> toList() => _ctl.items.value.map((e) => e.item).toList();
 
-  operator [](int index) => _videos[index];
+  operator [](int index) => _ctl.items.value[index].item;
 
-  int get length => _videos.length;
+  int get length => _ctl.total;
 
-  bool get isEmpty => _videos.isEmpty;
+  bool get isEmpty => _ctl.total == 0;
 
-  bool get isNotEmpty => _videos.isNotEmpty;
+  bool get isNotEmpty => _ctl.total != 0;
 
   set hasMore(v) => _hasMore = v;
 
   bool get hasMore => _hasMore;
 
   void addAll(Iterable<MediaCardInfo> iterable) {
-    _videos.addAll(iterable);
     _ctl.emitState(PaginationSuccessState(iterable.toList()));
-    _ctl.setTotal(_videos.length);
+    _ctl.setTotal(_ctl.items.value.length);
   }
 
-  void clear() {
-    _videos.clear();
-    _ctl.refresh();
-  }
+  void clear() => _ctl.clear();
 
   Future<void> refresh({saveInitData = true}) async {
     try {

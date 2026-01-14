@@ -9,6 +9,7 @@ import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart' as model;
 import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/storages/settings.dart';
+import 'package:bilitv/utils/stream.dart';
 import 'package:bilitv/widgets/bilibili_danmaku_wall.dart';
 import 'package:bilitv/widgets/focus_dropdown_button.dart';
 import 'package:bilitv/widgets/focus_progress_bar.dart';
@@ -276,6 +277,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   late final ValueNotifier<bool> _displayControl;
 
   Timer? _heartbeatTimer; // 播放心跳timer
+  late final StreamController<bool> loading;
 
   @override
   void initState() {
@@ -293,21 +295,28 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     _controller.player.stream.completed.listen((v) {
       if (v) _onPlayCompleted();
     });
+    _controller.player.stream.error.listen(_onPlayError);
     _danmakuCtl = BilibiliDanmakuWallController(widget.danmu);
     _screenFocusNode = FocusNode();
     _displayControl = ValueNotifier(false);
+    loading = StreamController<bool>();
     _onEpisodeChanged();
   }
 
   @override
   void dispose() {
     if (_heartbeatTimer != null) _heartbeatTimer!.cancel();
+    loading.close();
     _displayControl.dispose();
     _screenFocusNode.dispose();
     _danmakuCtl.dispose();
     _controller.player.dispose();
     _currentCid.dispose();
     super.dispose();
+  }
+
+  void _onPlayError(String err) {
+    pushTooltipError(context, err);
   }
 
   DateTime? _lastBackTime;
@@ -323,7 +332,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
           widget.video.avid,
           _currentCid.value,
           _controller.player.state.position,
-        );
+        ).ignore();
       }
       return Get.back();
     }
@@ -337,58 +346,64 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   Future<void> _onEpisodeChanged() async {
-    // 结束心跳
-    if (_heartbeatTimer != null) {
-      _heartbeatTimer!.cancel();
-    }
-    // 上报播放进度
-    if (loginInfoNotifier.value.isLogin &&
-        _controller.player.state.position.inSeconds > 0) {
-      reportPlayProgress(
-        widget.video.avid,
-        _currentCid.value,
-        _controller.player.state.position,
+    loading.sink.add(true);
+    try {
+      // 结束心跳
+      if (_heartbeatTimer != null) {
+        _heartbeatTimer!.cancel();
+      }
+      // 上报播放进度
+      if (loginInfoNotifier.value.isLogin &&
+          _controller.player.state.position.inSeconds > 0) {
+        reportPlayProgress(
+          widget.video.avid,
+          _currentCid.value,
+          _controller.player.state.position,
+        ).ignore();
+      }
+      reportPlayStart(widget.video.avid, _currentCid.value).ignore();
+      // 暂停弹幕
+      final danmakuEnabled = _danmakuCtl.enabled;
+      _danmakuCtl.enabled = false;
+
+      MediaPlayInfo? playInfo;
+      // 若已登陆，获取播放进度
+      if (loginInfoNotifier.value.isLogin) {
+        try {
+          final lastPlayInfo = await getMediaPlayInfo(
+            avid: widget.video.avid,
+            cid: _currentCid.value,
+          );
+          if (_currentCid.value == lastPlayInfo.lastPlayCid) {
+            playInfo = lastPlayInfo;
+          }
+        } catch (_) {}
+      }
+
+      _videoPlayURLInfo = await tooltipNetFetch(
+        context,
+        () => getVideoPlayURL(avid: widget.video.avid, cid: _currentCid.value),
       );
+
+      final qualityID =
+          await Settings.getInt(Settings.pathQualitySwitch) ??
+          _videoPlayURLInfo.defaultQualityID;
+      _currentQuality = _videoPlayURLInfo.supportFormats.firstWhere(
+        (e) => e.id == qualityID,
+      );
+      await _playDashMedia(
+        _videoPlayURLInfo.dashData,
+        start: playInfo?.lastPlayTime,
+      );
+
+      // 开始心跳
+      _heartbeatTimer = Timer(Duration(seconds: 15), _onHeartbeat);
+      // 恢复弹幕
+      _danmakuCtl.enabled = danmakuEnabled;
+    } catch (_) {
+    } finally {
+      loading.sink.add(false);
     }
-    reportPlayStart(widget.video.avid, _currentCid.value);
-    // 暂停弹幕
-    final danmakuEnabled = _danmakuCtl.enabled;
-    _danmakuCtl.enabled = false;
-
-    MediaPlayInfo? playInfo;
-    // 若已登陆，获取播放进度
-    if (loginInfoNotifier.value.isLogin) {
-      try {
-        final lastPlayInfo = await getMediaPlayInfo(
-          avid: widget.video.avid,
-          cid: _currentCid.value,
-        );
-        if (_currentCid.value == lastPlayInfo.lastPlayCid) {
-          playInfo = lastPlayInfo;
-        }
-      } catch (_) {}
-    }
-
-    _videoPlayURLInfo = await getVideoPlayURL(
-      avid: widget.video.avid,
-      cid: _currentCid.value,
-    );
-
-    final qualityID =
-        await Settings.getInt(Settings.pathQualitySwitch) ??
-        _videoPlayURLInfo.defaultQualityID;
-    _currentQuality = _videoPlayURLInfo.supportFormats.firstWhere(
-      (e) => e.id == qualityID,
-    );
-    await _playDashMedia(
-      _videoPlayURLInfo.dashData,
-      start: playInfo?.lastPlayTime,
-    );
-
-    // 开始心跳
-    _heartbeatTimer = Timer(Duration(seconds: 15), _onHeartbeat);
-    // 恢复弹幕
-    _danmakuCtl.enabled = danmakuEnabled;
   }
 
   void _onHeartbeat() {
@@ -397,7 +412,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       avid: widget.video.avid,
       cid: _currentCid.value,
       progress: _controller.player.state.position,
-    );
+    ).ignore();
   }
 
   Future<void> _onQualityChange(Quality sf) async {
@@ -408,10 +423,16 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     final danmakuEnabled = _danmakuCtl.enabled;
     _danmakuCtl.enabled = false;
 
-    await _playDashMedia(
-      _videoPlayURLInfo.dashData,
-      start: _controller.player.state.position,
-    );
+    loading.sink.add(true);
+    try {
+      await _playDashMedia(
+        _videoPlayURLInfo.dashData,
+        start: _controller.player.state.position,
+      );
+    } catch (_) {
+    } finally {
+      loading.sink.add(false);
+    }
 
     // 恢复弹幕
     _danmakuCtl.enabled = danmakuEnabled;
@@ -439,7 +460,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         widget.video.avid,
         _currentCid.value,
         _controller.player.state.position,
-      );
+      ).ignore();
     }
   }
 
@@ -457,7 +478,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
             children: [
               Video(controller: _controller, controls: NoVideoControls),
               StreamBuilder<bool>(
-                stream: _controller.player.stream.buffering,
+                stream: combineBoolStream(
+                  _controller.player.stream.buffering,
+                  loading.stream,
+                ),
                 builder: (context, buffering) => (buffering.data ?? false)
                     ? buildLoadingStyle3()
                     : const SizedBox(),
