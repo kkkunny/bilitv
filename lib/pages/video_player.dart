@@ -23,7 +23,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:toastification/toastification.dart';
 
 const _step = Duration(seconds: 5);
-const _danmakuWaitDuration = Duration(seconds: 10);
+const _danmakuWaitDuration = Duration(seconds: 5);
 
 // 视频控件
 class _VideoControlWidget extends StatefulWidget {
@@ -129,6 +129,12 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     );
   }
 
+  void onPositionChanged(Duration pos) {
+    widget.player.seek(pos);
+    _pageState._danmakuCtl.wait(_danmakuWaitDuration);
+    _pageState._danmakuCtl.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
     return FocusScope(
@@ -154,7 +160,11 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
             padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
             child: Column(
               children: [
-                FocusProgressBar(widget.player),
+                FocusProgressBar(
+                  stream: widget.player.stream,
+                  state: widget.player.state,
+                  onPositionChanged: onPositionChanged,
+                ),
                 Row(
                   children: [
                     IconButton(
