@@ -55,9 +55,9 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
                   progress: position.data ?? widget.state.position,
                   buffered: widget.state.buffer,
                   total: widget.state.duration,
-                  thumbColor: lightPink.withValues(alpha: 0.8),
-                  progressBarColor: lightPink.withValues(alpha: 0.8),
-                  bufferedBarColor: lightPink.withValues(alpha: 0.3),
+                  thumbColor: Colors.transparent,
+                  progressBarColor: lightPink.withValues(alpha: 0.4),
+                  bufferedBarColor: lightPink.withValues(alpha: 0.2),
                   timeLabelTextStyle: TextStyle(),
                 );
               },
@@ -105,12 +105,12 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
         case LogicalKeyboardKey.arrowLeft:
           _currentPosition.value =
               (_currentPosition.value ?? widget.state.position) -
-              const Duration(seconds: 5);
+              widget.state.duration ~/ 100;
           break;
         case LogicalKeyboardKey.arrowRight:
           _currentPosition.value =
               (_currentPosition.value ?? widget.state.position) +
-              const Duration(seconds: 5);
+              widget.state.duration ~/ 100;
           break;
       }
     } else if (value is KeyUpEvent) {
