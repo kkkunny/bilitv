@@ -1,5 +1,6 @@
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:bilitv/consts/color.dart';
+import 'package:bilitv/utils/comparable.dart';
 import 'package:dpad/dpad.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -101,16 +102,23 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
 
   KeyEventResult _onKeyEvent(FocusNode _, KeyEvent value) {
     if (value is KeyDownEvent || value is KeyRepeatEvent) {
+      final gep = widget.state.duration ~/ 100;
       switch (value.logicalKey) {
         case LogicalKeyboardKey.arrowLeft:
-          _currentPosition.value =
-              (_currentPosition.value ?? widget.state.position) -
-              widget.state.duration ~/ 100;
+          final target =
+              (_currentPosition.value ?? widget.state.position) - gep;
+          _currentPosition.value = target.clamp(
+            Duration.zero,
+            widget.state.duration,
+          );
           break;
         case LogicalKeyboardKey.arrowRight:
-          _currentPosition.value =
-              (_currentPosition.value ?? widget.state.position) +
-              widget.state.duration ~/ 100;
+          final target =
+              (_currentPosition.value ?? widget.state.position) + gep;
+          _currentPosition.value = target.clamp(
+            Duration.zero,
+            widget.state.duration,
+          );
           break;
       }
     } else if (value is KeyUpEvent) {
@@ -120,13 +128,13 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
           return KeyEventResult.handled;
         case LogicalKeyboardKey.select:
         case LogicalKeyboardKey.enter:
-          if (_currentPosition.value != null &&
-              _currentPosition.value != widget.state.position) {
-            widget.onPositionChanged?.call(_currentPosition.value!);
-            _currentPosition.value = null;
-            return KeyEventResult.handled;
+          if (_currentPosition.value == null ||
+              _currentPosition.value == widget.state.position) {
+            break;
           }
-          break;
+          widget.onPositionChanged?.call(_currentPosition.value!);
+          _currentPosition.value = null;
+          return KeyEventResult.handled;
       }
     }
     return KeyEventResult.ignored;
