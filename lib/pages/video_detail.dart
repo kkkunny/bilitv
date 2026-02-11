@@ -12,6 +12,7 @@ import 'package:bilitv/storages/settings.dart';
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/loading.dart';
+import 'package:bilitv/widgets/scroll_text.dart';
 import 'package:bilitv/widgets/text.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
@@ -204,7 +205,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     return Expanded(
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -220,319 +221,347 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   Widget _buildTitle() {
-    return FixedLineAdaptiveText(
-      widget.video.title,
-      line: 2,
-      style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.black),
-      overflow: TextOverflow.ellipsis,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      child: FixedLineAdaptiveText(
+        widget.video.title,
+        line: 2,
+        style: const TextStyle(
+          fontWeight: FontWeight.w900,
+          color: Colors.black,
+        ),
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 
   Widget _buildRelations() {
-    return Row(
-      children: [
-        Expanded(
-          child: MaterialButton(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            onPressed: () =>
-                likeMedia(widget.video.avid, like: !widget.relation.like).then(
-                  (_) {
-                    if (!mounted) return;
-                    pushTooltipInfo(
-                      context,
-                      '${widget.relation.like ? '取消' : ''}点赞成功！',
-                    );
-                    widget.relation.like = !widget.relation.like;
-                    _like.value = widget.relation.like;
-                  },
-                  onError: (e) {
-                    if (!mounted) return;
-                    if (e is BilibiliError) {
-                      pushTooltipError(context, e.message);
-                    } else {
-                      pushTooltipError(context, '未知的错误');
-                    }
-                  },
-                ),
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: ValueListenableBuilder(
-                      valueListenable: _like,
-                      builder: (context, like, _) {
-                        return Icon(
-                          Icons.thumb_up_rounded,
-                          color: like ? Colors.pinkAccent : Colors.grey,
-                        );
-                      },
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: MaterialButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              onPressed: () =>
+                  likeMedia(
+                    widget.video.avid,
+                    like: !widget.relation.like,
+                  ).then(
+                    (_) {
+                      if (!mounted) return;
+                      pushTooltipInfo(
+                        context,
+                        '${widget.relation.like ? '取消' : ''}点赞成功！',
+                      );
+                      widget.relation.like = !widget.relation.like;
+                      _like.value = widget.relation.like;
+                    },
+                    onError: (e) {
+                      if (!mounted) return;
+                      if (e is BilibiliError) {
+                        pushTooltipError(context, e.message);
+                      } else {
+                        pushTooltipError(context, '未知的错误');
+                      }
+                    },
+                  ),
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: ValueListenableBuilder(
+                        valueListenable: _like,
+                        builder: (context, like, _) {
+                          return Icon(
+                            Icons.thumb_up_rounded,
+                            color: like ? Colors.pinkAccent : Colors.grey,
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: FixedLineAdaptiveText(
-                    amountString(widget.video.stat.likeCount),
-                    line: 1,
-                    style: TextStyle(color: Colors.grey.shade600),
+                  Expanded(
+                    flex: 1,
+                    child: FixedLineAdaptiveText(
+                      amountString(widget.video.stat.likeCount),
+                      line: 1,
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        SizedBox(width: 20),
-        Expanded(
-          child: MaterialButton(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+          SizedBox(width: 20),
+          Expanded(
+            child: MaterialButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: Transform.scale(
+                        scaleX: -1,
+                        child: Icon(
+                          Icons.thumb_down_rounded,
+                          color: widget.relation.dislike
+                              ? Colors.pinkAccent
+                              : Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: FixedLineAdaptiveText(
+                      amountString(widget.video.stat.dislikeCount),
+                      line: 1,
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: Transform.scale(
-                      scaleX: -1,
+          ),
+          SizedBox(width: 20),
+          Expanded(
+            child: MaterialButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
                       child: Icon(
-                        Icons.thumb_down_rounded,
-                        color: widget.relation.dislike
+                        IconFont.coin,
+                        color: widget.relation.coin > 0
                             ? Colors.pinkAccent
                             : Colors.grey,
                       ),
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: FixedLineAdaptiveText(
-                    amountString(widget.video.stat.dislikeCount),
-                    line: 1,
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(width: 20),
-        Expanded(
-          child: MaterialButton(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: Icon(
-                      IconFont.coin,
-                      color: widget.relation.coin > 0
-                          ? Colors.pinkAccent
-                          : Colors.grey,
+                  Expanded(
+                    flex: 1,
+                    child: FixedLineAdaptiveText(
+                      amountString(widget.video.stat.coinCount),
+                      line: 1,
+                      style: TextStyle(color: Colors.grey.shade600),
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: FixedLineAdaptiveText(
-                    amountString(widget.video.stat.coinCount),
-                    line: 1,
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        SizedBox(width: 20),
-        Expanded(
-          child: MaterialButton(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: Icon(
-                      Icons.favorite_rounded,
-                      color: widget.relation.favorite
-                          ? Colors.pinkAccent
-                          : Colors.grey,
+          SizedBox(width: 20),
+          Expanded(
+            child: MaterialButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: Icon(
+                        Icons.favorite_rounded,
+                        color: widget.relation.favorite
+                            ? Colors.pinkAccent
+                            : Colors.grey,
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: FixedLineAdaptiveText(
-                    amountString(widget.video.stat.favoriteCount),
-                    line: 1,
-                    style: TextStyle(color: Colors.grey.shade600),
+                  Expanded(
+                    flex: 1,
+                    child: FixedLineAdaptiveText(
+                      amountString(widget.video.stat.favoriteCount),
+                      line: 1,
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        SizedBox(width: 20),
-        Expanded(
-          child: MaterialButton(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            onPressed: () {
-              if (!loginInfoNotifier.value.isLogin) return;
+          SizedBox(width: 20),
+          Expanded(
+            child: MaterialButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              onPressed: () {
+                if (!loginInfoNotifier.value.isLogin) return;
 
-              addToView(avid: widget.video.avid);
-              pushTooltipInfo(context, '已加入稍后再看：${widget.video.title}');
-            },
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: Icon(Icons.playlist_add_rounded, color: Colors.grey),
+                addToView(avid: widget.video.avid);
+                pushTooltipInfo(context, '已加入稍后再看：${widget.video.title}');
+              },
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: Icon(
+                        Icons.playlist_add_rounded,
+                        color: Colors.grey,
+                      ),
+                    ),
                   ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: FixedLineAdaptiveText(
-                    '稍后再看',
-                    line: 1,
-                    style: TextStyle(color: Colors.grey.shade600),
+                  Expanded(
+                    flex: 1,
+                    child: FixedLineAdaptiveText(
+                      '稍后再看',
+                      line: 1,
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        SizedBox(width: 20),
-        Expanded(
-          child: MaterialButton(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            onPressed: null,
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: Icon(IconFont.share, color: Colors.grey),
+          SizedBox(width: 20),
+          Expanded(
+            child: MaterialButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              onPressed: null,
+              child: Column(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: Icon(IconFont.share, color: Colors.grey.shade400),
+                    ),
                   ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: FixedLineAdaptiveText(
-                    amountString(widget.video.stat.shareCount),
-                    line: 1,
-                    style: TextStyle(color: Colors.grey.shade600),
+                  Expanded(
+                    flex: 1,
+                    child: FixedLineAdaptiveText(
+                      amountString(widget.video.stat.shareCount),
+                      line: 1,
+                      style: TextStyle(color: Colors.grey.shade400),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildDescription() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: FixedLineAdaptiveText(
-            '视频简介',
-            line: 1,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      child: MaterialButton(
+        onPressed: () => showDialog(
+          context: context,
+          builder: (context) => _buildCompleteDesc(),
         ),
-        const Spacer(flex: 1),
-        Expanded(
-          flex: 14,
-          child: FixedLineAdaptiveText(
-            widget.video.desc,
-            line: 12,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade600,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Divider(height: 2, color: Colors.black.withAlpha(5)),
+            Expanded(
+              child: FixedLineAdaptiveText(
+                widget.video.desc,
+                line: 6,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600,
+                ),
+              ),
             ),
-          ),
+            Divider(height: 2, color: Colors.black.withAlpha(5)),
+          ],
         ),
-      ],
+      ),
     );
   }
 
   Widget _buildOtherInfo() {
-    return Row(
-      children: [
-        BilibiliAvatar(widget.video.userAvatar),
-        const SizedBox(width: 12),
-        Column(
-          children: [
-            const Spacer(flex: 1),
-            Expanded(
-              flex: 3,
-              child: FixedLineAdaptiveText(
-                widget.video.userName,
-                line: 1,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-            const Spacer(flex: 1),
-            Expanded(
-              flex: 2,
-              child: FixedLineAdaptiveText(
-                'UP主',
-                line: 1,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-            ),
-            const Spacer(flex: 1),
-          ],
-        ),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      child: Row(
+        children: [
+          BilibiliAvatar(widget.video.userAvatar),
+          const SizedBox(width: 12),
+          Column(
             children: [
-              const Spacer(flex: 3),
+              const Spacer(flex: 1),
               Expanded(
-                flex: 1,
+                flex: 5,
                 child: FixedLineAdaptiveText(
-                  '发布日期: ${datetimeString(widget.video.publishTime)}',
+                  widget.video.userName,
                   line: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Colors.grey.shade500),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                 ),
               ),
+              const Spacer(flex: 1),
+              Expanded(
+                flex: 4,
+                child: FixedLineAdaptiveText(
+                  'UP 主',
+                  line: 1,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ),
+              const Spacer(flex: 1),
             ],
           ),
-        ),
-      ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Spacer(flex: 3),
+                Expanded(
+                  flex: 2,
+                  child: FixedLineAdaptiveText(
+                    '发布日期: ${datetimeString(widget.video.publishTime)}',
+                    line: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.grey.shade500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompleteDesc() {
+    return AlertDialog(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      content: SizedBox(
+        width: MediaQuery.of(context).size.width / 2,
+        height: MediaQuery.of(context).size.height / 2,
+        child: ScrollText(widget.video.desc, style: TextStyle(fontSize: 20)),
+      ),
     );
   }
 
