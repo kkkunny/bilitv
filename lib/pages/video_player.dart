@@ -161,8 +161,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
             child: Column(
               children: [
                 FocusProgressBar(
-                  stream: widget.player.stream,
-                  state: widget.player.state,
+                  player: widget.player,
                   onPositionChanged: onPositionChanged,
                 ),
                 Row(

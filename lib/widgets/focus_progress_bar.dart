@@ -7,14 +7,12 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 
 class FocusProgressBar extends StatefulWidget {
-  final PlayerStream stream;
-  final PlayerState state;
+  final Player player;
   final void Function(Duration)? onPositionChanged;
 
   const FocusProgressBar({
     super.key,
-    required this.stream,
-    required this.state,
+    required this.player,
     this.onPositionChanged,
   });
 
@@ -50,12 +48,12 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
           children: [
             // 该bar用于在用户拖动进度时显示视频当前进度
             StreamBuilder<Duration>(
-              stream: widget.stream.position,
+              stream: widget.player.stream.position,
               builder: (context, position) {
                 return ProgressBar(
-                  progress: position.data ?? widget.state.position,
-                  buffered: widget.state.buffer,
-                  total: widget.state.duration,
+                  progress: position.data ?? widget.player.state.position,
+                  buffered: widget.player.state.buffer,
+                  total: widget.player.state.duration,
                   thumbColor: Colors.transparent,
                   progressBarColor: lightPink.withValues(alpha: 0.4),
                   bufferedBarColor: lightPink.withValues(alpha: 0.2),
@@ -69,11 +67,11 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
               builder: (context, value, _) {
                 if (value == null) {
                   return StreamBuilder<Duration>(
-                    stream: widget.stream.position,
+                    stream: widget.player.stream.position,
                     builder: (context, position) {
                       return ProgressBar(
-                        progress: position.data ?? widget.state.position,
-                        total: widget.state.duration,
+                        progress: position.data ?? widget.player.state.position,
+                        total: widget.player.state.duration,
                         thumbColor: lightPink,
                         progressBarColor: lightPink,
                         timeLabelLocation: TimeLabelLocation.none,
@@ -83,7 +81,7 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
                 }
                 return ProgressBar(
                   progress: value,
-                  total: widget.state.duration,
+                  total: widget.player.state.duration,
                   thumbColor: lightPink,
                   progressBarColor: lightPink,
                   timeLabelLocation: TimeLabelLocation.none,
@@ -101,23 +99,24 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
   }
 
   KeyEventResult _onKeyEvent(FocusNode _, KeyEvent value) {
+    print(widget.player.state.position);
     if (value is KeyDownEvent || value is KeyRepeatEvent) {
-      final gep = widget.state.duration ~/ 100;
+      final gep = widget.player.state.duration ~/ 100;
       switch (value.logicalKey) {
         case LogicalKeyboardKey.arrowLeft:
           final target =
-              (_currentPosition.value ?? widget.state.position) - gep;
+              (_currentPosition.value ?? widget.player.state.position) - gep;
           _currentPosition.value = target.clamp(
             Duration.zero,
-            widget.state.duration,
+            widget.player.state.duration,
           );
           break;
         case LogicalKeyboardKey.arrowRight:
           final target =
-              (_currentPosition.value ?? widget.state.position) + gep;
+              (_currentPosition.value ?? widget.player.state.position) + gep;
           _currentPosition.value = target.clamp(
             Duration.zero,
-            widget.state.duration,
+            widget.player.state.duration,
           );
           break;
       }
@@ -129,7 +128,7 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
         case LogicalKeyboardKey.select:
         case LogicalKeyboardKey.enter:
           if (_currentPosition.value == null ||
-              _currentPosition.value == widget.state.position) {
+              _currentPosition.value == widget.player.state.position) {
             break;
           }
           widget.onPositionChanged?.call(_currentPosition.value!);
