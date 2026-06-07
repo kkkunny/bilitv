@@ -11,8 +11,8 @@ class FixedLineAdaptiveText extends StatelessWidget {
 
   const FixedLineAdaptiveText(
     this.text, {
-    required this.line,
     super.key,
+    required this.line,
     this.lineHeight = 1.2,
     this.style,
     this.overflow,
