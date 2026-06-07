@@ -56,6 +56,7 @@ class BilibiliDanmakuWall extends StatefulWidget {
 }
 
 class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
+  late final int _danmuBlockWeight;
   bool _pullDanmaku = false;
   (int, DmSegMobileReply)? _danmakuCache;
 
@@ -82,6 +83,10 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
     super.dispose();
   }
 
+  Future<void> _init() async {
+    _danmuBlockWeight = await Settings.getInt(Settings.pathDanmuBlockWeightSwitch) ?? 6;
+  }
+
   // 时间变化
   Duration? _lastPushDanmakuTime;
 
@@ -106,11 +111,9 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
         ? pos.inMilliseconds
         : _lastPushDanmakuTime!.inMilliseconds;
     _lastPushDanmakuTime = pos;
-    var danmuBlockWeight =
-        await Settings.getInt(Settings.pathDanmuBlockWeightSwitch) ?? 6;
     final needPushDanmakuList = _danmakuCache!.$2.elems.where((e) {
       // 屏蔽权重
-      if (e.weight <= danmuBlockWeight) return false;
+      if (e.weight <= _danmuBlockWeight) return false;
       return lastPushMS <= e.progress && e.progress < pos.inMilliseconds;
     }).toList();
     if (needPushDanmakuList.isEmpty) return;
@@ -176,9 +179,17 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
 
   @override
   Widget build(BuildContext context) {
-    return DanmakuScreen(
-      createdController: (c) => widget.controller._controller = c,
-      option: DanmakuOption(),
+    return FutureBuilder(
+      future: _init(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const SizedBox();
+        }
+        return DanmakuScreen(
+          createdController: (c) => widget.controller._controller = c,
+          option: DanmakuOption(),
+        );
+      },
     );
   }
 }
