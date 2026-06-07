@@ -187,14 +187,12 @@ class _SidebarAvatarItem extends StatelessWidget {
   final Widget child;
   final String label;
   final bool selected;
-  final bool autofocus;
   final VoidCallback onTap;
 
   const _SidebarAvatarItem({
     required this.label,
     required this.selected,
     required this.onTap,
-    this.autofocus = false,
     required this.child,
   });
 
@@ -208,7 +206,6 @@ class _SidebarAvatarItem extends StatelessWidget {
             : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
-          autofocus: autofocus,
           borderRadius: BorderRadius.circular(10),
           onTap: onTap,
           child: Padding(
