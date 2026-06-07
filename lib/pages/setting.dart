@@ -3,6 +3,7 @@ import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/storages/settings.dart';
 import 'package:bilitv/widgets/custom_setting_tiles.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:settings_ui/settings_ui.dart';
 
 class SettingPage extends StatefulWidget {
@@ -18,8 +19,9 @@ class _SettingPageState extends State<SettingPage> {
   late bool _ha;
   late VideoOutputDrivers _vo;
   late HardwareVideoDecoder _hwdec;
+  late String _version;
 
-  Future<int> _loadSettings() async {
+  Future<void> _loadSettings() async {
     _danmu = await Settings.getBool(Settings.pathDanmuSwitch) ?? true;
     _danmuBlockWeight =
         await Settings.getInt(Settings.pathDanmuBlockWeightSwitch) ?? 6;
@@ -36,7 +38,8 @@ class _SettingPageState extends State<SettingPage> {
               HardwareVideoDecoder.autoSafe.value,
         ) ??
         HardwareVideoDecoder.autoSafe;
-    return 0;
+    final pi = await PackageInfo.fromPlatform();
+    _version = pi.version;
   }
 
   @override
@@ -45,67 +48,93 @@ class _SettingPageState extends State<SettingPage> {
       body: FutureBuilder(
         future: _loadSettings(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const SizedBox();
-          return SettingsList(
-            sections: [
-              SettingsSection(
-                tiles: <SettingsTile>[
-                  SettingsTile.switchTile(
-                    leading: Icon(IconFont.danmushezhi),
-                    title: Text('弹幕设置-是否开启弹幕'),
-                    initialValue: _danmu,
-                    onToggle: (value) => setState(() {
-                      Settings.setBool(Settings.pathDanmuSwitch, value);
-                      _danmu = value;
-                    }),
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const SizedBox();
+          }
+          return Column(
+            children: [
+              Expanded(
+                child: SettingsList(
+                  lightTheme: SettingsThemeData(
+                    settingsListBackground: Theme.of(
+                      context,
+                    ).scaffoldBackgroundColor,
                   ),
-                  CustomSettingsTiles.dropdown(
-                    leading: Icon(IconFont.danmushezhi),
-                    title: Text('弹幕屏蔽权重：值越大弹幕越少'),
-                    value: _danmuBlockWeight,
-                    items: List<int>.generate(
-                      11,
-                      (int index) => index,
-                      growable: false,
+                  sections: [
+                    SettingsSection(
+                      tiles: <SettingsTile>[
+                        SettingsTile.switchTile(
+                          leading: Icon(IconFont.danmushezhi),
+                          title: Text('弹幕设置-是否开启弹幕'),
+                          initialValue: _danmu,
+                          onToggle: (value) => setState(() {
+                            Settings.setBool(Settings.pathDanmuSwitch, value);
+                            _danmu = value;
+                          }),
+                        ),
+                        CustomSettingsTiles.dropdown(
+                          leading: Icon(IconFont.danmushezhi),
+                          title: Text('弹幕屏蔽权重：值越大弹幕越少'),
+                          value: _danmuBlockWeight,
+                          items: List<int>.generate(
+                            11,
+                            (int index) => index,
+                            growable: false,
+                          ),
+                          onChanged: (value) => setState(() {
+                            Settings.setInt(
+                              Settings.pathDanmuBlockWeightSwitch,
+                              value,
+                            );
+                            _danmuBlockWeight = value;
+                          }),
+                        ),
+                        SettingsTile.switchTile(
+                          leading: Icon(IconFont.ha),
+                          title: Text('播放设置-是否开启硬解'),
+                          initialValue: _ha,
+                          onToggle: (value) => setState(() {
+                            Settings.setBool(Settings.pathHASwitch, value);
+                            _ha = value;
+                          }),
+                        ),
+                        CustomSettingsTiles.dropdown(
+                          leading: Icon(Icons.video_settings_rounded),
+                          title: Text('播放设置-输出驱动'),
+                          value: _vo,
+                          items: VideoOutputDrivers.values,
+                          onChanged: (value) => setState(() {
+                            Settings.setString(
+                              Settings.pathVOSwitch,
+                              value.value,
+                            );
+                            _vo = value;
+                          }),
+                        ),
+                        CustomSettingsTiles.dropdown(
+                          leading: Icon(Icons.video_stable_rounded),
+                          title: Text('播放设置-硬解方式'),
+                          value: _hwdec,
+                          items: HardwareVideoDecoder.values,
+                          onChanged: (value) => setState(() {
+                            Settings.setString(
+                              Settings.pathHwdecSwitch,
+                              value.value,
+                            );
+                            _hwdec = value;
+                          }),
+                        ),
+                      ],
                     ),
-                    onChanged: (value) => setState(() {
-                      Settings.setInt(
-                        Settings.pathDanmuBlockWeightSwitch,
-                        value,
-                      );
-                      _danmuBlockWeight = value;
-                    }),
-                  ),
-                  SettingsTile.switchTile(
-                    leading: Icon(IconFont.ha),
-                    title: Text('播放设置-是否开启硬解'),
-                    initialValue: _ha,
-                    onToggle: (value) => setState(() {
-                      Settings.setBool(Settings.pathHASwitch, value);
-                      _ha = value;
-                    }),
-                  ),
-                  CustomSettingsTiles.dropdown(
-                    leading: Icon(Icons.video_settings_rounded),
-                    title: Text('播放设置-输出驱动'),
-                    value: _vo,
-                    items: VideoOutputDrivers.values,
-                    onChanged: (value) => setState(() {
-                      Settings.setString(Settings.pathVOSwitch, value.value);
-                      _vo = value;
-                    }),
-                  ),
-                  CustomSettingsTiles.dropdown(
-                    leading: Icon(Icons.video_stable_rounded),
-                    title: Text('播放设置-硬解方式'),
-                    value: _hwdec,
-                    items: HardwareVideoDecoder.values,
-                    onChanged: (value) => setState(() {
-                      Settings.setString(Settings.pathHwdecSwitch, value.value);
-                      _hwdec = value;
-                    }),
-                  ),
-                ],
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(bottom: 20),
+                child: Text(
+                  'v$_version',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                ),
               ),
             ],
           );

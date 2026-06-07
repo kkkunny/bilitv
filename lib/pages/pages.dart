@@ -1,11 +1,12 @@
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/pages/dynamic.dart';
 import 'package:bilitv/pages/history.dart';
+import 'package:bilitv/pages/qr_login.dart';
 import 'package:bilitv/pages/recommend.dart';
 import 'package:bilitv/pages/search.dart';
 import 'package:bilitv/pages/setting.dart';
 import 'package:bilitv/pages/to_view.dart';
-import 'package:bilitv/pages/user.dart';
+import 'package:bilitv/pages/user_info.dart';
 import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/tooltip.dart';
@@ -16,7 +17,9 @@ import 'package:get/get.dart';
 class _PageItem {
   final IconData icon;
   late final Widget child;
-  late final bool homePage;
+
+  late final bool homePage; // 是否是首页
+  late final bool needLogin; // 是否需要登陆
 
   final onTappedListener = ValueNotifier(0);
 
@@ -24,6 +27,7 @@ class _PageItem {
     required this.icon,
     required Widget Function(ValueNotifier<int>) child,
     this.homePage = false,
+    this.needLogin = false,
   }) {
     this.child = child(onTappedListener);
   }
@@ -51,20 +55,24 @@ class _PageState extends State<Page> {
     _tabs = [
       _PageItem(
         icon: Icons.account_circle_rounded,
-        child: (listener) => UserEntryPage(),
+        child: (listener) => UserInfoPage(),
+        needLogin: true,
       ),
       _PageItem(icon: Icons.search_rounded, child: (listener) => SearchPage()),
       _PageItem(
         icon: Icons.history_rounded,
         child: (listener) => HistoryPage(listener),
+        needLogin: true,
       ),
       _PageItem(
         icon: IconFont.trends,
         child: (listener) => DynamicPage(listener),
+        needLogin: true,
       ),
       _PageItem(
         icon: IconFont.playlist,
         child: (listener) => ToViewPage(listener),
+        needLogin: true,
       ),
       _PageItem(
         icon: Icons.home_max_rounded,
@@ -89,6 +97,16 @@ class _PageState extends State<Page> {
   }
 
   _onTabTapped(_PageItem tab) {
+    // 检查登陆，否则弹窗提醒登陆
+    if (tab.needLogin && !loginInfoNotifier.value.isLogin) {
+      pushTooltipInfo(
+        context,
+        "请先点击屏幕左上的默认头像进行登录！",
+        duration: Duration(seconds: 2),
+      );
+      return;
+    }
+
     final index = _tabs.indexOf(tab);
     if (_currentPageIndex.value != index) {
       _currentPageIndex.value = index;
@@ -99,7 +117,7 @@ class _PageState extends State<Page> {
 
   DateTime _lastTapAvatarTime = DateTime.now();
 
-  Future<void> _onLongPressAvatar() async {
+  Future<void> _onDoublePressAvatar() async {
     if (!loginInfoNotifier.value.isLogin) return;
     loginInfoNotifier.value = LoginInfo.notLogin;
     pushTooltipInfo(context, "已退出当前账号！");
@@ -128,20 +146,19 @@ class _PageState extends State<Page> {
               children: [
                 IconButton(
                   onPressed: () {
-                    if (!loginInfoNotifier.value.isLogin) return;
+                    if (!loginInfoNotifier.value.isLogin) {
+                      showQrLoginDialog(context);
+                      return;
+                    }
 
                     final now = DateTime.now();
                     final diff = now.difference(_lastTapAvatarTime);
                     if (diff < Duration(milliseconds: 600)) {
-                      _onLongPressAvatar();
+                      _onDoublePressAvatar();
                     } else {
-                      pushTooltipInfo(context, "长按退出当前账号");
+                      pushTooltipInfo(context, "再次点击头像退出当前账号！");
                     }
                     _lastTapAvatarTime = now;
-                  },
-                  onLongPress: () {
-                    if (!loginInfoNotifier.value.isLogin) return;
-                    _onLongPressAvatar();
                   },
                   icon: ListenableBuilder(
                     listenable: loginInfoNotifier,
