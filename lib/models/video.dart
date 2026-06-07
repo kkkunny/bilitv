@@ -137,7 +137,7 @@ class MediaCardInfo {
       userName: json['modules']['module_author']['name'],
       userAvatar: json['modules']['module_author']['face'],
       publishTime: DateTime.fromMillisecondsSinceEpoch(
-        json['modules']['module_author']['pub_ts'] *
+        int.parse(json['modules']['module_author']['pub_ts']) *
             Duration.millisecondsPerSecond,
       ),
     );
