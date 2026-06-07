@@ -22,14 +22,14 @@ class BilibiliDanmakuWallController {
   bool get enabled => enableNotifier.value;
 
   // 清空，并重新开始推送弹幕
-  late final Function() _clearFunc;
+  late Function() _clearFunc;
 
   void clear() {
     _clearFunc();
   }
 
   // 等待一会儿再开始载入弹幕，用于步进等场景，避免频繁拉取
-  late final Function(Duration duration) _waitFunc;
+  late Function(Duration duration) _waitFunc;
 
   void wait(Duration duration) {
     _waitFunc(duration);
