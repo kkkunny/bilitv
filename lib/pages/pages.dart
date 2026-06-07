@@ -16,7 +16,9 @@ import 'package:get/get.dart';
 class _PageItem {
   final IconData icon;
   late final Widget child;
-  late final bool homePage;
+
+  late final bool homePage; // 是否是首页
+  late final bool needLogin; // 是否需要登陆
 
   final onTappedListener = ValueNotifier(0);
 
@@ -24,6 +26,7 @@ class _PageItem {
     required this.icon,
     required Widget Function(ValueNotifier<int>) child,
     this.homePage = false,
+    this.needLogin = false,
   }) {
     this.child = child(onTappedListener);
   }
@@ -57,14 +60,17 @@ class _PageState extends State<Page> {
       _PageItem(
         icon: Icons.history_rounded,
         child: (listener) => HistoryPage(listener),
+        needLogin: true,
       ),
       _PageItem(
         icon: IconFont.trends,
         child: (listener) => DynamicPage(listener),
+        needLogin: true,
       ),
       _PageItem(
         icon: IconFont.playlist,
         child: (listener) => ToViewPage(listener),
+        needLogin: true,
       ),
       _PageItem(
         icon: Icons.home_max_rounded,
@@ -89,6 +95,12 @@ class _PageState extends State<Page> {
   }
 
   _onTabTapped(_PageItem tab) {
+    // 检查登陆，否则弹窗提醒登陆
+    if (tab.needLogin && !loginInfoNotifier.value.isLogin) {
+      pushTooltipInfo(context, "请先登录！");
+      return;
+    }
+
     final index = _tabs.indexOf(tab);
     if (_currentPageIndex.value != index) {
       _currentPageIndex.value = index;
