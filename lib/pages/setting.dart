@@ -17,6 +17,7 @@ class SettingPage extends StatefulWidget {
 class _SettingPageState extends State<SettingPage> {
   late bool _danmu;
   late int _danmuBlockWeight;
+  late int _danmuFontSize;
   late bool _ha;
   late VideoOutputDrivers _vo;
   late HardwareVideoDecoder _hwdec;
@@ -26,6 +27,7 @@ class _SettingPageState extends State<SettingPage> {
     _danmu = await Settings.getBool(Settings.pathDanmuSwitch) ?? true;
     _danmuBlockWeight =
         await Settings.getInt(Settings.pathDanmuBlockWeightSwitch) ?? 6;
+    _danmuFontSize = await Settings.getInt(Settings.pathDanmuFontSize) ?? 20;
     _ha = await Settings.getBool(Settings.pathHASwitch) ?? true;
     _vo =
         VideoOutputDrivers.parse(
@@ -88,6 +90,16 @@ class _SettingPageState extends State<SettingPage> {
                               value,
                             );
                             _danmuBlockWeight = value;
+                          }),
+                        ),
+                        CustomSettingsTiles.dropdown(
+                          leading: Icon(IconFont.danmushezhi),
+                          title: Text('弹幕字体大小'),
+                          value: _danmuFontSize,
+                          items: const [16, 18, 20, 22, 25, 28, 30, 36],
+                          onChanged: (value) => setState(() {
+                            Settings.setInt(Settings.pathDanmuFontSize, value);
+                            _danmuFontSize = value;
                           }),
                         ),
                         SettingsTile.switchTile(

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:bilitv/apis/bilibili/media.dart';
 import 'package:bilitv/consts/bilibili.dart';
@@ -58,6 +57,7 @@ class BilibiliDanmakuWall extends StatefulWidget {
 
 class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
   late final int _danmuBlockWeight;
+  late final double _danmuFontSize;
   bool _pullDanmaku = false;
   (int, DmSegMobileReply)? _danmakuCache;
 
@@ -87,6 +87,8 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
   Future<void> _init() async {
     _danmuBlockWeight =
         await Settings.getInt(Settings.pathDanmuBlockWeightSwitch) ?? 6;
+    _danmuFontSize =
+        (await Settings.getInt(Settings.pathDanmuFontSize))?.toDouble() ?? 20;
   }
 
   // 时间变化
@@ -133,7 +135,6 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
   }
 
   // 推送弹幕
-  static final _random = Random();
 
   Future<void> _onPushDanmaku(List<DanmakuElem> danmakuList) async {
     for (var e in danmakuList) {
@@ -217,7 +218,7 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
         }
         return DanmakuScreen(
           createdController: (c) => widget.controller._controller = c,
-          option: DanmakuOption(fontSize: 20),
+          option: DanmakuOption(fontSize: _danmuFontSize),
         );
       },
     );

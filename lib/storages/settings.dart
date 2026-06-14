@@ -12,6 +12,7 @@ class Settings {
     'danmu',
     'block_weight',
   ];
+  static const pathDanmuFontSize = ['setting', 'danmu', 'font_size'];
   static const pathQualitySwitch = ['setting', 'player', 'quality'];
 
   static String _getKey(List<String> path) => '$_settingsKey.${path.join('.')}';
