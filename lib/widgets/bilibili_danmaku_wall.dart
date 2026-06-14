@@ -137,17 +137,45 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
 
   Future<void> _onPushDanmaku(List<DanmakuElem> danmakuList) async {
     for (var e in danmakuList) {
-      final y = _random.nextDouble() / 2;
-      widget.controller._controller.addDanmaku(
-        SpecialDanmakuContentItem(
-          e.content,
-          color: Color(0xFF000000 | e.color),
-          fontSize: e.fontsize.toDouble(),
-          translateXTween: Tween<double>(begin: 1, end: -0.5),
-          translateYTween: Tween<double>(begin: y, end: y),
-          duration: Duration(seconds: 15).inMilliseconds,
-        ),
-      );
+      final color = Color(0xFF000000 | e.color);
+
+      switch (e.mode) {
+        case 4: // 底部弹幕
+          widget.controller._controller.addDanmaku(
+            DanmakuContentItem(
+              e.content,
+              color: color,
+              type: DanmakuItemType.bottom,
+            ),
+          );
+          break;
+        case 5: // 顶部弹幕
+          widget.controller._controller.addDanmaku(
+            DanmakuContentItem(
+              e.content,
+              color: color,
+              type: DanmakuItemType.top,
+            ),
+          );
+          break;
+        // case 6: // 逆向弹幕
+        //   final y = _random.nextDouble() / 2;
+        //   widget.controller._controller.addDanmaku(
+        //     SpecialDanmakuContentItem(
+        //       e.content,
+        //       color: color,
+        //       fontSize: 20,
+        //       translateXTween: Tween<double>(begin: -0.5, end: 1),
+        //       translateYTween: Tween<double>(begin: y, end: y),
+        //       duration: Duration(seconds: 15).inMilliseconds,
+        //     ),
+        //   );
+        //   break;
+        default: // 1,2,3 普通弹幕 + 6 逆向弹幕 + 其他
+          widget.controller._controller.addDanmaku(
+            DanmakuContentItem(e.content, color: color),
+          );
+      }
     }
   }
 
@@ -189,7 +217,7 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
         }
         return DanmakuScreen(
           createdController: (c) => widget.controller._controller = c,
-          option: DanmakuOption(),
+          option: DanmakuOption(fontSize: 20),
         );
       },
     );
