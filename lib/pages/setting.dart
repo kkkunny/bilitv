@@ -1,6 +1,7 @@
 import 'package:bilitv/consts/settings.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/storages/settings.dart';
+import 'package:bilitv/widgets/cache_future_builder.dart';
 import 'package:bilitv/widgets/custom_setting_tiles.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -45,8 +46,8 @@ class _SettingPageState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder(
-        future: _loadSettings(),
+      body: CacheFutureBuilder(
+        future: _loadSettings,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
             return const SizedBox();

@@ -5,6 +5,7 @@ import 'package:bilitv/apis/bilibili/media.dart';
 import 'package:bilitv/consts/bilibili.dart';
 import 'package:bilitv/models/pbs/dm.pb.dart';
 import 'package:bilitv/storages/settings.dart';
+import 'package:bilitv/widgets/cache_future_builder.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
 import 'package:flutter/material.dart';
 
@@ -84,7 +85,8 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
   }
 
   Future<void> _init() async {
-    _danmuBlockWeight = await Settings.getInt(Settings.pathDanmuBlockWeightSwitch) ?? 6;
+    _danmuBlockWeight =
+        await Settings.getInt(Settings.pathDanmuBlockWeightSwitch) ?? 6;
   }
 
   // 时间变化
@@ -179,8 +181,8 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _init(),
+    return CacheFutureBuilder(
+      future: _init,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const SizedBox();

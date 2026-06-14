@@ -38,11 +38,19 @@ class _VideoControlWidget extends StatefulWidget {
 class _VideoControlWidgetState extends State<_VideoControlWidget> {
   late _VideoPlayerPageState _pageState;
   Timer? _nextTimer; // 播放下一个视频的计时器
+  StreamSubscription<bool>? _completedSub;
 
   @override
   void initState() {
     super.initState();
-    widget.player.stream.completed.listen(_onCompleted);
+    _completedSub = widget.player.stream.completed.listen(_onCompleted);
+  }
+
+  @override
+  void dispose() {
+    _nextTimer?.cancel();
+    _completedSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -287,6 +295,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   Timer? _heartbeatTimer; // 播放心跳timer
   late final StreamController<bool> loading;
+  StreamSubscription<bool>? _completedSub;
+  StreamSubscription<String>? _errorSub;
 
   @override
   void initState() {
@@ -301,10 +311,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         enableHardwareAcceleration: widget.ha,
       ),
     );
-    _controller.player.stream.completed.listen((v) {
+    _completedSub = _controller.player.stream.completed.listen((v) {
       if (v) _onPlayCompleted();
     });
-    _controller.player.stream.error.listen(_onPlayError);
+    _errorSub = _controller.player.stream.error.listen(_onPlayError);
     _danmakuCtl = BilibiliDanmakuWallController(widget.danmu);
     _screenFocusNode = FocusNode();
     _displayControl = ValueNotifier(false);
@@ -315,7 +325,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   @override
   void dispose() {
     if (_heartbeatTimer != null) _heartbeatTimer!.cancel();
-    loading.close();
+    _completedSub?.cancel();
+    _errorSub?.cancel();
+    if (!loading.isClosed) loading.close();
     _displayControl.dispose();
     _screenFocusNode.dispose();
     _danmakuCtl.dispose();

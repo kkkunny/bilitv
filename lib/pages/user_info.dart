@@ -3,6 +3,7 @@ import 'package:bilitv/apis/bilibili/user.dart';
 import 'package:bilitv/storages/auth.dart'
     show clearCookie, loginInfoNotifier, LoginInfo;
 import 'package:bilitv/widgets/bilibili_image.dart';
+import 'package:bilitv/widgets/cache_future_builder.dart';
 import 'package:flutter/material.dart';
 
 class UserInfoPage extends StatelessWidget {
@@ -30,8 +31,8 @@ class UserInfoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _load(),
+    return CacheFutureBuilder(
+      future: _load,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
