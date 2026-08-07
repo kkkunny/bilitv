@@ -28,8 +28,9 @@ const _danmakuWaitDuration = Duration(seconds: 5);
 // 视频控件
 class _VideoControlWidget extends StatefulWidget {
   final Player player;
+  final ValueNotifier<bool> displayControl;
 
-  const _VideoControlWidget(this.player);
+  const _VideoControlWidget(this.player, this.displayControl);
 
   @override
   State<_VideoControlWidget> createState() => _VideoControlWidgetState();
@@ -39,18 +40,34 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
   late _VideoPlayerPageState _pageState;
   Timer? _nextTimer; // 播放下一个视频的计时器
   StreamSubscription<bool>? _completedSub;
+  final _playFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     _completedSub = widget.player.stream.completed.listen(_onCompleted);
+    widget.displayControl.addListener(_onDisplayControlChanged);
   }
 
   @override
   void dispose() {
+    widget.displayControl.removeListener(_onDisplayControlChanged);
     _nextTimer?.cancel();
     _completedSub?.cancel();
+    _playFocusNode.dispose();
     super.dispose();
+  }
+
+  void _onDisplayControlChanged() {
+    if (!widget.displayControl.value) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.displayControl.value) {
+        return;
+      }
+      _playFocusNode.requestFocus();
+    });
   }
 
   @override
@@ -146,7 +163,6 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
   @override
   Widget build(BuildContext context) {
     return FocusScope(
-      autofocus: true,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,7 +202,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                     StreamBuilder<bool>(
                       stream: widget.player.stream.playing,
                       builder: (context, playing) => IconButton(
-                        autofocus: true,
+                        focusNode: _playFocusNode,
                         focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                         onPressed: _onPlayOrPauseTapped,
                         icon: Icon(
@@ -225,27 +241,35 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                         ),
                       ),
                     ),
-                    FocusDropdownButton<Quality>(
-                      icon: Icon(
-                        Icons.high_quality_outlined,
-                        color: Colors.white,
-                        size: 28,
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _pageState._videoReady,
+                      builder: (context, ready, child) => Opacity(
+                        opacity: ready ? 1 : 0.5,
+                        child: FocusDropdownButton<Quality>(
+                          icon: Icon(
+                            Icons.high_quality_outlined,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                          focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
+                          dropdownColor: Colors.pinkAccent.shade100,
+                          initialValue: ready ? _pageState._currentQuality : null,
+                          allowValues: ready
+                              ? _pageState._videoPlayURLInfo.supportFormats
+                                  .map(
+                                    (e) => DropdownMenuItem<Quality>(
+                                      value: e,
+                                      child: Text(
+                                        e.description,
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  )
+                                  .toList()
+                              : const [],
+                          onChanged: ready ? _onSelectQuality : null,
+                        ),
                       ),
-                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
-                      dropdownColor: Colors.pinkAccent.shade100,
-                      initialValue: _pageState._currentQuality,
-                      allowValues: _pageState._videoPlayURLInfo.supportFormats
-                          .map(
-                            (e) => DropdownMenuItem<Quality>(
-                              value: e,
-                              child: Text(
-                                e.description,
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: _onSelectQuality,
                     ),
                   ],
                 ),
@@ -297,6 +321,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   late final StreamController<bool> loading;
   StreamSubscription<bool>? _completedSub;
   StreamSubscription<String>? _errorSub;
+  final _videoReady = ValueNotifier(false);
 
   @override
   void initState() {
@@ -318,6 +343,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     _danmakuCtl = BilibiliDanmakuWallController(widget.danmu);
     _screenFocusNode = FocusNode();
     _displayControl = ValueNotifier(false);
+    _displayControl.addListener(_onDisplayControlChanged);
     loading = StreamController<bool>();
     _onEpisodeChanged();
   }
@@ -328,12 +354,21 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     _completedSub?.cancel();
     _errorSub?.cancel();
     if (!loading.isClosed) loading.close();
+    _displayControl.removeListener(_onDisplayControlChanged);
     _displayControl.dispose();
+    _videoReady.dispose();
     _screenFocusNode.dispose();
     _danmakuCtl.dispose();
     _controller.player.dispose();
     _currentCid.dispose();
     super.dispose();
+  }
+
+  void _onDisplayControlChanged() {
+    if (_displayControl.value) {
+      return;
+    }
+    _screenFocusNode.requestFocus();
   }
 
   void _onPlayError(String err) {
@@ -424,6 +459,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       _currentQuality = _videoPlayURLInfo.supportFormats.firstWhere(
         (e) => e.id == qualityID,
       );
+      _videoReady.value = true;
       await _playDashMedia(
         _videoPlayURLInfo.dashData,
         start: playInfo?.lastPlayTime,
@@ -547,11 +583,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
               ),
               ValueListenableBuilder(
                 valueListenable: _displayControl,
-                builder: (context, display, child) {
-                  return display
-                      ? _VideoControlWidget(_controller.player)
-                      : const SizedBox();
-                },
+                builder: (context, display, child) =>
+                    Offstage(offstage: !display, child: child!),
+                child: _VideoControlWidget(_controller.player, _displayControl),
               ),
             ],
           ),
