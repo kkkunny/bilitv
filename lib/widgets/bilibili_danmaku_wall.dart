@@ -59,7 +59,7 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
   late final int _danmuBlockWeight;
   late final double _danmuFontSize;
   bool _pullDanmaku = false;
-  (int, DmSegMobileReply)? _danmakuCache;
+  (int, int, DmSegMobileReply)? _danmakuCache; // (cid, 分块index, 弹幕数据)
 
   StreamSubscription<Duration>? _timelineSubscription;
   StreamSubscription<bool>? _playingSubscription;
@@ -101,11 +101,13 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
     if (DateTime.now().isBefore(_beginTime)) return;
 
     // 拉取弹幕
-    // 已有缓存分块不属于当前时间所在分块时拉取
+    // 已有缓存不属于当前分P或当前时间分块时重新拉取
     final index =
         (pos.inSeconds / danmakuChunkIntervalDuration.inSeconds).toInt() + 1;
-    final needPull =
-        !_pullDanmaku && (_danmakuCache == null || index != _danmakuCache!.$1);
+    final needPull = !_pullDanmaku &&
+        (_danmakuCache == null ||
+            widget.cid != _danmakuCache!.$1 ||
+            index != _danmakuCache!.$2);
     if (needPull) _onPullDanmaku(index);
 
     if (_danmakuCache == null) return;
@@ -115,7 +117,7 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
         ? pos.inMilliseconds
         : _lastPushDanmakuTime!.inMilliseconds;
     _lastPushDanmakuTime = pos;
-    final needPushDanmakuList = _danmakuCache!.$2.elems.where((e) {
+    final needPushDanmakuList = _danmakuCache!.$3.elems.where((e) {
       // 屏蔽权重
       if (e.weight <= _danmuBlockWeight) return false;
       return lastPushMS <= e.progress && e.progress < pos.inMilliseconds;
@@ -128,8 +130,10 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
   Future<void> _onPullDanmaku(int index) async {
     _pullDanmaku = true;
 
-    final danmakuResp = await getDanmaku(widget.cid, index);
-    _danmakuCache = (index, danmakuResp);
+    // 请求前捕获cid，分P切换后旧分P的在途请求返回的数据不会被新分P使用
+    final cid = widget.cid;
+    final danmakuResp = await getDanmaku(cid, index);
+    _danmakuCache = (cid, index, danmakuResp);
 
     _pullDanmaku = false;
   }

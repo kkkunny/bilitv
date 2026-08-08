@@ -99,7 +99,6 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
   }
 
   KeyEventResult _onKeyEvent(FocusNode _, KeyEvent value) {
-    print(widget.player.state.position);
     if (value is KeyDownEvent || value is KeyRepeatEvent) {
       final gep = widget.player.state.duration ~/ 100;
       switch (value.logicalKey) {

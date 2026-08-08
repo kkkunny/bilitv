@@ -38,22 +38,17 @@ class _VideoControlWidget extends StatefulWidget {
 
 class _VideoControlWidgetState extends State<_VideoControlWidget> {
   late _VideoPlayerPageState _pageState;
-  Timer? _nextTimer; // 播放下一个视频的计时器
-  StreamSubscription<bool>? _completedSub;
   final _playFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    _completedSub = widget.player.stream.completed.listen(_onCompleted);
     widget.displayControl.addListener(_onDisplayControlChanged);
   }
 
   @override
   void dispose() {
     widget.displayControl.removeListener(_onDisplayControlChanged);
-    _nextTimer?.cancel();
-    _completedSub?.cancel();
     _playFocusNode.dispose();
     super.dispose();
   }
@@ -95,7 +90,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     final index = _pageState.widget.video.episodes.indexWhere(
       (e) => e.cid == _pageState._currentCid.value,
     );
-    if (index == 0) return;
+    if (index <= 0) return;
 
     _pageState._currentCid.value =
         _pageState.widget.video.episodes[index - 1].cid;
@@ -109,53 +104,17 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     final index = _pageState.widget.video.episodes.indexWhere(
       (e) => e.cid == _pageState._currentCid.value,
     );
-    if (index == _pageState.widget.video.episodes.length - 1) return;
+    if (index < 0 || index == _pageState.widget.video.episodes.length - 1) {
+      return;
+    }
 
     _pageState._currentCid.value =
         _pageState.widget.video.episodes[index + 1].cid;
   }
 
-  void _onCompleted(bool completed) {
-    if (!completed) {
-      if (_nextTimer != null) {
-        _nextTimer!.cancel();
-        _nextTimer = null;
-      }
-      return;
-    }
-
-    final index = _pageState.widget.video.episodes.indexWhere(
-      (e) => e.cid == _pageState._currentCid.value,
-    );
-    if (index == _pageState.widget.video.episodes.length - 1) return;
-
-    _nextTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_nextTimer != null) {
-        _nextTimer!.cancel();
-        _nextTimer = null;
-      }
-      _pageState._currentCid.value =
-          _pageState.widget.video.episodes[index + 1].cid;
-    });
-
-    if (!mounted) {
-      return;
-    }
-    toastification.show(
-      context: context,
-      closeButtonShowType: CloseButtonShowType.none,
-      style: ToastificationStyle.simple,
-      alignment: Alignment.centerRight,
-      backgroundColor: Colors.white10.withValues(alpha: 0.5),
-      borderSide: BorderSide(width: 0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      title: Text('即将播放下一分P'),
-      autoCloseDuration: const Duration(seconds: 3),
-    );
-  }
-
   void onPositionChanged(Duration pos) {
     widget.player.seek(pos);
+    _pageState._cancelAutoNext();
     _pageState._danmakuCtl.wait(_danmakuWaitDuration);
     _pageState._danmakuCtl.clear();
   }
@@ -190,14 +149,27 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                 ),
                 Row(
                   children: [
-                    IconButton(
-                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
-                      onPressed: _onPrevTapped,
-                      icon: Icon(
-                        Icons.skip_previous_rounded,
-                        color: Colors.white,
-                        size: 44,
-                      ),
+                    ValueListenableBuilder<int>(
+                      valueListenable: _pageState._currentCid,
+                      builder: (context, cid, child) {
+                        final index = _pageState.widget.video.episodes
+                            .indexWhere((e) => e.cid == cid);
+                        final isFirst = index <= 0;
+                        return Opacity(
+                          opacity: isFirst ? 0.4 : 1,
+                          child: IconButton(
+                            focusColor: Colors.pinkAccent.withValues(
+                              alpha: 0.5,
+                            ),
+                            onPressed: isFirst ? null : _onPrevTapped,
+                            icon: Icon(
+                              Icons.skip_previous_rounded,
+                              color: Colors.white,
+                              size: 44,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     StreamBuilder<bool>(
                       stream: widget.player.stream.playing,
@@ -214,14 +186,28 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                         ),
                       ),
                     ),
-                    IconButton(
-                      focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
-                      onPressed: _onNextTapped,
-                      icon: Icon(
-                        Icons.skip_next_rounded,
-                        color: Colors.white,
-                        size: 44,
-                      ),
+                    ValueListenableBuilder<int>(
+                      valueListenable: _pageState._currentCid,
+                      builder: (context, cid, child) {
+                        final episodes = _pageState.widget.video.episodes;
+                        final index = episodes.indexWhere((e) => e.cid == cid);
+                        final isLast =
+                            index < 0 || index == episodes.length - 1;
+                        return Opacity(
+                          opacity: isLast ? 0.4 : 1,
+                          child: IconButton(
+                            focusColor: Colors.pinkAccent.withValues(
+                              alpha: 0.5,
+                            ),
+                            onPressed: isLast ? null : _onNextTapped,
+                            icon: Icon(
+                              Icons.skip_next_rounded,
+                              color: Colors.white,
+                              size: 44,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     const Spacer(),
                     IconButton(
@@ -253,19 +239,21 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                           ),
                           focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                           dropdownColor: Colors.pinkAccent.shade100,
-                          initialValue: ready ? _pageState._currentQuality : null,
+                          initialValue: ready
+                              ? _pageState._currentQuality
+                              : null,
                           allowValues: ready
                               ? _pageState._videoPlayURLInfo.supportFormats
-                                  .map(
-                                    (e) => DropdownMenuItem<Quality>(
-                                      value: e,
-                                      child: Text(
-                                        e.description,
-                                        style: TextStyle(color: Colors.white),
+                                    .map(
+                                      (e) => DropdownMenuItem<Quality>(
+                                        value: e,
+                                        child: Text(
+                                          e.description,
+                                          style: TextStyle(color: Colors.white),
+                                        ),
                                       ),
-                                    ),
-                                  )
-                                  .toList()
+                                    )
+                                    .toList()
                               : const [],
                           onChanged: ready ? _onSelectQuality : null,
                         ),
@@ -310,6 +298,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   late final ValueNotifier<int> _currentCid;
   late GetVideoPlayURLResponse _videoPlayURLInfo;
   late Quality _currentQuality;
+  late int _playingCid; // 当前实际播放的分P，用于进度上报，避免与_currentCid错配
 
   late final VideoController _controller;
   late final BilibiliDanmakuWallController _danmakuCtl;
@@ -318,7 +307,14 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   late final ValueNotifier<bool> _displayControl;
 
   Timer? _heartbeatTimer; // 播放心跳timer
+  Timer? _autoNextTimer; // 播完自动切下一分P的计时器
   late final StreamController<bool> loading;
+
+  // memoize合并流，避免rebuild时StreamBuilder对单订阅loading流重新订阅
+  late final Stream<bool> _bufferingOrLoading = combineBoolStream(
+    _controller.player.stream.buffering,
+    loading.stream,
+  );
   StreamSubscription<bool>? _completedSub;
   StreamSubscription<String>? _errorSub;
   final _videoReady = ValueNotifier(false);
@@ -328,6 +324,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     super.initState();
     _currentCid = ValueNotifier(widget.cid);
     _currentCid.addListener(_onEpisodeChanged);
+    _playingCid = widget.cid;
     _controller = VideoController(
       Player(),
       configuration: VideoControllerConfiguration(
@@ -351,6 +348,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   @override
   void dispose() {
     if (_heartbeatTimer != null) _heartbeatTimer!.cancel();
+    _cancelAutoNext();
     _completedSub?.cancel();
     _errorSub?.cancel();
     if (!loading.isClosed) loading.close();
@@ -372,16 +370,41 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   void _onPlayError(String err) {
+    if (!mounted) return;
+    // 视频源失败：仅在"无法打开"类错误时轮换到下一个备份地址，其他错误直接提示
+    if (_videoUrls.isNotEmpty && err.contains(_videoUrls.first)) {
+      if (!err.contains('Can not open external file')) {
+        pushTooltipError(context, '视频加载失败');
+        return;
+      }
+      _videoUrls.removeAt(0);
+      if (_videoUrls.isEmpty) {
+        pushTooltipError(context, '视频加载失败');
+        return;
+      }
+      _controller.player
+          .open(
+            Media(
+              _videoUrls.first,
+              httpHeaders: bilibiliHttpClient.options.headers
+                  .cast<String, String>(),
+            ),
+          )
+          .ignore();
+      return;
+    }
+    // 音频源失败：轮换到下一个备份地址
     if (_audioUrls.isNotEmpty && err.contains(_audioUrls.first)) {
       if (!err.contains('Can not open external file')) {
+        pushTooltipError(context, "音频加载失败");
         return;
       }
       _audioUrls.removeAt(0);
       if (_audioUrls.isEmpty) {
         pushTooltipError(context, "音频加载失败");
-      } else {
-        _controller.player.setAudioTrack(AudioTrack.uri(_audioUrls.first));
+        return;
       }
+      _controller.player.setAudioTrack(AudioTrack.uri(_audioUrls.first));
       return;
     }
     pushTooltipError(context, err);
@@ -398,7 +421,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       if (loginInfoNotifier.value.isLogin) {
         reportPlayProgress(
           widget.video.avid,
-          _currentCid.value,
+          _playingCid,
           _controller.player.state.position,
         ).ignore();
       }
@@ -414,64 +437,90 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   Future<void> _onEpisodeChanged() async {
-    loading.sink.add(true);
-    try {
-      // 结束心跳
-      if (_heartbeatTimer != null) {
-        _heartbeatTimer!.cancel();
-      }
-      // 上报播放进度
-      if (loginInfoNotifier.value.isLogin &&
-          _controller.player.state.position.inSeconds > 0) {
-        reportPlayProgress(
-          widget.video.avid,
-          _currentCid.value,
-          _controller.player.state.position,
-        ).ignore();
-      }
-      reportPlayStart(widget.video.avid, _currentCid.value).ignore();
-      // 暂停弹幕
-      final danmakuEnabled = _danmakuCtl.enabled;
-      _danmakuCtl.enabled = false;
+    // 快照本次请求的分P，若处理过程中用户又切了分P则丢弃本次结果
+    final cid = _currentCid.value;
+    // 结束心跳
+    _heartbeatTimer?.cancel();
+    // 取消待执行的自动下一分P
+    _cancelAutoNext();
+    // 上报上一分P的播放进度（使用实际播放中的cid，避免切P后cid与位置错配）
+    if (loginInfoNotifier.value.isLogin &&
+        _controller.player.state.position.inSeconds > 0) {
+      reportPlayProgress(
+        widget.video.avid,
+        _playingCid,
+        _controller.player.state.position,
+      ).ignore();
+    }
+    reportPlayStart(widget.video.avid, cid).ignore();
+    // 暂停弹幕
+    final danmakuEnabled = _danmakuCtl.enabled;
+    _danmakuCtl.enabled = false;
 
+    var success = false;
+    if (!loading.isClosed) loading.sink.add(true);
+    try {
       MediaPlayInfo? playInfo;
       // 若已登陆，获取播放进度
       if (loginInfoNotifier.value.isLogin) {
         try {
           final lastPlayInfo = await getMediaPlayInfo(
             avid: widget.video.avid,
-            cid: _currentCid.value,
+            cid: cid,
           );
-          if (_currentCid.value == lastPlayInfo.lastPlayCid) {
+          if (cid == lastPlayInfo.lastPlayCid) {
             playInfo = lastPlayInfo;
           }
         } catch (_) {}
+        if (!mounted || cid != _currentCid.value) return;
       }
 
-      _videoPlayURLInfo = await tooltipNetFetch(
-        context,
-        () => getVideoPlayURL(avid: widget.video.avid, cid: _currentCid.value),
-      );
+      final info = await getVideoPlayURL(avid: widget.video.avid, cid: cid);
+      if (!mounted || cid != _currentCid.value) return;
+      if (info.supportFormats.isEmpty) {
+        throw Exception('该视频暂无可播放清晰度');
+      }
 
       final qualityID =
           await Settings.getInt(Settings.pathQualitySwitch) ??
-          _videoPlayURLInfo.defaultQualityID;
-      _currentQuality = _videoPlayURLInfo.supportFormats.firstWhere(
+          info.defaultQualityID;
+      // 用户设置的画质不可用时依次回退到默认画质、第一个可用画质
+      final quality = info.supportFormats.firstWhere(
         (e) => e.id == qualityID,
+        orElse: () => info.supportFormats.firstWhere(
+          (e) => e.id == info.defaultQualityID,
+          orElse: () => info.supportFormats.first,
+        ),
       );
-      _videoReady.value = true;
+      // 打开媒体前再校验一次分P未变，避免并发切P时旧请求最后执行覆盖新请求
+      if (!mounted || cid != _currentCid.value) return;
+
       await _playDashMedia(
-        _videoPlayURLInfo.dashData,
+        info.dashData,
+        quality,
         start: playInfo?.lastPlayTime,
       );
+      if (!mounted || cid != _currentCid.value) return;
 
-      // 开始心跳
-      _heartbeatTimer = Timer(Duration(seconds: 15), _onHeartbeat);
-      // 恢复弹幕
-      _danmakuCtl.enabled = danmakuEnabled;
-    } catch (_) {
+      // 播放成功后才提交状态，失败时保持旧画质/旧播放信息不变
+      _videoPlayURLInfo = info;
+      _currentQuality = quality;
+      _videoReady.value = true;
+      success = true;
+      // 开始周期心跳（每15秒上报一次，切P/退出时取消）
+      _heartbeatTimer = Timer.periodic(
+        const Duration(seconds: 15),
+        (_) => _onHeartbeat(),
+      );
+    } catch (e) {
+      if (mounted) pushTooltipError(context, e.toString());
     } finally {
-      loading.sink.add(false);
+      if (!loading.isClosed) loading.sink.add(false);
+      // 仅当前分P的请求仍有效时恢复弹幕，避免旧请求覆盖新请求的状态
+      if (mounted && cid == _currentCid.value) {
+        _danmakuCtl.enabled = danmakuEnabled;
+        if (success) _playingCid = cid;
+      }
     }
   }
 
@@ -479,52 +528,70 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     if (!loginInfoNotifier.value.isLogin) return;
     reportPlayHeartbeat(
       avid: widget.video.avid,
-      cid: _currentCid.value,
+      cid: _playingCid,
       progress: _controller.player.state.position,
     ).ignore();
   }
 
   Future<void> _onQualityChange(Quality sf) async {
-    if (_currentQuality.id == sf.id) return;
-    _currentQuality = sf;
+    if (!mounted || _currentQuality.id == sf.id) return;
+    // 快照当前分P，切画质期间若用户切换了分P则不恢复弹幕，避免覆盖新分P的状态
+    final cid = _currentCid.value;
 
     // 暂停弹幕
     final danmakuEnabled = _danmakuCtl.enabled;
     _danmakuCtl.enabled = false;
 
-    loading.sink.add(true);
+    if (!loading.isClosed) loading.sink.add(true);
     try {
       await _playDashMedia(
         _videoPlayURLInfo.dashData,
+        sf,
         start: _controller.player.state.position,
       );
-    } catch (_) {
+      if (!mounted) return;
+      // 播放成功后才提交画质
+      _currentQuality = sf;
+    } catch (e) {
+      if (mounted) pushTooltipError(context, e.toString());
     } finally {
-      loading.sink.add(false);
+      if (!loading.isClosed) loading.sink.add(false);
+      if (mounted && cid == _currentCid.value) {
+        // 恢复弹幕
+        _danmakuCtl.enabled = danmakuEnabled;
+      }
     }
-
-    // 恢复弹幕
-    _danmakuCtl.enabled = danmakuEnabled;
   }
 
-  var _videoUrls = [];
-  var _audioUrls = [];
+  List<String> _videoUrls = [];
+  List<String> _audioUrls = [];
 
-  Future<void> _playDashMedia(DashData media, {Duration? start}) async {
-    var video = _videoPlayURLInfo.dashData.video.firstWhere(
-      (e) => e.quality == _currentQuality.id,
+  Future<void> _playDashMedia(
+    DashData media,
+    Quality quality, {
+    Duration? start,
+  }) async {
+    var video = media.video.firstWhere(
+      (e) => e.quality == quality.id,
+      orElse: () => throw Exception('该画质无可用视频流'),
     );
-    var videoUrls = [video.baseUrl];
-    videoUrls.addAll(video.backupUrls);
-    var audioUrls = _videoPlayURLInfo.dashData.audio.mapMany((e) {
-      var urls = [e.baseUrl];
-      urls.addAll(e.backupUrls);
-      return urls;
-    }).toList();
+    var videoUrls = [
+      video.baseUrl,
+      ...video.backupUrls,
+    ].where((u) => u.isNotEmpty).toList();
+    if (videoUrls.isEmpty) {
+      throw Exception('该画质无可用视频流');
+    }
+    var audioUrls = media.audio
+        .expand((e) => [e.baseUrl, ...e.backupUrls])
+        .where((u) => u.isNotEmpty)
+        .toList();
 
-    _videoUrls.clear();
-    _audioUrls.clear();
-    Future.wait([
+    // 先记录全部候选地址，供_onPlayError在首个地址失败时轮换备份地址
+    _videoUrls = videoUrls;
+    _audioUrls = audioUrls;
+
+    final futures = <Future<void>>[
       _controller.player.open(
         Media(
           videoUrls.first,
@@ -533,10 +600,18 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
           start: start,
         ),
       ),
-      _controller.player.setAudioTrack(AudioTrack.uri(audioUrls.first)),
-    ]).ignore();
-    _videoUrls = videoUrls;
-    _audioUrls = audioUrls;
+    ];
+    if (audioUrls.isNotEmpty) {
+      futures.add(
+        _controller.player.setAudioTrack(AudioTrack.uri(audioUrls.first)),
+      );
+    }
+    Future.wait(futures).ignore();
+  }
+
+  void _cancelAutoNext() {
+    _autoNextTimer?.cancel();
+    _autoNextTimer = null;
   }
 
   void _onPlayCompleted() {
@@ -544,10 +619,36 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     if (loginInfoNotifier.value.isLogin) {
       reportPlayProgress(
         widget.video.avid,
-        _currentCid.value,
+        _playingCid,
         _controller.player.state.position,
       ).ignore();
     }
+
+    final index = widget.video.episodes.indexWhere(
+      (e) => e.cid == _currentCid.value,
+    );
+    if (index < 0 || index == widget.video.episodes.length - 1) return;
+    if (!mounted) return;
+
+    // 3秒后自动切到下一分P，用户seek或手动切P会取消该计时器
+    _autoNextTimer = Timer(const Duration(seconds: 3), () {
+      _autoNextTimer = null;
+      if (!mounted || _currentCid.value != widget.video.episodes[index].cid) {
+        return;
+      }
+      _currentCid.value = widget.video.episodes[index + 1].cid;
+    });
+    toastification.show(
+      context: context,
+      closeButtonShowType: CloseButtonShowType.none,
+      style: ToastificationStyle.simple,
+      alignment: Alignment.centerRight,
+      backgroundColor: Colors.white10.withValues(alpha: 0.5),
+      borderSide: BorderSide(width: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      title: Text('即将播放下一分P'),
+      autoCloseDuration: const Duration(seconds: 3),
+    );
   }
 
   @override
@@ -564,10 +665,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
             children: [
               Video(controller: _controller, controls: NoVideoControls),
               StreamBuilder<bool>(
-                stream: combineBoolStream(
-                  _controller.player.stream.buffering,
-                  loading.stream,
-                ),
+                stream: _bufferingOrLoading,
                 builder: (context, buffering) => (buffering.data ?? false)
                     ? buildLoadingStyle3()
                     : const SizedBox(),
@@ -615,8 +713,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     if (_displayControl.value) {
       switch (value.logicalKey) {
         case LogicalKeyboardKey.goBack:
-          // 延迟50ms是为了确保_onBack先被调用，这样_onBack里才能拿到此时的displayControl.value的值而不是这里修改后的
-          Future.delayed(Duration(milliseconds: 10)).then((_) {
+          // 延迟一帧后再隐藏控制层：确保PopScope的_onBack先被调用，
+          // 这样_onBack里才能拿到此时的displayControl.value（true），
+          // 从而仅关闭控制层而不是退出播放页
+          Future.delayed(const Duration(milliseconds: 10)).then((_) {
             _displayControl.value = false;
           });
           break;
@@ -639,6 +739,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   void _onStepForward(bool forward) {
+    _cancelAutoNext();
     if (forward) {
       if (_controller.player.state.duration -
               _controller.player.state.position <
