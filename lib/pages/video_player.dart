@@ -640,7 +640,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     });
     toastification.show(
       context: context,
-      closeButtonShowType: CloseButtonShowType.none,
+      closeButton: const ToastCloseButton(showType: CloseButtonShowType.none),
       style: ToastificationStyle.simple,
       alignment: Alignment.centerRight,
       backgroundColor: Colors.white10.withValues(alpha: 0.5),
@@ -655,7 +655,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: _onBack,
+      onPopInvokedWithResult: (didPop, _) => _onBack(didPop),
       child: Scaffold(
         body: KeyboardListener(
           autofocus: true,
