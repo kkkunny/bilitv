@@ -5,6 +5,7 @@ import 'package:bilitv/apis/bilibili/user.dart';
 import 'package:bilitv/storages/auth.dart'
     show saveCookie, loginInfoNotifier, LoginInfo;
 import 'package:bilitv/utils/ui_scale.dart';
+import 'package:bilitv/widgets/pink_style.dart';
 import 'package:dpad/dpad.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -49,6 +50,8 @@ class _QrLoginWidgetState extends State<_QrLoginWidget> {
   QRState _state = QRState.waiting;
   Timer? _pollTimer;
   bool _isRefreshing = false;
+  bool _isChecking = false;
+  bool _isLoggingIn = false;
 
   @override
   void initState() {
@@ -99,7 +102,9 @@ class _QrLoginWidgetState extends State<_QrLoginWidget> {
   }
 
   Future<void> _check() async {
-    if (_qr == null) return;
+    // 防止上一次轮询/登录未完成时并发重入
+    if (_qr == null || _isChecking || _isLoggingIn) return;
+    _isChecking = true;
     try {
       final status = await checkQRStatus(_qr!.key);
       if (!mounted) return;
@@ -117,10 +122,14 @@ class _QrLoginWidgetState extends State<_QrLoginWidget> {
       setState(() {
         _state = QRState.error;
       });
+    } finally {
+      _isChecking = false;
     }
   }
 
   Future<void> _onLoginSuccess(QRStatus status) async {
+    if (_isLoggingIn) return;
+    _isLoggingIn = true;
     _pollTimer?.cancel();
 
     try {
@@ -138,6 +147,8 @@ class _QrLoginWidgetState extends State<_QrLoginWidget> {
       setState(() {
         _state = QRState.error;
       });
+    } finally {
+      _isLoggingIn = false;
     }
   }
 
@@ -146,6 +157,20 @@ class _QrLoginWidgetState extends State<_QrLoginWidget> {
     final size = 260.0 * ui;
 
     if (_qr == null) {
+      if (_state == QRState.error) {
+        return SizedBox(
+          width: size,
+          height: size,
+          child: Center(
+            child: PinkButton(
+              ui: ui,
+              label: '重试',
+              icon: Icons.refresh_rounded,
+              onPressed: _refreshQR,
+            ),
+          ),
+        );
+      }
       return SizedBox(
         width: size,
         height: size,

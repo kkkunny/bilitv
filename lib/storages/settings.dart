@@ -19,7 +19,7 @@ class Settings {
 
   static Future<void> setBool(List<String> path, bool v) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setBool(_getKey(path), v);
+    await prefs.setBool(_getKey(path), v);
   }
 
   static Future<bool?> getBool(List<String> path) async {
@@ -29,7 +29,7 @@ class Settings {
 
   static Future<void> setInt(List<String> path, int v) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setInt(_getKey(path), v);
+    await prefs.setInt(_getKey(path), v);
   }
 
   static Future<int?> getInt(List<String> path) async {
@@ -39,7 +39,7 @@ class Settings {
 
   static Future<void> setString(List<String> path, String v) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString(_getKey(path), v);
+    await prefs.setString(_getKey(path), v);
   }
 
   static Future<String?> getString(List<String> path) async {

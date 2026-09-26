@@ -93,16 +93,14 @@ Future<QRStatus> checkQRStatus(String key) async {
   var qrStatus = QRStatus.fromJson(data);
   if (qrStatus.state == QRState.confirmed) {
     final cookies = respHeaders?['set-cookie'];
-    qrStatus.cookies = cookies != null
+    final cookieList = cookies != null
         ? cookies.map((cookie) {
             return Cookie.fromSetCookieValue(cookie);
           }).toList()
-        : const [];
+        : <Cookie>[];
     final (buvid3, buvid4) = await getBuvids();
-    qrStatus.cookies.addAll([
-      Cookie('buvid3', buvid3),
-      Cookie('buvid4', buvid4),
-    ]);
+    cookieList.addAll([Cookie('buvid3', buvid3), Cookie('buvid4', buvid4)]);
+    qrStatus.cookies = cookieList;
   }
   return qrStatus;
 }

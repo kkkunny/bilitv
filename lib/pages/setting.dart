@@ -24,25 +24,36 @@ class _SettingPageState extends State<SettingPage> {
   late String _version;
 
   Future<void> _loadSettings() async {
-    _danmu = await Settings.getBool(Settings.pathDanmuSwitch) ?? true;
-    _danmuBlockWeight =
-        await Settings.getInt(Settings.pathDanmuBlockWeightSwitch) ?? 6;
-    _danmuFontSize = await Settings.getInt(Settings.pathDanmuFontSize) ?? 20;
-    _ha = await Settings.getBool(Settings.pathHASwitch) ?? true;
-    _vo =
-        VideoOutputDrivers.parse(
-          await Settings.getString(Settings.pathVOSwitch) ??
-              VideoOutputDrivers.gpu.value,
-        ) ??
-        VideoOutputDrivers.gpu;
-    _hwdec =
-        HardwareVideoDecoder.parse(
-          await Settings.getString(Settings.pathHwdecSwitch) ??
-              HardwareVideoDecoder.autoSafe.value,
-        ) ??
-        HardwareVideoDecoder.autoSafe;
-    final pi = await PackageInfo.fromPlatform();
-    _version = pi.version;
+    try {
+      _danmu = await Settings.getBool(Settings.pathDanmuSwitch) ?? true;
+      _danmuBlockWeight =
+          await Settings.getInt(Settings.pathDanmuBlockWeightSwitch) ?? 6;
+      _danmuFontSize = await Settings.getInt(Settings.pathDanmuFontSize) ?? 20;
+      _ha = await Settings.getBool(Settings.pathHASwitch) ?? true;
+      _vo =
+          VideoOutputDrivers.parse(
+            await Settings.getString(Settings.pathVOSwitch) ??
+                VideoOutputDrivers.gpu.value,
+          ) ??
+          VideoOutputDrivers.gpu;
+      _hwdec =
+          HardwareVideoDecoder.parse(
+            await Settings.getString(Settings.pathHwdecSwitch) ??
+                HardwareVideoDecoder.autoSafe.value,
+          ) ??
+          HardwareVideoDecoder.autoSafe;
+      final pi = await PackageInfo.fromPlatform();
+      _version = pi.version;
+    } catch (_) {
+      // 读取失败时使用默认值，避免页面因late字段未初始化而崩溃
+      _danmu = true;
+      _danmuBlockWeight = 6;
+      _danmuFontSize = 20;
+      _ha = true;
+      _vo = VideoOutputDrivers.gpu;
+      _hwdec = HardwareVideoDecoder.autoSafe;
+      _version = '';
+    }
   }
 
   @override
@@ -53,6 +64,9 @@ class _SettingPageState extends State<SettingPage> {
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
             return const SizedBox();
+          }
+          if (snapshot.hasError) {
+            return const Center(child: Text('加载失败，请稍后重试'));
           }
           final ui = context.ui;
           return Column(

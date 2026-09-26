@@ -51,7 +51,7 @@ Future<void> saveCookie(
   }
 }
 
-Future<void> clearCookie({withRefreshToken = true}) async {
+Future<void> clearCookie({bool withRefreshToken = true}) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove(_cookieKey);
   if (withRefreshToken) await prefs.remove(_refreshTokenKey);
@@ -61,10 +61,16 @@ Future<List<Cookie>> loadCookie() async {
   final prefs = await SharedPreferences.getInstance();
   final cookieString = prefs.getString(_cookieKey) ?? '';
   if (cookieString.isEmpty) return [];
-  return cookieString
-      .split('; ')
-      .map((s) => Cookie.fromSetCookieValue(s))
-      .toList();
+  final cookies = <Cookie>[];
+  for (final part in cookieString.split('; ')) {
+    if (part.trim().isEmpty) continue;
+    try {
+      cookies.add(Cookie.fromSetCookieValue(part));
+    } catch (_) {
+      // 单条Cookie损坏时跳过，避免影响其它Cookie与整个请求
+    }
+  }
+  return cookies;
 }
 
 Future<String?> loadRefreshToken() async {

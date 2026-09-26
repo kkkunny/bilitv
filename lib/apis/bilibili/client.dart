@@ -6,6 +6,9 @@ import 'package:flutter/foundation.dart';
 final Dio bilibiliHttpClient = () {
   final client = Dio(
     BaseOptions(
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
+      sendTimeout: const Duration(seconds: 20),
       headers: {
         'Referer': 'https://www.bilibili.com/',
         'User-Agent':

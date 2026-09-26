@@ -61,7 +61,7 @@ class _PageState extends State<Page> {
       _PageItem(
         icon: Icons.account_circle_rounded,
         label: '我的',
-        child: (listener) => UserInfoPage(),
+        child: (listener) => UserInfoPage(refreshListener: listener),
         needLogin: true,
       ),
       _PageItem(
@@ -129,7 +129,7 @@ class _PageState extends State<Page> {
     }
   }
 
-  DateTime _lastTapAvatarTime = DateTime.now();
+  DateTime _lastTapAvatarTime = DateTime.fromMillisecondsSinceEpoch(0);
 
   Future<void> _onAvatarTapped() async {
     if (!loginInfoNotifier.value.isLogin) {
@@ -149,9 +149,15 @@ class _PageState extends State<Page> {
 
   Future<void> _onDoublePressAvatar() async {
     if (!loginInfoNotifier.value.isLogin) return;
+    // 先清除持久化信息，失败则保持登录状态，避免状态不一致
+    try {
+      await clearCookie();
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
     loginInfoNotifier.value = LoginInfo.notLogin;
     pushTooltipInfo(context, "已退出当前账号！");
-    await clearCookie();
   }
 
   @override
@@ -198,9 +204,14 @@ class _PageState extends State<Page> {
               child: ValueListenableBuilder(
                 valueListenable: _currentPageIndex,
                 builder: (context, index, _) {
-                  return LazyIndexedStack(
-                    index: index,
-                    children: _tabs.map((tab) => tab.child).toList(),
+                  return ValueListenableBuilder<LoginInfo>(
+                    valueListenable: loginInfoNotifier,
+                    builder: (context, login, _) => LazyIndexedStack(
+                      // 登录状态变化时重建页面，避免残留在上一个账号的数据
+                      key: ValueKey(login.mid),
+                      index: index,
+                      children: _tabs.map((tab) => tab.child).toList(),
+                    ),
                   );
                 },
               ),

@@ -10,7 +10,10 @@ import 'package:bilitv/widgets/pink_style.dart';
 import 'package:flutter/material.dart';
 
 class UserInfoPage extends StatelessWidget {
-  const UserInfoPage({super.key});
+  /// 点击当前Tab时触发刷新（值变化即重新拉取）
+  final ValueNotifier<int>? refreshListener;
+
+  const UserInfoPage({super.key, this.refreshListener});
 
   Future<MySelf?> _load() async {
     try {
@@ -37,12 +40,30 @@ class UserInfoPage extends StatelessWidget {
     // 以1080p为基准缩放整体尺寸
     final ui = context.ui;
 
-    return CacheFutureBuilder(
+    return ValueListenableBuilder<LoginInfo>(
+      valueListenable: loginInfoNotifier,
+      builder: (context, login, _) {
+        if (!login.isLogin) {
+          return const Center(child: Text('未登录'));
+        }
+        return _buildUserInfo(context, ui, login);
+      },
+    );
+  }
+
+  Widget _buildUserInfo(BuildContext context, double ui, LoginInfo login) {
+    Widget content = CacheFutureBuilder(
+      key: ValueKey(login.mid),
       future: _load,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState != ConnectionState.done) {
           return Center(child: CircularProgressIndicator(color: biliPink));
-        } else if (snapshot.data == null) {
+        }
+        if (snapshot.hasError) {
+          return const Center(child: Text('加载失败，请稍后重试'));
+        }
+        final info = snapshot.data;
+        if (info == null) {
           return const Center(child: Text('未登录'));
         }
         return Center(
@@ -65,7 +86,7 @@ class UserInfoPage extends StatelessWidget {
                       width: context.border(3),
                     ),
                   ),
-                  child: BilibiliAvatar(snapshot.data!.avatar, radius: 80 * ui),
+                  child: BilibiliAvatar(info.avatar, radius: 80 * ui),
                 ),
                 SizedBox(width: 40 * ui),
                 Column(
@@ -73,7 +94,7 @@ class UserInfoPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      snapshot.data!.name,
+                      info.name,
                       style: TextStyle(
                         fontSize: 36 * ui,
                         fontWeight: FontWeight.w900,
@@ -91,7 +112,7 @@ class UserInfoPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8 * ui),
                       ),
                       child: Text(
-                        '等级 ${snapshot.data!.level}',
+                        '等级 ${info.level}',
                         style: TextStyle(
                           fontSize: 20 * ui,
                           fontWeight: FontWeight.w600,
@@ -113,6 +134,14 @@ class UserInfoPage extends StatelessWidget {
           ),
         );
       },
+    );
+
+    final listener = refreshListener;
+    if (listener == null) return content;
+    return ValueListenableBuilder<int>(
+      valueListenable: listener,
+      builder: (context, value, _) =>
+          KeyedSubtree(key: ValueKey(value), child: content),
     );
   }
 }
