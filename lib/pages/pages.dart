@@ -65,12 +65,12 @@ class _PageState extends State<Page> {
         needLogin: true,
       ),
       _PageItem(
-        icon: Icons.search_rounded,
+        icon: IconFont.search,
         label: '搜索',
         child: (listener) => SearchPage(),
       ),
       _PageItem(
-        icon: Icons.history_rounded,
+        icon: IconFont.history,
         label: '历史',
         child: (listener) => HistoryPage(listener),
         needLogin: true,

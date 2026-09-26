@@ -573,16 +573,23 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                 ValueListenableBuilder(
                   valueListenable: _followerCount,
                   builder: (context, followerCount, _) {
-                    return Text(
-                      followerCount == null
-                          ? 'UP 主'
-                          : '${amountString(followerCount)}粉丝',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 20 * ui,
-                        color: Colors.grey[600],
-                      ),
+                    final color = Colors.grey[600];
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(IconFont.fensi, size: 30 * ui, color: color),
+                        SizedBox(width: 6 * ui),
+                        Flexible(
+                          child: Text(
+                            followerCount == null
+                                ? 'UP 主'
+                                : '${amountString(followerCount)}粉丝',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 20 * ui, color: color),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),

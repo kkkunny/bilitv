@@ -1,4 +1,5 @@
 import 'package:bilitv/consts/color.dart';
+import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/utils/ui_scale.dart';
@@ -141,7 +142,7 @@ class VideoCard extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.done, size: 30 * ui, color: Colors.green),
+                      Icon(IconFont.done_1, size: 30 * ui, color: Colors.green),
                       SizedBox(width: 6 * ui),
                       Text(
                         "已看完",
