@@ -26,6 +26,10 @@ void main() {
     test('DioException 按类型映射文案', () {
       expect(errorMessage(_dioException(DioExceptionType.connectionTimeout)), '请求超时，请重试');
       expect(errorMessage(_dioException(DioExceptionType.receiveTimeout)), '请求超时，请重试');
+      expect(
+        errorMessage(_dioException(DioExceptionType.transformTimeout)),
+        '请求超时，请重试',
+      );
       expect(errorMessage(_dioException(DioExceptionType.connectionError)), '网络异常，请检查网络后重试');
       expect(errorMessage(_dioException(DioExceptionType.badResponse)), '服务暂时不可用，请稍后重试');
       expect(errorMessage(_dioException(DioExceptionType.cancel)), '请求已取消');

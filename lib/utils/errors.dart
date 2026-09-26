@@ -35,6 +35,7 @@ String errorMessage(Object error) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
         return '请求超时，请重试';
       case DioExceptionType.connectionError:
         return '网络异常，请检查网络后重试';
