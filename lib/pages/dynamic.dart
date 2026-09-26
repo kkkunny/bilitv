@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:bilitv/apis/bilibili/dynamic.dart';
-import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/apis/bilibili/user.dart' show UserInfo;
 import 'package:bilitv/consts/assets.dart';
@@ -65,7 +64,7 @@ class _DynamicPageState extends State<DynamicPage> {
       });
     } catch (e) {
       if (!mounted) return;
-      pushTooltipError(context, e is BilibiliError ? e.message : '未知的错误');
+      showAppError(context, e);
     }
   }
 

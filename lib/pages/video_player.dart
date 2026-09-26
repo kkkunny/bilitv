@@ -21,7 +21,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:toastification/toastification.dart';
 
 const _step = Duration(seconds: 5);
 const _danmakuWaitDuration = Duration(seconds: 5);
@@ -555,7 +554,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         (_) => _onHeartbeat(),
       );
     } catch (e) {
-      if (mounted) pushTooltipError(context, e.toString());
+      if (mounted) showAppError(context, e);
     } finally {
       if (!loading.isClosed) loading.sink.add(false);
       // 仅当前分P的请求仍有效时恢复弹幕，避免旧请求覆盖新请求的状态
@@ -596,7 +595,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       // 播放成功后才提交画质
       _currentQuality = sf;
     } catch (e) {
-      if (mounted) pushTooltipError(context, e.toString());
+      if (mounted) showAppError(context, e);
     } finally {
       if (!loading.isClosed) loading.sink.add(false);
       if (mounted && cid == _currentCid.value) {
@@ -676,18 +675,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       }
       _currentCid.value = widget.video.episodes[index + 1].cid;
     });
-    final ui = context.ui;
-    toastification.show(
-      context: context,
-      closeButton: const ToastCloseButton(showType: CloseButtonShowType.none),
-      style: ToastificationStyle.simple,
-      alignment: Alignment.centerRight,
-      backgroundColor: Colors.white10.withValues(alpha: 0.5),
-      borderSide: BorderSide(width: 0),
-      padding: EdgeInsets.symmetric(horizontal: 16 * ui, vertical: 4 * ui),
-      title: Text('即将播放下一分P', style: TextStyle(fontSize: 20 * ui)),
-      autoCloseDuration: const Duration(seconds: 3),
-    );
+    pushTooltipInfo(context, '即将播放下一分P', duration: const Duration(seconds: 3));
   }
 
   @override

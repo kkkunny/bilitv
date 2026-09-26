@@ -1,4 +1,3 @@
-import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/apis/bilibili/media.dart'
     show getVideoInfo, getArchiveRelation, ArchiveRelation, likeMedia;
 import 'package:bilitv/apis/bilibili/recommend.dart' show fetchRelatedVideos;
@@ -463,11 +462,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       _like.value = widget.relation.like;
     } catch (e) {
       if (!mounted) return;
-      if (e is BilibiliError) {
-        pushTooltipError(context, e.message);
-      } else {
-        pushTooltipError(context, '未知的错误');
-      }
+      showAppError(context, e);
     }
   }
 
@@ -483,11 +478,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       pushTooltipInfo(context, '已加入稍后再看：${widget.video.title}');
     } catch (e) {
       if (!mounted) return;
-      if (e is BilibiliError) {
-        pushTooltipError(context, e.message);
-      } else {
-        pushTooltipError(context, '未知的错误');
-      }
+      showAppError(context, e);
     }
   }
 
@@ -509,11 +500,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       pushTooltipInfo(context, follow ? '关注成功！' : '已取消关注！');
     } catch (e) {
       if (!mounted) return;
-      if (e is BilibiliError) {
-        pushTooltipError(context, e.message);
-      } else {
-        pushTooltipError(context, '未知的错误');
-      }
+      showAppError(context, e);
     }
   }
 

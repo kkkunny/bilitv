@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/consts/assets.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
@@ -84,10 +83,7 @@ class _ToViewPageState extends State<ToViewPage> {
               await deleteToView(media.avid);
             } catch (e) {
               if (!context.mounted) return;
-              pushTooltipError(
-                context,
-                e is BilibiliError ? e.message : '未知的错误',
-              );
+              showAppError(context, e);
               return;
             }
             if (!context.mounted) return;
