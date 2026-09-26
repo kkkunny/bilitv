@@ -31,9 +31,9 @@ class BiliTVApp extends StatelessWidget {
         canvasColor: lightPink,
         scaffoldBackgroundColor: lightPink,
         applyElevationOverlayColor: true,
-        focusColor: Colors.blue.shade100,
-        hoverColor: Colors.blue.shade100,
-        highlightColor: Colors.blueAccent,
+        focusColor: biliPink.withValues(alpha: 0.15),
+        hoverColor: biliPink.withValues(alpha: 0.15),
+        highlightColor: biliPink,
       ),
       initialRoute: '/',
       getPages: [

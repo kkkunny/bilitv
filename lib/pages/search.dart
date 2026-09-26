@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bilitv/apis/bilibili/search.dart';
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/consts/assets.dart';
+import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
 import 'package:bilitv/storages/auth.dart';
@@ -67,18 +68,44 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 以1080p为基准缩放整体尺寸
+    final ui = MediaQuery.sizeOf(context).height / 1080;
+    final radius = 28 * ui;
+
     return Column(
       children: [
         Container(
-          width: MediaQuery.of(context).size.width / 3,
-          height: 40,
-          margin: const EdgeInsets.only(top: 14),
+          width: MediaQuery.sizeOf(context).width / 3,
+          height: 56 * ui,
+          margin: EdgeInsets.only(top: 16 * ui),
           child: TextField(
+            textAlignVertical: TextAlignVertical.center,
+            style: TextStyle(fontSize: 20 * ui, color: Colors.black87),
             decoration: InputDecoration(
-              icon: Icon(Icons.search_rounded, size: 34),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                size: 28 * ui,
+                color: biliPink,
+              ),
               hintText: '请输入搜索内容',
+              hintStyle: TextStyle(
+                fontSize: 20 * ui,
+                color: Colors.grey.shade500,
+              ),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.72),
+              contentPadding: EdgeInsets.zero,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(30)),
+                borderRadius: BorderRadius.all(Radius.circular(radius)),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(radius)),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(radius)),
+                borderSide: BorderSide(color: biliPink, width: 2 * ui),
               ),
             ),
             onSubmitted: (text) async {

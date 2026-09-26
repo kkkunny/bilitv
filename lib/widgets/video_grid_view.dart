@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:animated_infinite_scroll_pagination/animated_infinite_scroll_pagination.dart'
     hide AnimatedInfiniteScrollView;
+import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/widgets/animated_infinite_scrollview.dart';
 import 'package:bilitv/widgets/video_card.dart';
@@ -120,7 +121,6 @@ class VideoGridView<T> extends StatefulWidget {
   final int? crossAxisCount; // 与maxCrossAxisExtent互斥
   final double? maxCrossAxisExtent; // 与crossAxisCount互斥
   final double? cardAspectRatio; // 卡片宽高比，默认videoCardAspectRatio
-  final bool showVideoStats; // 卡片是否展示播放量/评论数
   final FocusEffectBuilder? videoFocusEffect; // 卡片选中特效
   final EdgeInsets? padding; // 列表内边距，默认根据间距计算
   final List<ItemMenuAction> itemMenuActions;
@@ -134,12 +134,11 @@ class VideoGridView<T> extends StatefulWidget {
     this.shrinkWrap = false,
     this.onItemTap,
     this.onItemFocus,
-    this.mainAxisSpacing = 20.0,
-    this.crossAxisSpacing = 20.0,
+    this.mainAxisSpacing = 24.0,
+    this.crossAxisSpacing = 24.0,
     this.crossAxisCount,
     this.maxCrossAxisExtent,
     this.cardAspectRatio,
-    this.showVideoStats = false,
     this.videoFocusEffect,
     this.padding,
     this.itemMenuActions = const [],
@@ -151,7 +150,7 @@ class VideoGridView<T> extends StatefulWidget {
   State<VideoGridView<T>> createState() => _VideoGridViewState<T>();
 }
 
-const _defaultMaxCrossAxisExtent = 400.0;
+const _defaultMaxCrossAxisExtent = 600.0;
 
 class _VideoGridViewState<T> extends State<VideoGridView<T>> {
   int _focusIndex = 0;
@@ -179,6 +178,8 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
 
     // 焦点在最后一行时拉取更多数据
     if (!widget.provider.hasMore) return;
+    // 以1080p为基准缩放卡片尺寸
+    final ui = MediaQuery.sizeOf(context).height / 1080;
     late int crossAxisCount;
     if (widget.crossAxisCount != null) {
       crossAxisCount = widget.crossAxisCount!;
@@ -188,7 +189,7 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
           : Get.width;
       crossAxisCount = max(
         crossAxisSize /
-            ((widget.maxCrossAxisExtent ?? _defaultMaxCrossAxisExtent) +
+            (((widget.maxCrossAxisExtent ?? _defaultMaxCrossAxisExtent) * ui) +
                 widget.crossAxisSpacing),
         1.0,
       ).toInt();
@@ -216,7 +217,6 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
     return VideoCard(
       video: item,
       aspectRatio: widget.cardAspectRatio ?? videoCardAspectRatio,
-      showStats: widget.showVideoStats,
       focusEffect: widget.videoFocusEffect,
       onTap: () => widget.onItemTap?.call(index, item),
       onFocus: () => _onItemFocus(index, item),
@@ -241,7 +241,7 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (bottomCtx) {
+      builder: (_) {
         final actions = widget.itemMenuActions
             .asMap()
             .map(
@@ -253,15 +253,23 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
                     Get.back();
                     item.action(media);
                   },
+                  focusColor: biliPink.withValues(alpha: 0.15),
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(item.icon, size: 40),
-                      Text(item.title, style: const TextStyle(fontSize: 20)),
+                      Icon(item.icon, size: 40, color: biliPink),
+                      const SizedBox(height: 4),
+                      Text(
+                        item.title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.black87,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -273,13 +281,13 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
           padding: const EdgeInsets.all(16.0),
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(bottomCtx).canvasColor,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: const [
+              color: Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
                 BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
+                  color: Colors.pink.withValues(alpha: 0.15),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -296,6 +304,8 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
 
   @override
   Widget build(BuildContext context) {
+    // 以1080p为基准缩放卡片尺寸
+    final ui = MediaQuery.sizeOf(context).height / 1080;
     final cardAspectRatio = widget.cardAspectRatio ?? videoCardAspectRatio;
     late SliverGridDelegate gridDelegate;
     if (widget.crossAxisCount != null) {
@@ -308,7 +318,7 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
     } else {
       gridDelegate = SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent:
-            widget.maxCrossAxisExtent ?? _defaultMaxCrossAxisExtent,
+            (widget.maxCrossAxisExtent ?? _defaultMaxCrossAxisExtent) * ui,
         childAspectRatio: cardAspectRatio,
         mainAxisSpacing: widget.mainAxisSpacing,
         crossAxisSpacing: widget.crossAxisSpacing,

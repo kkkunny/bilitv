@@ -4,13 +4,16 @@ import 'package:bilitv/apis/bilibili/dynamic.dart';
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/apis/bilibili/user.dart' show UserInfo;
 import 'package:bilitv/consts/assets.dart';
+import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
 import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/loading.dart';
+import 'package:bilitv/widgets/pink_style.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
+import 'package:dpad/dpad.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -65,10 +68,7 @@ class _DynamicPageState extends State<DynamicPage> {
       duration: Duration(milliseconds: 250),
       curve: Curves.linear,
     );
-    await Future.wait([
-      _fetchUpList(),
-      _refreshVideos(),
-    ]);
+    await Future.wait([_fetchUpList(), _refreshVideos()]);
   }
 
   Future<(List<MediaCardInfo>, bool)> _onLoad({
@@ -111,32 +111,37 @@ class _DynamicPageState extends State<DynamicPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 以1080p为基准缩放整体尺寸
+    final ui = MediaQuery.sizeOf(context).height / 1080;
     return Row(
       children: [
-        _buildUpSidebar(),
-        const VerticalDivider(width: 1),
+        _buildUpSidebar(ui),
         Expanded(child: _buildVideoGrid()),
       ],
     );
   }
 
-  Widget _buildUpSidebar() {
+  Widget _buildUpSidebar(double ui) {
     return Container(
-      width: 90,
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      width: 96 * ui,
+      margin: EdgeInsets.fromLTRB(12 * ui, 12 * ui, 0, 12 * ui),
+      padding: EdgeInsets.symmetric(vertical: 8 * ui, horizontal: 6 * ui),
       decoration: BoxDecoration(
-        border: Border(
-          right: BorderSide(
-            color: Colors.pink.withValues(alpha: 0.1),
-            width: 1,
+        color: Colors.white.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(20 * ui),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.pink.withValues(alpha: 0.08),
+            blurRadius: 18 * ui,
+            offset: Offset(0, 4 * ui),
           ),
-        ),
+        ],
       ),
-      child: _buildUpListView(),
+      child: _buildUpListView(ui),
     );
   }
 
-  Widget _buildUpListView() {
+  Widget _buildUpListView(double ui) {
     if (_ups.isEmpty) {
       return const Center(child: SizedBox());
     }
@@ -146,9 +151,13 @@ class _DynamicPageState extends State<DynamicPage> {
       itemBuilder: (context, index) {
         final up = _ups[index];
         final avatar = up.mid <= 0
-            ? CircleAvatar(radius: 22, child: Image.asset(Images.dynamicAvatar))
-            : BilibiliAvatar(up.avatar, radius: 22);
+            ? CircleAvatar(
+                radius: 20 * ui,
+                child: Image.asset(Images.dynamicAvatar),
+              )
+            : BilibiliAvatar(up.avatar, radius: 20 * ui);
         return _SidebarAvatarItem(
+          ui: ui,
           selected:
               (up.mid <= 0 && _selectedMid == null) || _selectedMid == up.mid,
           onTap: () => _onUpSelected(up.mid),
@@ -184,12 +193,14 @@ class _DynamicPageState extends State<DynamicPage> {
 }
 
 class _SidebarAvatarItem extends StatelessWidget {
+  final double ui;
   final Widget child;
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
   const _SidebarAvatarItem({
+    required this.ui,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -199,29 +210,35 @@ class _SidebarAvatarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Material(
-        color: selected
-            ? Colors.pink.withValues(alpha: 0.12)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
+      padding: EdgeInsets.symmetric(vertical: 4 * ui),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: DpadFocusable(
+          onSelect: onTap,
+          builder: pinkFocusEffect(ui: ui, radius: 14 * ui),
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 6 * ui),
+            decoration: BoxDecoration(
+              gradient: selected ? pinkGradient : null,
+              borderRadius: BorderRadius.circular(14 * ui),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 child,
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: selected ? Colors.pinkAccent : Colors.grey.shade700,
+                SizedBox(height: 4 * ui),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 2 * ui),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14 * ui,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      color: selected ? Colors.white : Colors.grey.shade600,
+                    ),
                   ),
                 ),
               ],

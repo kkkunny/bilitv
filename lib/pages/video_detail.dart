@@ -20,82 +20,18 @@ import 'package:bilitv/storages/settings.dart';
 import 'package:bilitv/utils/format.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/loading.dart';
+import 'package:bilitv/widgets/pink_style.dart';
 import 'package:bilitv/widgets/scroll_text.dart';
 import 'package:bilitv/widgets/text.dart';
 import 'package:bilitv/widgets/tooltip.dart';
+import 'package:bilitv/widgets/video_card.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
 import 'package:dpad/dpad.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-// 粉色渐变
-const _pinkGradient = LinearGradient(
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-  colors: [biliPinkLight, biliPinkDeep],
-);
-
-// 详情页背景
-const _backgroundGradient = LinearGradient(
-  begin: Alignment.topCenter,
-  end: Alignment.bottomCenter,
-  colors: [detailBackgroundStart, detailBackgroundEnd],
-);
-
 // 相关推荐卡片宽高比（封面固定16:10，比默认卡片更高）
 const _relatedCardAspectRatio = 1.05;
-
-// 统一的选中特效：粉色描边 + 粉色光晕（描边宽度恒定，避免选中时布局位移）
-Widget _buildFocusEffect({
-  required double ui,
-  required double radius,
-  required bool isFocused,
-  required Widget child,
-  double borderWidth = 2,
-  Color unfocusedColor = Colors.transparent,
-  Color? backgroundColor,
-}) {
-  return AnimatedContainer(
-    duration: const Duration(milliseconds: 150),
-    decoration: BoxDecoration(
-      color: backgroundColor,
-      borderRadius: BorderRadius.circular(radius),
-      border: Border.all(
-        color: isFocused ? biliPink : unfocusedColor,
-        width: borderWidth,
-      ),
-      boxShadow: isFocused
-          ? [
-              BoxShadow(
-                color: biliPink.withValues(alpha: 0.5),
-                blurRadius: 18 * ui,
-                spreadRadius: 3 * ui,
-              ),
-            ]
-          : null,
-    ),
-    child: child,
-  );
-}
-
-// 统一的选中特效（DpadFocusable builder）
-FocusEffectBuilder _pinkFocusEffect({
-  required double ui,
-  required double radius,
-  double borderWidth = 2,
-  Color unfocusedColor = Colors.transparent,
-  Color? backgroundColor,
-}) {
-  return (context, isFocused, child) => _buildFocusEffect(
-    ui: ui,
-    radius: radius,
-    isFocused: isFocused,
-    borderWidth: borderWidth,
-    unfocusedColor: unfocusedColor,
-    backgroundColor: backgroundColor,
-    child: child ?? const SizedBox.shrink(),
-  );
-}
 
 class VideoDetailPageWrap extends StatelessWidget {
   final int? avid;
@@ -288,7 +224,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: _backgroundGradient),
+        decoration: const BoxDecoration(gradient: pageBackgroundGradient),
         padding: EdgeInsets.fromLTRB(24 * ui, 14 * ui, 24 * ui, 10 * ui),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -322,7 +258,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       autofocus: true,
       onSelect: _onCoverTapped,
       builder: (context, isFocused, _) {
-        return _buildFocusEffect(
+        return buildPinkFocusEffect(
           ui: ui,
           radius: 20 * ui,
           borderWidth: 3 * ui,
@@ -358,7 +294,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                               color: isFocused
                                   ? null
                                   : Colors.black.withValues(alpha: 0.35),
-                              gradient: isFocused ? _pinkGradient : null,
+                              gradient: isFocused ? pinkGradient : null,
                               border: Border.all(
                                 color: Colors.white,
                                 width: 4 * ui,
@@ -386,7 +322,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                     Positioned(
                       right: 12 * ui,
                       bottom: 12 * ui,
-                      child: _CoverBadge(
+                      child: CoverBadge(
                         ui: ui,
                         child: Text(
                           videoDurationString(widget.video.duration),
@@ -584,7 +520,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         context: context,
         builder: (context) => _buildCompleteDesc(ui),
       ),
-      builder: _pinkFocusEffect(ui: ui, radius: 12 * ui),
+      builder: pinkFocusEffect(ui: ui, radius: 12 * ui),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 4 * ui),
         child: FixedLineAdaptiveText(
@@ -697,17 +633,17 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   Widget _buildEpisodes(double ui) {
-    return _SectionPanel(
+    return PinkPanel(
       ui: ui,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _SectionHeader(
+          PinkSectionHeader(
             ui: ui,
             icon: Container(
               padding: EdgeInsets.all(6 * ui),
               decoration: BoxDecoration(
-                gradient: _pinkGradient,
+                gradient: pinkGradient,
                 borderRadius: BorderRadius.circular(10 * ui),
               ),
               child: Icon(
@@ -744,12 +680,12 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   Widget _buildRelatedVideos(double ui) {
-    return _SectionPanel(
+    return PinkPanel(
       ui: ui,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _SectionHeader(
+          PinkSectionHeader(
             ui: ui,
             icon: Icon(
               Icons.local_fire_department_rounded,
@@ -766,8 +702,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
               onItemTap: _onVideoTapped,
               crossAxisCount: 1,
               cardAspectRatio: _relatedCardAspectRatio,
-              showVideoStats: true,
-              videoFocusEffect: _pinkFocusEffect(
+              videoFocusEffect: pinkFocusEffect(
                 ui: ui,
                 radius: 12,
                 borderWidth: 2 * ui,
@@ -798,26 +733,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           ),
         ],
       ),
-    );
-  }
-}
-
-// 封面上带黑色背景的角标
-class _CoverBadge extends StatelessWidget {
-  final double ui;
-  final Widget child;
-
-  const _CoverBadge({required this.ui, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10 * ui, vertical: 5 * ui),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(8 * ui),
-      ),
-      child: child,
     );
   }
 }
@@ -857,7 +772,7 @@ class _RelationAction extends StatelessWidget {
 
     return DpadFocusable(
       onSelect: onPressed,
-      builder: _pinkFocusEffect(ui: ui, radius: 12 * ui),
+      builder: pinkFocusEffect(ui: ui, radius: 12 * ui),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -923,12 +838,12 @@ class _FollowButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return DpadFocusable(
       onSelect: onPressed,
-      builder: _pinkFocusEffect(ui: ui, radius: 28 * ui),
+      builder: pinkFocusEffect(ui: ui, radius: 28 * ui),
       child: Container(
         height: 56 * ui,
         padding: EdgeInsets.symmetric(horizontal: 30 * ui),
         decoration: BoxDecoration(
-          gradient: following ? null : _pinkGradient,
+          gradient: following ? null : pinkGradient,
           color: following ? Colors.grey.shade200 : null,
           borderRadius: BorderRadius.circular(28 * ui),
         ),
@@ -954,64 +869,6 @@ class _FollowButton extends StatelessWidget {
   }
 }
 
-// 区间面板
-class _SectionPanel extends StatelessWidget {
-  final double ui;
-  final Widget child;
-
-  const _SectionPanel({required this.ui, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(16 * ui, 10 * ui, 16 * ui, 10 * ui),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(20 * ui),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.pink.withValues(alpha: 0.06),
-            blurRadius: 16 * ui,
-            offset: Offset(0, 4 * ui),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
-}
-
-// 区间标题
-class _SectionHeader extends StatelessWidget {
-  final double ui;
-  final Widget icon;
-  final String title;
-
-  const _SectionHeader({
-    required this.ui,
-    required this.icon,
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        icon,
-        SizedBox(width: 8 * ui),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 26 * ui,
-            fontWeight: FontWeight.w900,
-            color: Colors.black87,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 // 分P卡片
 class _EpisodeCard extends StatelessWidget {
   final double ui;
@@ -1032,7 +889,7 @@ class _EpisodeCard extends StatelessWidget {
 
     return DpadFocusable(
       onSelect: onPressed,
-      builder: _pinkFocusEffect(
+      builder: pinkFocusEffect(
         ui: ui,
         radius: 14 * ui,
         unfocusedColor: Colors.white,
@@ -1040,7 +897,7 @@ class _EpisodeCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           gradient: selected
-              ? _pinkGradient
+              ? pinkGradient
               : const LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
