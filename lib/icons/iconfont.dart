@@ -8,6 +8,11 @@ class IconFont {
   
   IconFont._();
   
+  static const IconData home = IconData(0xe649, fontFamily: _family); // home
+  static const IconData history = IconData(0xe6ad, fontFamily: _family); // history
+  static const IconData search = IconData(0xe60c, fontFamily: _family); // Search
+  static const IconData done_1 = IconData(0xe68c, fontFamily: _family); // done
+  static const IconData fensi = IconData(0xe669, fontFamily: _family); // 粉丝
   static const IconData danmukai = IconData(0xe602, fontFamily: _family); // 弹幕开
   static const IconData danmushezhi = IconData(0xe608, fontFamily: _family); // 弹幕设置
   static const IconData ha = IconData(0xe672, fontFamily: _family); // 硬解码设置- icon
@@ -30,6 +35,11 @@ class IconFontPreview extends StatelessWidget {
   const IconFontPreview({Key? key}) : super(key: key);
 
   static const iconList = <_PreviewIcon>[
+    _PreviewIcon(IconFont.home, "home", "home"),
+    _PreviewIcon(IconFont.history, "history", "history"),
+    _PreviewIcon(IconFont.search, "search", "Search"),
+    _PreviewIcon(IconFont.done_1, "done_1", "done"),
+    _PreviewIcon(IconFont.fensi, "fensi", "粉丝"),
     _PreviewIcon(IconFont.danmukai, "danmukai", "弹幕开"),
     _PreviewIcon(IconFont.danmushezhi, "danmushezhi", "弹幕设置"),
     _PreviewIcon(IconFont.ha, "ha", "硬解码设置- icon"),

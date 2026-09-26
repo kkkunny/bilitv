@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:bilitv/apis/bilibili/search.dart';
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/consts/assets.dart';
+import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
 import 'package:bilitv/storages/auth.dart';
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:bilitv/widgets/loading.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
@@ -22,6 +24,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   String _searchKeyword = "";
   int _page = 0;
+  int _searchSeq = 0;
   late final VideoGridViewProvider _provider;
 
   @override
@@ -43,10 +46,18 @@ class _SearchPageState extends State<SearchPage> {
       return (List<MediaCardInfo>.empty(growable: false), false);
     }
 
-    _page++;
+    // 先占位页码，避免请求期间并发触发时重复请求同一页
+    final page = _page + 1;
+    _page = page;
+    final seq = _searchSeq;
+    final keyword = _searchKeyword;
 
-    final videos = await searchVideos(_searchKeyword, page: _page);
-    return (videos, true);
+    final videos = await searchVideos(keyword, page: page);
+    // 搜索关键词已更换时丢弃过期结果
+    if (seq != _searchSeq || keyword != _searchKeyword) {
+      return (List<MediaCardInfo>.empty(growable: false), false);
+    }
+    return (videos, videos.isNotEmpty);
   }
 
   void _onVideoTapped(_, MediaCardInfo video) {
@@ -58,34 +69,72 @@ class _SearchPageState extends State<SearchPage> {
       return;
     }
 
+    final seq = ++_searchSeq;
     _searchKeyword = input;
-    final (videos, _) = await _onLoad(isFetchMore: true);
-    _provider.clear();
-    _provider.addAll(videos);
-    _provider.hasMore = true;
+    _page = 0;
+    try {
+      final (videos, _) = await _onLoad(isFetchMore: true);
+      if (!mounted || seq != _searchSeq) return;
+
+      _provider.clear();
+      _provider.addAll(videos);
+      _provider.hasMore = videos.isNotEmpty;
+    } catch (e) {
+      // 搜索失败时给出提示，避免未捕获异步异常
+      if (!mounted || seq != _searchSeq) return;
+      showAppError(context, e);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // 以1080p为基准缩放整体尺寸
+    final ui = context.ui;
+    final radius = 28 * ui;
+
     return Column(
       children: [
         Container(
-          width: MediaQuery.of(context).size.width / 3,
-          height: 40,
-          margin: const EdgeInsets.only(top: 14),
+          width: MediaQuery.sizeOf(context).width / 3,
+          height: 56 * ui,
+          margin: EdgeInsets.only(top: 16 * ui),
           child: TextField(
+            textAlignVertical: TextAlignVertical.center,
+            style: TextStyle(fontSize: 20 * ui, color: Colors.black87),
             decoration: InputDecoration(
-              icon: Icon(Icons.search_rounded, size: 34),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                size: 28 * ui,
+                color: biliPink,
+              ),
               hintText: '请输入搜索内容',
+              hintStyle: TextStyle(
+                fontSize: 20 * ui,
+                color: Colors.grey.shade500,
+              ),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.72),
+              contentPadding: EdgeInsets.zero,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(30)),
+                borderRadius: BorderRadius.all(Radius.circular(radius)),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(radius)),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(radius)),
+                borderSide: BorderSide(color: biliPink, width: 2 * ui),
               ),
             ),
-            onSubmitted: (text) async {
+            onSubmitted: (text) {
               if (text.isEmpty) {
                 return;
               }
-              _onSearch(text);
+              // 提交后收起键盘，避免键盘浮层遮挡结果
+              FocusManager.instance.primaryFocus?.unfocus();
+              unawaited(_onSearch(text));
             },
           ),
         ),
@@ -100,8 +149,11 @@ class _SearchPageState extends State<SearchPage> {
                 action: (media) {
                   if (!loginInfoNotifier.value.isLogin) return;
 
-                  addToView(avid: media.avid);
-                  pushTooltipInfo(context, '已加入稍后再看：${media.title}');
+                  requestWithTooltip(
+                    context,
+                    request: () => addToView(avid: media.avid),
+                    successText: '已加入稍后再看：${media.title}',
+                  );
                 },
               ),
             ],

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 // 固定行数自适应文本
@@ -8,6 +10,7 @@ class FixedLineAdaptiveText extends StatelessWidget {
   final double lineHeight;
   final TextStyle? style;
   final TextOverflow? overflow;
+  final double? maxFontSize; // 自适应字号的绝对上限
 
   const FixedLineAdaptiveText(
     this.text, {
@@ -16,6 +19,7 @@ class FixedLineAdaptiveText extends StatelessWidget {
     this.lineHeight = 1.2,
     this.style,
     this.overflow,
+    this.maxFontSize,
   });
 
   @override
@@ -28,7 +32,8 @@ class FixedLineAdaptiveText extends StatelessWidget {
         );
 
         final double h = constraints.maxHeight;
-        final double fs = (h / (line * lineHeight)).clamp(1.0, 1000.0);
+        final double maxFs = math.max(1.0, maxFontSize ?? 1000.0);
+        final double fs = (h / (line * lineHeight)).clamp(1.0, maxFs);
 
         final base = style ?? DefaultTextStyle.of(context).style;
         final resolved = base.copyWith(fontSize: fs, height: lineHeight);

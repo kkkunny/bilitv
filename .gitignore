@@ -49,3 +49,5 @@ app.*.map.json
 
 # AI
 AGENTS.md
+.codegraph
+ui

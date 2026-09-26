@@ -55,10 +55,9 @@ class _HistoryPageState extends State<HistoryPage> {
       cursor: _cursor,
       count: _pageVideoCount,
     );
-    if (nextCursor.max != 0) {
-      _cursor = nextCursor;
-    }
-    return (videos, videos.length == _pageVideoCount);
+    // 游标 max 为 0 表示没有更多数据；每页都推进游标，避免重复请求
+    _cursor = nextCursor;
+    return (videos, nextCursor.max != 0);
   }
 
   Future<void> _refreshFromData(List<MediaCardInfo> medias) async {
@@ -79,10 +78,17 @@ class _HistoryPageState extends State<HistoryPage> {
         ItemMenuAction(
           title: '移除',
           icon: Icons.playlist_remove_rounded,
-          action: (media) {
+          action: (media) async {
             if (!loginInfoNotifier.value.isLogin) return;
 
-            deleteHistory(media.avid);
+            try {
+              await deleteHistory(media.avid);
+            } catch (e) {
+              if (!context.mounted) return;
+              showAppError(context, e);
+              return;
+            }
+            if (!context.mounted) return;
             pushTooltipInfo(context, '已从历史记录中移除：${media.title}');
             final newVideos = _provider.toList();
             newVideos.removeWhere((video) => video.avid == media.avid);

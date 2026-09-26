@@ -12,13 +12,17 @@ class Settings {
     'danmu',
     'block_weight',
   ];
+  static const pathDanmuFontSize = ['setting', 'danmu', 'font_size'];
   static const pathQualitySwitch = ['setting', 'player', 'quality'];
+  static const pathPlaybackRateSwitch = ['setting', 'player', 'playback_rate'];
+  static const pathAspectModeSwitch = ['setting', 'player', 'aspect_mode'];
+  static const pathLoopModeSwitch = ['setting', 'player', 'loop_mode'];
 
   static String _getKey(List<String> path) => '$_settingsKey.${path.join('.')}';
 
   static Future<void> setBool(List<String> path, bool v) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setBool(_getKey(path), v);
+    await prefs.setBool(_getKey(path), v);
   }
 
   static Future<bool?> getBool(List<String> path) async {
@@ -28,7 +32,7 @@ class Settings {
 
   static Future<void> setInt(List<String> path, int v) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setInt(_getKey(path), v);
+    await prefs.setInt(_getKey(path), v);
   }
 
   static Future<int?> getInt(List<String> path) async {
@@ -38,7 +42,7 @@ class Settings {
 
   static Future<void> setString(List<String> path, String v) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString(_getKey(path), v);
+    await prefs.setString(_getKey(path), v);
   }
 
   static Future<String?> getString(List<String> path) async {

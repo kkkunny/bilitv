@@ -1,5 +1,7 @@
+import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/apis/bilibili/user.dart';
 import 'package:bilitv/models/video.dart';
+import 'package:bilitv/utils/json.dart';
 
 import 'client.dart';
 
@@ -10,7 +12,11 @@ Future<String> avidToDynamicId(int avid) async {
     "https://api.bilibili.com/x/polymer/web-dynamic/v1/detail",
     queries: {'rid': avid, 'type': 8},
   );
-  return data['item']['id_str'];
+  final idStr = jsonString(jsonMap(jsonMap(data)?['item'])?['id_str']);
+  if (idStr.isEmpty) {
+    throw const BilibiliError(-2, '动态id获取失败');
+  }
+  return idStr;
 }
 
 class GetDynamicPortalResponse {
@@ -19,9 +25,13 @@ class GetDynamicPortalResponse {
   GetDynamicPortalResponse({required this.ups});
 
   factory GetDynamicPortalResponse.fromJson(Map<String, dynamic> json) {
+    final items = jsonList(jsonMap(json['up_list'])?['items']);
     return GetDynamicPortalResponse(
-      ups: ((json['up_list']['items'] ?? []) as List<dynamic>)
-          .map((e) => UserInfo.fromJson(e))
+      ups: (items ?? const <dynamic>[])
+          .map((e) => jsonMap(e))
+          .whereType<Map<String, dynamic>>()
+          .map(UserInfo.fromJson)
+          .whereType<UserInfo>()
           .toList(),
     );
   }
@@ -35,7 +45,7 @@ Future<GetDynamicPortalResponse> getDynamicPortal() async {
     "https://api.bilibili.com/x/polymer/web-dynamic/v1/portal",
     queries: queries,
   );
-  return GetDynamicPortalResponse.fromJson(data);
+  return GetDynamicPortalResponse.fromJson(jsonMap(data) ?? const {});
 }
 
 class ListDynamicResponse {
@@ -51,11 +61,15 @@ class ListDynamicResponse {
 
   factory ListDynamicResponse.fromJson(Map<String, dynamic> json) {
     return ListDynamicResponse(
-      hasMore: json['has_more'],
-      medias: ((json['items'] ?? []) as List<dynamic>)
-          .map((e) => MediaCardInfo.fromDynamicJson(e))
+      hasMore: jsonBool(json['has_more']),
+      medias: (jsonList(json['items']) ?? const <dynamic>[])
+          .map((e) => jsonMap(e))
+          .whereType<Map<String, dynamic>>()
+          .map(MediaCardInfo.fromDynamicJson)
+          .whereType<MediaCardInfo>()
           .toList(),
-      offset: int.parse(json['offset']),
+      // 最后一页时offset可能为空串
+      offset: jsonInt(json['offset']),
     );
   }
 }
@@ -74,5 +88,5 @@ Future<ListDynamicResponse> listDynamic({int offset = 0, int? mid}) async {
     "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all",
     queries: queries,
   );
-  return ListDynamicResponse.fromJson(data);
+  return ListDynamicResponse.fromJson(jsonMap(data) ?? const {});
 }

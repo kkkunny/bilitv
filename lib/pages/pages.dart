@@ -1,3 +1,4 @@
+import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/icons/iconfont.dart';
 import 'package:bilitv/pages/dynamic.dart';
 import 'package:bilitv/pages/history.dart';
@@ -8,7 +9,9 @@ import 'package:bilitv/pages/setting.dart';
 import 'package:bilitv/pages/to_view.dart';
 import 'package:bilitv/pages/user_info.dart';
 import 'package:bilitv/storages/auth.dart';
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
+import 'package:bilitv/widgets/sidebar.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_lazy_indexed_stack/flutter_lazy_indexed_stack.dart';
@@ -16,6 +19,7 @@ import 'package:get/get.dart';
 
 class _PageItem {
   final IconData icon;
+  final String label;
   late final Widget child;
 
   late final bool homePage; // 是否是首页
@@ -25,6 +29,7 @@ class _PageItem {
 
   _PageItem({
     required this.icon,
+    required this.label,
     required Widget Function(ValueNotifier<int>) child,
     this.homePage = false,
     this.needLogin = false,
@@ -55,27 +60,36 @@ class _PageState extends State<Page> {
     _tabs = [
       _PageItem(
         icon: Icons.account_circle_rounded,
-        child: (listener) => UserInfoPage(),
+        label: '我的',
+        child: (listener) => UserInfoPage(refreshListener: listener),
         needLogin: true,
       ),
-      _PageItem(icon: Icons.search_rounded, child: (listener) => SearchPage()),
       _PageItem(
-        icon: Icons.history_rounded,
+        icon: IconFont.search,
+        label: '搜索',
+        child: (listener) => SearchPage(),
+      ),
+      _PageItem(
+        icon: IconFont.history,
+        label: '历史',
         child: (listener) => HistoryPage(listener),
         needLogin: true,
       ),
       _PageItem(
         icon: IconFont.trends,
+        label: '动态',
         child: (listener) => DynamicPage(listener),
         needLogin: true,
       ),
       _PageItem(
         icon: IconFont.playlist,
+        label: '稍后再看',
         child: (listener) => ToViewPage(listener),
         needLogin: true,
       ),
       _PageItem(
-        icon: Icons.home_max_rounded,
+        icon: Icons.home_rounded,
+        label: '首页',
         child: (listener) => RecommendPage(listener),
         homePage: true,
       ),
@@ -115,107 +129,97 @@ class _PageState extends State<Page> {
     }
   }
 
-  DateTime _lastTapAvatarTime = DateTime.now();
+  DateTime _lastTapAvatarTime = DateTime.fromMillisecondsSinceEpoch(0);
+
+  Future<void> _onAvatarTapped() async {
+    if (!loginInfoNotifier.value.isLogin) {
+      showQrLoginDialog(context);
+      return;
+    }
+
+    final now = DateTime.now();
+    final diff = now.difference(_lastTapAvatarTime);
+    if (diff < Duration(milliseconds: 600)) {
+      await _onDoublePressAvatar();
+    } else {
+      pushTooltipInfo(context, "再次点击头像退出当前账号！");
+    }
+    _lastTapAvatarTime = now;
+  }
 
   Future<void> _onDoublePressAvatar() async {
     if (!loginInfoNotifier.value.isLogin) return;
+    // 先清除持久化信息，失败则保持登录状态，避免状态不一致
+    try {
+      await clearCookie();
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
     loginInfoNotifier.value = LoginInfo.notLogin;
     pushTooltipInfo(context, "已退出当前账号！");
-    await clearCookie();
   }
 
   @override
   Widget build(BuildContext context) {
+    // 以1080p为基准缩放整体尺寸
+    final ui = context.ui;
+
     return Scaffold(
-      body: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            width: 80,
-            decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(
-                  color: Colors.pink.withValues(alpha: 0.1),
-                  width: 1,
+      // TV 场景键盘以浮层出现，不压缩布局（避免侧边栏在键盘弹出时溢出）
+      resizeToAvoidBottomInset: false,
+      body: Container(
+        decoration: const BoxDecoration(gradient: pageBackgroundGradient),
+        child: Row(
+          children: [
+            ValueListenableBuilder(
+              valueListenable: _currentPageIndex,
+              builder: (context, index, _) => Sidebar(
+                ui: ui,
+                onAvatarTap: _onAvatarTapped,
+                avatar: ListenableBuilder(
+                  listenable: loginInfoNotifier,
+                  builder: (context, child) => BilibiliAvatar(
+                    loginInfoNotifier.value.avatar,
+                    radius: 46 * ui,
+                  ),
+                ),
+                items: [
+                  for (var i = 0; i < _tabs.length; i++)
+                    SidebarItemData(
+                      icon: _tabs[i].icon,
+                      label: _tabs[i].label,
+                      selected: i == index,
+                      autofocus: i == index,
+                      onTap: () => _onTabTapped(_tabs[i]),
+                    ),
+                ],
+                footer: SidebarItemData(
+                  icon: Icons.settings_rounded,
+                  label: '设置',
+                  selected: false,
+                  onTap: () => Get.to(() => const SettingPage()),
                 ),
               ),
-              borderRadius: BorderRadius.circular(10),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  onPressed: () {
-                    if (!loginInfoNotifier.value.isLogin) {
-                      showQrLoginDialog(context);
-                      return;
-                    }
-
-                    final now = DateTime.now();
-                    final diff = now.difference(_lastTapAvatarTime);
-                    if (diff < Duration(milliseconds: 600)) {
-                      _onDoublePressAvatar();
-                    } else {
-                      pushTooltipInfo(context, "再次点击头像退出当前账号！");
-                    }
-                    _lastTapAvatarTime = now;
-                  },
-                  icon: ListenableBuilder(
-                    listenable: loginInfoNotifier,
-                    builder: (context, child) {
-                      return BilibiliAvatar(
-                        loginInfoNotifier.value.avatar,
-                        radius: 30,
-                      );
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: Get.height / 6),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: _tabs
-                          .map(
-                            (tab) => IconButton(
-                              autofocus:
-                                  _tabs.indexOf(tab) == _currentPageIndex.value,
-                              onPressed: () => _onTabTapped(tab),
-                              icon: ValueListenableBuilder(
-                                valueListenable: _currentPageIndex,
-                                builder: (context, index, _) => Icon(
-                                  tab.icon,
-                                  color: _tabs.indexOf(tab) == index
-                                      ? Colors.pinkAccent
-                                      : Colors.grey.shade400,
-                                  size: 40,
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
+            Expanded(
+              child: ValueListenableBuilder(
+                valueListenable: _currentPageIndex,
+                builder: (context, index, _) {
+                  return ValueListenableBuilder<LoginInfo>(
+                    valueListenable: loginInfoNotifier,
+                    builder: (context, login, _) => LazyIndexedStack(
+                      // 登录状态变化时重建页面，避免残留在上一个账号的数据
+                      key: ValueKey(login.mid),
+                      index: index,
+                      children: _tabs.map((tab) => tab.child).toList(),
                     ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Get.to(() => const SettingPage()),
-                  icon: const Icon(Icons.settings, size: 40),
-                ),
-              ],
+                  );
+                },
+              ),
             ),
-          ),
-          Expanded(
-            child: ValueListenableBuilder(
-              valueListenable: _currentPageIndex,
-              builder: (context, index, _) {
-                return LazyIndexedStack(
-                  index: index,
-                  children: _tabs.map((tab) => tab.child).toList(),
-                );
-              },
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

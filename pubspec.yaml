@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.11.4+1
+version: 0.12.0+1
 
 environment:
   sdk: ^3.9.2
@@ -46,7 +46,6 @@ dependencies:
   pointycastle: ^4.0.0 # 加解密
   convert: ^3.1.2
   basic_utils: ^5.8.2 # 工具包
-  toastification: ^3.0.3 # toast
   visibility_detector: ^0.4.0+2 # 不可见组件释放
   audio_video_progress_bar: ^2.0.3 # 视频进度条
   animated_infinite_scroll_pagination: ^1.0.13 # 无限列表
@@ -59,14 +58,16 @@ dependencies:
   logger: ^2.6.2 # 日志
   html: ^0.15.6
   xpath_selector_html_parser: ^3.0.1 # xpath
-  settings_ui: ^2.0.2 # 设置页ui
   dpad: ^2.0.2 # 方向键导航系统
   flutter_lazy_indexed_stack: ^0.1.0 # 懒加载indexed_stack
   rxdart: ^0.28.0 # stream工具包
   package_info_plus: ^10.1.0 # 获取app版本信息
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -78,6 +79,7 @@ dev_dependencies:
 
   flutter_launcher_icons: ^0.14.4 # 图标
   iconfont_convert: ^1.0.2 # icon
+  http_mock_adapter: ^0.6.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

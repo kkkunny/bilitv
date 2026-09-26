@@ -16,4 +16,7 @@ class BilibiliError implements Exception {
 
   @override
   int get hashCode => code.hashCode;
+
+  @override
+  String toString() => 'BilibiliError(code: $code, message: $message)';
 }

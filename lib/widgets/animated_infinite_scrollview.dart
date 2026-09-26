@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:animated_infinite_scroll_pagination/animated_infinite_scroll_pagination.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutterx_live_data/flutterx_live_data.dart';
 
 class AnimatedInfiniteScrollView<T> extends StatefulWidget {
@@ -133,7 +134,9 @@ class AnimatedInfiniteScrollViewState<T>
       scrollDirection: options.scrollDirection,
       scrollBehavior: options.scrollBehavior,
       clipBehavior: options.clipBehavior,
-      cacheExtent: options.cacheExtent,
+      scrollCacheExtent: options.cacheExtent == null
+          ? null
+          : ScrollCacheExtent.pixels(options.cacheExtent!),
       reverse: options.reverse,
       physics: options.physics,
       primary: options.primary,
@@ -145,8 +148,7 @@ class AnimatedInfiniteScrollViewState<T>
                 (topWidget) => topWidget.isSliver
                     ? topWidget.child
                     : SliverToBoxAdapter(child: topWidget.child),
-              )
-              .toList(),
+              ),
 
         /// custom sliver child
         if (options.itemBuilder == null && options.customSliverChild != null)

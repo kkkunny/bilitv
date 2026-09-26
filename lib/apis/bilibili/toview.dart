@@ -1,5 +1,6 @@
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/storages/auth.dart' show loadCookie;
+import 'package:bilitv/utils/json.dart';
 import 'package:dio/dio.dart' show Headers;
 
 import 'client.dart';
@@ -11,8 +12,11 @@ Future<List<MediaCardInfo>> listToView({int count = 30, int page = 1}) async {
     'https://api.bilibili.com/x/v2/history/toview/web',
     queries: {'pn': page, 'ps': count, 'viewed': 0, 'asc': false},
   );
-  return ((data['list'] ?? []) as List<dynamic>)
-      .map((item) => MediaCardInfo.fromToViewJson(item))
+  return (jsonList(jsonMap(data)?['list']) ?? const <dynamic>[])
+      .map((item) => jsonMap(item))
+      .whereType<Map<String, dynamic>>()
+      .map(MediaCardInfo.fromToViewJson)
+      .whereType<MediaCardInfo>()
       .toList();
 }
 
