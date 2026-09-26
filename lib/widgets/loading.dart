@@ -59,6 +59,8 @@ class _LoadingWidgetState<T> extends State<LoadingWidget<T>> {
     super.initState();
     _isLoading = widget.isLoading ?? ValueNotifier(true);
     widget.loader().then((data) {
+      // 加载过程中页面可能已被销毁
+      if (!mounted) return;
       _data = data;
       _isLoading.value = false;
     });

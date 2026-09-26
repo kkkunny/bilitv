@@ -5,6 +5,7 @@ import 'package:animated_infinite_scroll_pagination/animated_infinite_scroll_pag
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/widgets/animated_infinite_scrollview.dart';
 import 'package:bilitv/widgets/video_card.dart';
+import 'package:dpad/dpad.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -45,10 +46,12 @@ class VideoGridViewProvider {
   late bool _hasMore = onLoad == null;
   final _refreshing = ValueNotifier(false);
   late final ScrollController _scrollCtl = ScrollController();
+  bool _disposed = false;
 
   VideoGridViewProvider({this.initVideos = const [], this.onLoad});
 
   void dispose() {
+    _disposed = true;
     _refreshing.dispose();
     _scrollCtl.dispose();
   }
@@ -75,7 +78,7 @@ class VideoGridViewProvider {
   void clear() => _ctl.clear();
 
   Future<void> refresh({saveInitData = true}) async {
-    if (_refreshing.value) return;
+    if (_disposed || _refreshing.value) return;
 
     if (_scrollCtl.hasClients && _scrollCtl.offset != 0) {
       await _scrollCtl.animateTo(
@@ -84,19 +87,23 @@ class VideoGridViewProvider {
         curve: Curves.easeInOut,
       );
     }
+    if (_disposed) return;
     _refreshing.value = true;
     clear();
-    if (saveInitData && initVideos.isNotEmpty) addAll(initVideos);
+    // 传入初始数据（可能为空，用于正确显示空数据状态）
+    if (saveInitData) addAll(initVideos);
     await fetchData(isFetchMore: false);
+    if (_disposed) return;
     _refreshing.value = false;
   }
 
   Future<void> fetchData({bool isFetchMore = false}) async {
-    if (onLoad == null) return;
+    if (_disposed || onLoad == null) return;
 
     _ctl.emitState(const PaginationLoadingState());
 
     final (newVideos, hasMore) = await onLoad!(isFetchMore: isFetchMore);
+    if (_disposed) return;
     _hasMore = hasMore;
     addAll(newVideos);
   }
@@ -112,6 +119,10 @@ class VideoGridView<T> extends StatefulWidget {
   final double crossAxisSpacing;
   final int? crossAxisCount; // 与maxCrossAxisExtent互斥
   final double? maxCrossAxisExtent; // 与crossAxisCount互斥
+  final double? cardAspectRatio; // 卡片宽高比，默认videoCardAspectRatio
+  final bool showVideoStats; // 卡片是否展示播放量/评论数
+  final FocusEffectBuilder? videoFocusEffect; // 卡片选中特效
+  final EdgeInsets? padding; // 列表内边距，默认根据间距计算
   final List<ItemMenuAction> itemMenuActions;
   final Widget? refreshWidget; // 刷新时展示的组件
   final Widget? noItemsWidget; // items为空时展示的组件
@@ -127,6 +138,10 @@ class VideoGridView<T> extends StatefulWidget {
     this.crossAxisSpacing = 20.0,
     this.crossAxisCount,
     this.maxCrossAxisExtent,
+    this.cardAspectRatio,
+    this.showVideoStats = false,
+    this.videoFocusEffect,
+    this.padding,
     this.itemMenuActions = const [],
     this.refreshWidget,
     this.noItemsWidget,
@@ -200,6 +215,9 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
   Widget _itemBuilder(BuildContext context, int index, MediaCardInfo item) {
     return VideoCard(
       video: item,
+      aspectRatio: widget.cardAspectRatio ?? videoCardAspectRatio,
+      showStats: widget.showVideoStats,
+      focusEffect: widget.videoFocusEffect,
       onTap: () => widget.onItemTap?.call(index, item),
       onFocus: () => _onItemFocus(index, item),
     );
@@ -278,11 +296,12 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final cardAspectRatio = widget.cardAspectRatio ?? videoCardAspectRatio;
     late SliverGridDelegate gridDelegate;
     if (widget.crossAxisCount != null) {
       gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: widget.crossAxisCount!,
-        childAspectRatio: 1 / videoCardAspectRatio,
+        childAspectRatio: 1 / cardAspectRatio,
         mainAxisSpacing: widget.mainAxisSpacing,
         crossAxisSpacing: widget.crossAxisSpacing,
       );
@@ -290,7 +309,7 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
       gridDelegate = SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent:
             widget.maxCrossAxisExtent ?? _defaultMaxCrossAxisExtent,
-        childAspectRatio: videoCardAspectRatio,
+        childAspectRatio: cardAspectRatio,
         mainAxisSpacing: widget.mainAxisSpacing,
         crossAxisSpacing: widget.crossAxisSpacing,
       );
@@ -316,14 +335,16 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
                 _itemBuilder(context, index, item),
             primary: widget.shrinkWrap,
             noItemsWidget: widget.noItemsWidget,
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.scrollDirection == Axis.horizontal
-                  ? widget.mainAxisSpacing
-                  : widget.crossAxisSpacing,
-              vertical: widget.scrollDirection == Axis.vertical
-                  ? widget.mainAxisSpacing
-                  : widget.crossAxisSpacing,
-            ),
+            padding:
+                widget.padding ??
+                EdgeInsets.symmetric(
+                  horizontal: widget.scrollDirection == Axis.horizontal
+                      ? widget.mainAxisSpacing
+                      : widget.crossAxisSpacing,
+                  vertical: widget.scrollDirection == Axis.vertical
+                      ? widget.mainAxisSpacing
+                      : widget.crossAxisSpacing,
+                ),
           ),
         ),
       ),

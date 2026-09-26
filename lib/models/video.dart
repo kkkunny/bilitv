@@ -175,6 +175,7 @@ class Stat {
   final int dislikeCount;
   final int coinCount;
   final int shareCount;
+  final int commentCount; // 评论数
 
   Stat({
     required this.viewCount,
@@ -183,6 +184,7 @@ class Stat {
     required this.dislikeCount,
     required this.coinCount,
     required this.shareCount,
+    this.commentCount = 0,
   });
 
   factory Stat.fromJson(Map<String, dynamic> json) {
@@ -193,6 +195,7 @@ class Stat {
       dislikeCount: json['dislike'] ?? 0,
       coinCount: json['coin'] ?? 0,
       shareCount: json['share'] ?? 0,
+      commentCount: json['reply'] ?? 0,
     );
   }
 }
@@ -230,6 +233,7 @@ class Video {
   final String desc;
   final Duration duration;
   final Stat stat;
+  final int userMid;
   final String userName;
   final String userAvatar;
   final DateTime publishTime;
@@ -244,6 +248,7 @@ class Video {
     required this.desc,
     required this.duration,
     required this.stat,
+    required this.userMid,
     required this.userName,
     required this.userAvatar,
     required this.publishTime,
@@ -256,6 +261,7 @@ class Video {
         .map((e) => Episode.fromJson(e))
         .toList();
     episodes.sort((a, b) => a.index.compareTo(b.index));
+    final owner = json['owner'] ?? const <String, dynamic>{};
     return Video(
       avid: json['aid'] ?? 0,
       bvid: json['bvid'] ?? '',
@@ -264,8 +270,9 @@ class Video {
       desc: json['desc'] ?? '',
       duration: Duration(seconds: json['duration'] ?? 0),
       stat: Stat.fromJson(json['stat'] ?? {}),
-      userName: json['owner']['name'] ?? '',
-      userAvatar: json['owner']['face'] ?? '',
+      userMid: owner['mid'] ?? 0,
+      userName: owner['name'] ?? '',
+      userAvatar: owner['face'] ?? '',
       publishTime: DateTime.fromMillisecondsSinceEpoch(
         (json['pubdate'] ?? DateTime.timestamp()) *
             Duration.millisecondsPerSecond,
