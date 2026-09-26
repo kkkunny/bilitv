@@ -18,6 +18,7 @@ import 'package:bilitv/pages/video_player.dart';
 import 'package:bilitv/storages/auth.dart' show loginInfoNotifier;
 import 'package:bilitv/storages/settings.dart';
 import 'package:bilitv/utils/format.dart';
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/loading.dart';
 import 'package:bilitv/widgets/pink_style.dart';
@@ -30,8 +31,7 @@ import 'package:dpad/dpad.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-// 相关推荐卡片宽高比（封面固定16:10，比默认卡片更高）
-const _relatedCardAspectRatio = 1.05;
+// 相关推荐卡片与主页卡片使用同一规格（videoCardAspectRatio）
 
 class VideoDetailPageWrap extends StatelessWidget {
   final int? avid;
@@ -220,7 +220,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   @override
   Widget build(BuildContext context) {
     // 以1080p为基准缩放整体尺寸
-    final ui = MediaQuery.sizeOf(context).height / 1080;
+    final ui = context.ui;
 
     return Scaffold(
       body: Container(
@@ -297,7 +297,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                               gradient: isFocused ? pinkGradient : null,
                               border: Border.all(
                                 color: Colors.white,
-                                width: 4 * ui,
+                                width: UiScale.border(4, ui),
                               ),
                               boxShadow: isFocused
                                   ? [
@@ -421,7 +421,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           _RelationAction(
             ui: ui,
             iconFont: IconFont.coin,
-            iconScale: 1.2,
+            iconScale: 1.1,
             label: amountString(widget.video.stat.coinCount),
             color: widget.relation.coin > 0 ? biliPink : Colors.grey.shade500,
             onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
@@ -429,6 +429,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           _RelationAction(
             ui: ui,
             icon: Icons.star_rounded,
+            iconScale: 1.3,
             label: amountString(widget.video.stat.favoriteCount),
             color: widget.relation.favorite ? biliPink : Colors.grey.shade500,
             onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
@@ -436,12 +437,14 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           _RelationAction(
             ui: ui,
             iconFont: IconFont.playlist,
+            iconScale: 1.1,
             color: Colors.grey.shade500,
             onPressed: _onAddToViewTapped,
           ),
           _RelationAction(
             ui: ui,
             iconFont: IconFont.share,
+            iconScale: 1.2,
             label: amountString(widget.video.stat.shareCount),
             color: Colors.grey.shade500,
             onPressed: () => pushTooltipInfo(context, '暂不支持该功能！'),
@@ -652,7 +655,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                 size: 18 * ui,
               ),
             ),
-            title: '选集',
+            title: '分P',
           ),
           SizedBox(height: 10 * ui),
           Expanded(
@@ -701,10 +704,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
               scrollDirection: Axis.horizontal,
               onItemTap: _onVideoTapped,
               crossAxisCount: 1,
-              cardAspectRatio: _relatedCardAspectRatio,
               videoFocusEffect: pinkFocusEffect(
                 ui: ui,
-                radius: 12,
+                radius: 12 * ui,
                 borderWidth: 2 * ui,
               ),
               padding: EdgeInsets.symmetric(horizontal: 4 * ui),

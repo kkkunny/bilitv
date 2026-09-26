@@ -1,12 +1,15 @@
 import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/utils/format.dart';
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/pink_style.dart';
 import 'package:bilitv/widgets/text.dart';
 import 'package:dpad/dpad.dart';
 import 'package:flutter/material.dart';
 
+// 卡片宽高比属于卡片规格（封面16:10 + 两行标题），与内容结构绑定；
+// 调整卡片内部结构时必须同步修改，不要在页面里传入手调值。
 const videoCardAspectRatio = 1.2;
 
 class VideoCard extends StatelessWidget {
@@ -28,7 +31,7 @@ class VideoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 以1080p为基准缩放整体尺寸
-    final ui = MediaQuery.sizeOf(context).height / 1080;
+    final ui = context.ui;
     final radius = 18 * ui;
 
     return DpadFocusable(
@@ -53,7 +56,7 @@ class VideoCard extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_buildCover(ui), ?_buildProgress(ui), _buildTitle()],
+            children: [_buildCover(ui), ?_buildProgress(ui), _buildTitle(ui)],
           ),
         ),
       ),
@@ -211,12 +214,12 @@ class VideoCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTitle() {
+  Widget _buildTitle(double ui) {
     return Expanded(
       child: LayoutBuilder(
         builder: (context, constraints) {
           // 与卡片宽度成比例，保证不同分辨率下观感一致
-          final padding = (constraints.maxWidth * 0.02).clamp(6.0, 16.0);
+          final padding = (constraints.maxWidth * 0.02).clamp(6 * ui, 16 * ui);
           return Container(
             width: double.infinity,
             padding: EdgeInsets.fromLTRB(padding, padding, padding, padding),
@@ -224,6 +227,8 @@ class VideoCard extends StatelessWidget {
               video.title,
               line: 2,
               lineHeight: 1.4,
+              // 字号与卡片宽度挂钩，避免卡片过窄时标题被撑得过大
+              maxFontSize: constraints.maxWidth * 0.065,
               style: const TextStyle(
                 color: Colors.black87,
                 fontWeight: FontWeight.w600,

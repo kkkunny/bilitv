@@ -3,6 +3,7 @@ import 'package:bilitv/apis/bilibili/user.dart';
 import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/storages/auth.dart'
     show clearCookie, loginInfoNotifier, LoginInfo;
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/cache_future_builder.dart';
 import 'package:bilitv/widgets/pink_style.dart';
@@ -34,7 +35,7 @@ class UserInfoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 以1080p为基准缩放整体尺寸
-    final ui = MediaQuery.sizeOf(context).height / 1080;
+    final ui = context.ui;
 
     return CacheFutureBuilder(
       future: _load,
@@ -59,7 +60,10 @@ class UserInfoPage extends StatelessWidget {
                   padding: EdgeInsets.all(6 * ui),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: biliPink, width: 3 * ui),
+                    border: Border.all(
+                      color: biliPink,
+                      width: context.border(3),
+                    ),
                   ),
                   child: BilibiliAvatar(snapshot.data!.avatar, radius: 80 * ui),
                 ),

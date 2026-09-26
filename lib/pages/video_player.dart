@@ -10,6 +10,7 @@ import 'package:bilitv/models/video.dart' as model;
 import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/storages/settings.dart';
 import 'package:bilitv/utils/stream.dart';
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:bilitv/widgets/bilibili_danmaku_wall.dart';
 import 'package:bilitv/widgets/focus_dropdown_button.dart';
 import 'package:bilitv/widgets/focus_progress_bar.dart';
@@ -121,18 +122,23 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final ui = context.ui;
     return FocusScope(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(left: 20, right: 20, top: 20),
+            padding: EdgeInsets.only(
+              left: 20 * ui,
+              right: 20 * ui,
+              top: 20 * ui,
+            ),
             child: Text(
               _pageState.widget.video.title,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 26,
+                fontSize: 26 * ui,
                 fontWeight: FontWeight.bold,
               ),
               overflow: TextOverflow.ellipsis,
@@ -140,7 +146,11 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
           ),
           Container(
             color: Colors.black.withValues(alpha: 0.5),
-            padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
+            padding: EdgeInsets.only(
+              left: 20 * ui,
+              right: 20 * ui,
+              bottom: 20 * ui,
+            ),
             child: Column(
               children: [
                 FocusProgressBar(
@@ -161,11 +171,12 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                             focusColor: Colors.pinkAccent.withValues(
                               alpha: 0.5,
                             ),
+                            padding: EdgeInsets.all(8 * ui),
                             onPressed: isFirst ? null : _onPrevTapped,
                             icon: Icon(
                               Icons.skip_previous_rounded,
                               color: Colors.white,
-                              size: 44,
+                              size: 44 * ui,
                             ),
                           ),
                         );
@@ -176,13 +187,14 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                       builder: (context, playing) => IconButton(
                         focusNode: _playFocusNode,
                         focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
+                        padding: EdgeInsets.all(8 * ui),
                         onPressed: _onPlayOrPauseTapped,
                         icon: Icon(
                           playing.data ?? widget.player.state.playing
                               ? Icons.pause_rounded
                               : Icons.play_arrow_rounded,
                           color: Colors.white,
-                          size: 44,
+                          size: 44 * ui,
                         ),
                       ),
                     ),
@@ -199,11 +211,12 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                             focusColor: Colors.pinkAccent.withValues(
                               alpha: 0.5,
                             ),
+                            padding: EdgeInsets.all(8 * ui),
                             onPressed: isLast ? null : _onNextTapped,
                             icon: Icon(
                               Icons.skip_next_rounded,
                               color: Colors.white,
-                              size: 44,
+                              size: 44 * ui,
                             ),
                           ),
                         );
@@ -212,9 +225,10 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                     const Spacer(),
                     IconButton(
                       focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
+                      padding: EdgeInsets.all(8 * ui),
                       onPressed: _onDanmakuSwitchTapped,
                       icon: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 5.0),
+                        padding: EdgeInsets.symmetric(horizontal: 5 * ui),
                         child: ValueListenableBuilder(
                           valueListenable:
                               _pageState._danmakuCtl.enableNotifier,
@@ -223,6 +237,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                                 ? IconFont.danmukai
                                 : IconFont.danmuguanbi,
                             color: Colors.white,
+                            size: 24 * ui,
                           ),
                         ),
                       ),
@@ -235,7 +250,7 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                           icon: Icon(
                             Icons.high_quality_outlined,
                             color: Colors.white,
-                            size: 28,
+                            size: 28 * ui,
                           ),
                           focusColor: Colors.pinkAccent.withValues(alpha: 0.5),
                           dropdownColor: Colors.pinkAccent.shade100,
@@ -249,7 +264,10 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
                                         value: e,
                                         child: Text(
                                           e.description,
-                                          style: TextStyle(color: Colors.white),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20 * ui,
+                                          ),
                                         ),
                                       ),
                                     )
@@ -638,6 +656,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       }
       _currentCid.value = widget.video.episodes[index + 1].cid;
     });
+    final ui = context.ui;
     toastification.show(
       context: context,
       closeButton: const ToastCloseButton(showType: CloseButtonShowType.none),
@@ -645,8 +664,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       alignment: Alignment.centerRight,
       backgroundColor: Colors.white10.withValues(alpha: 0.5),
       borderSide: BorderSide(width: 0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      title: Text('即将播放下一分P'),
+      padding: EdgeInsets.symmetric(horizontal: 16 * ui, vertical: 4 * ui),
+      title: Text('即将播放下一分P', style: TextStyle(fontSize: 20 * ui)),
       autoCloseDuration: const Duration(seconds: 3),
     );
   }

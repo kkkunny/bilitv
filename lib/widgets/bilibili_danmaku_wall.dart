@@ -4,6 +4,7 @@ import 'package:bilitv/apis/bilibili/media.dart';
 import 'package:bilitv/consts/bilibili.dart';
 import 'package:bilitv/models/pbs/dm.pb.dart';
 import 'package:bilitv/storages/settings.dart';
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:bilitv/widgets/cache_future_builder.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
 import 'package:flutter/material.dart';
@@ -104,7 +105,8 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
     // 已有缓存不属于当前分P或当前时间分块时重新拉取
     final index =
         (pos.inSeconds / danmakuChunkIntervalDuration.inSeconds).toInt() + 1;
-    final needPull = !_pullDanmaku &&
+    final needPull =
+        !_pullDanmaku &&
         (_danmakuCache == null ||
             widget.cid != _danmakuCache!.$1 ||
             index != _danmakuCache!.$2);
@@ -214,6 +216,7 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
 
   @override
   Widget build(BuildContext context) {
+    final ui = context.ui;
     return CacheFutureBuilder(
       future: _init,
       builder: (context, snapshot) {
@@ -222,7 +225,8 @@ class _BilibiliDanmakuWallState extends State<BilibiliDanmakuWall> {
         }
         return DanmakuScreen(
           createdController: (c) => widget.controller._controller = c,
-          option: DanmakuOption(fontSize: _danmuFontSize),
+          // 设置里的字号以1080p为基准，随屏幕缩放
+          option: DanmakuOption(fontSize: _danmuFontSize * ui),
         );
       },
     );

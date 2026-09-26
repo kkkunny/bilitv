@@ -7,6 +7,7 @@ import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/pages/video_detail.dart';
 import 'package:bilitv/storages/auth.dart';
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:bilitv/widgets/loading.dart';
 import 'package:bilitv/widgets/tooltip.dart';
 import 'package:bilitv/widgets/video_grid_view.dart';
@@ -69,7 +70,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     // 以1080p为基准缩放整体尺寸
-    final ui = MediaQuery.sizeOf(context).height / 1080;
+    final ui = context.ui;
     final radius = 28 * ui;
 
     return Column(

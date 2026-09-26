@@ -2,6 +2,7 @@ import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/pages/pages.dart';
 import 'package:bilitv/pages/splash.dart';
 import 'package:bilitv/utils/scroll_behavior.dart';
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:flutter/material.dart' hide Page;
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:get/get.dart';
@@ -42,6 +43,8 @@ class BiliTVApp extends StatelessWidget {
       ],
       debugShowCheckedModeBanner: false,
       scrollBehavior: NoThumbScrollBehavior().copyWith(scrollbars: false),
+      builder: (context, child) =>
+          UiScaleScope(child: child ?? const SizedBox()),
     );
   }
 }

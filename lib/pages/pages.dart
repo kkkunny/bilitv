@@ -9,6 +9,7 @@ import 'package:bilitv/pages/setting.dart';
 import 'package:bilitv/pages/to_view.dart';
 import 'package:bilitv/pages/user_info.dart';
 import 'package:bilitv/storages/auth.dart';
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:bilitv/widgets/bilibili_image.dart';
 import 'package:bilitv/widgets/sidebar.dart';
 import 'package:bilitv/widgets/tooltip.dart';
@@ -156,7 +157,7 @@ class _PageState extends State<Page> {
   @override
   Widget build(BuildContext context) {
     // 以1080p为基准缩放整体尺寸
-    final ui = MediaQuery.sizeOf(context).height / 1080;
+    final ui = context.ui;
 
     return Scaffold(
       body: Container(

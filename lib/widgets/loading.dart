@@ -1,34 +1,53 @@
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:flutter/material.dart';
 
 Widget buildLoadingStyle1() {
-  return Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset("assets/images/loading/loading1.gif"),
-        const SizedBox(height: 16),
-        const Text(
-          '加载中...',
-          style: TextStyle(color: Colors.grey, fontSize: 16),
+  return Builder(
+    builder: (context) {
+      final ui = context.ui;
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              "assets/images/loading/loading1.gif",
+              width: 216 * ui,
+              height: 216 * ui,
+            ),
+            SizedBox(height: 16 * ui),
+            Text(
+              '加载中...',
+              style: TextStyle(color: Colors.grey, fontSize: 16 * ui),
+            ),
+          ],
         ),
-      ],
-    ),
+      );
+    },
   );
 }
 
 Widget buildLoadingStyle3() {
-  return Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset("assets/images/loading/loading3.gif"),
-        const SizedBox(height: 16),
-        const Text(
-          '加载中...',
-          style: TextStyle(color: Colors.grey, fontSize: 16),
+  return Builder(
+    builder: (context) {
+      final ui = context.ui;
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              "assets/images/loading/loading3.gif",
+              width: 90 * ui,
+              height: 90 * ui,
+            ),
+            SizedBox(height: 16 * ui),
+            Text(
+              '加载中...',
+              style: TextStyle(color: Colors.grey, fontSize: 16 * ui),
+            ),
+          ],
         ),
-      ],
-    ),
+      );
+    },
   );
 }
 

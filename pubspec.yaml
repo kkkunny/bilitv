@@ -59,7 +59,6 @@ dependencies:
   logger: ^2.6.2 # 日志
   html: ^0.15.6
   xpath_selector_html_parser: ^3.0.1 # xpath
-  settings_ui: ^2.0.2 # 设置页ui
   dpad: ^2.0.2 # 方向键导航系统
   flutter_lazy_indexed_stack: ^0.1.0 # 懒加载indexed_stack
   rxdart: ^0.28.0 # stream工具包

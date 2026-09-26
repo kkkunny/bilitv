@@ -1,3 +1,4 @@
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:flutter/material.dart';
 
 void pushTooltipInfo(
@@ -5,6 +6,7 @@ void pushTooltipInfo(
   String text, {
   Duration duration = const Duration(milliseconds: 500),
 }) {
+  final ui = context.ui;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
@@ -12,13 +14,17 @@ void pushTooltipInfo(
         backgroundColor: Colors.black45,
         content: Row(
           children: [
-            Icon(Icons.info_outline_rounded, color: Colors.white),
+            Icon(
+              Icons.info_outline_rounded,
+              color: Colors.white,
+              size: 24 * ui,
+            ),
             Expanded(
               child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 10),
+                margin: EdgeInsets.symmetric(horizontal: 10 * ui),
                 child: Text(
                   '提示：$text',
-                  style: TextStyle(color: Colors.white, fontSize: 20),
+                  style: TextStyle(color: Colors.white, fontSize: 20 * ui),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -36,6 +42,7 @@ void pushTooltipWarning(
   String text, {
   Duration duration = const Duration(milliseconds: 500),
 }) {
+  final ui = context.ui;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
@@ -43,13 +50,17 @@ void pushTooltipWarning(
         backgroundColor: Colors.yellow.withValues(alpha: 0.8),
         content: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.black),
+            Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.black,
+              size: 24 * ui,
+            ),
             Expanded(
               child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 10),
+                margin: EdgeInsets.symmetric(horizontal: 10 * ui),
                 child: Text(
                   '警告：$text',
-                  style: TextStyle(color: Colors.white, fontSize: 20),
+                  style: TextStyle(color: Colors.white, fontSize: 20 * ui),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -67,6 +78,7 @@ void pushTooltipError(
   String text, {
   Duration duration = const Duration(seconds: 1),
 }) {
+  final ui = context.ui;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
@@ -74,13 +86,17 @@ void pushTooltipError(
         backgroundColor: Colors.red.withValues(alpha: 0.6),
         content: Row(
           children: [
-            Icon(Icons.error_outline_rounded, color: Colors.white),
+            Icon(
+              Icons.error_outline_rounded,
+              color: Colors.white,
+              size: 24 * ui,
+            ),
             Expanded(
               child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 10),
+                margin: EdgeInsets.symmetric(horizontal: 10 * ui),
                 child: Text(
                   '错误：$text',
-                  style: TextStyle(color: Colors.white, fontSize: 20),
+                  style: TextStyle(color: Colors.white, fontSize: 20 * ui),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

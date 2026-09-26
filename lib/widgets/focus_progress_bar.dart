@@ -1,6 +1,7 @@
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/utils/comparable.dart';
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:dpad/dpad.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -38,12 +39,18 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
 
   @override
   Widget build(BuildContext context) {
+    final ui = context.ui;
     return FocusScope(
       node: _focusScopeNode,
       onFocusChange: _onFocusChanged,
       onKeyEvent: _onKeyEvent,
       child: DpadFocusable(
-        builder: FocusEffects.glow(glowColor: Colors.blue),
+        builder: FocusEffects.glow(
+          glowColor: Colors.blue,
+          blurRadius: 20 * ui,
+          spreadRadius: 2 * ui,
+          borderRadius: BorderRadius.circular(12 * ui),
+        ),
         child: Stack(
           children: [
             // 该bar用于在用户拖动进度时显示视频当前进度
@@ -54,10 +61,13 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
                   progress: position.data ?? widget.player.state.position,
                   buffered: widget.player.state.buffer,
                   total: widget.player.state.duration,
+                  barHeight: 5 * ui,
+                  thumbRadius: 10 * ui,
+                  thumbGlowRadius: 30 * ui,
                   thumbColor: Colors.transparent,
                   progressBarColor: lightPink.withValues(alpha: 0.4),
                   bufferedBarColor: lightPink.withValues(alpha: 0.2),
-                  timeLabelTextStyle: TextStyle(),
+                  timeLabelTextStyle: TextStyle(fontSize: 20 * ui),
                 );
               },
             ),
@@ -72,6 +82,9 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
                       return ProgressBar(
                         progress: position.data ?? widget.player.state.position,
                         total: widget.player.state.duration,
+                        barHeight: 5 * ui,
+                        thumbRadius: 10 * ui,
+                        thumbGlowRadius: 30 * ui,
                         thumbColor: lightPink,
                         progressBarColor: lightPink,
                         timeLabelLocation: TimeLabelLocation.none,
@@ -82,6 +95,9 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
                 return ProgressBar(
                   progress: value,
                   total: widget.player.state.duration,
+                  barHeight: 5 * ui,
+                  thumbRadius: 10 * ui,
+                  thumbGlowRadius: 30 * ui,
                   thumbColor: lightPink,
                   progressBarColor: lightPink,
                   timeLabelLocation: TimeLabelLocation.none,

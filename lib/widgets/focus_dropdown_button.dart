@@ -1,3 +1,4 @@
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:flutter/material.dart';
 
 class FocusDropdownButton<T> extends StatefulWidget {
@@ -45,6 +46,7 @@ class _FocusDropdownButtonState<T> extends State<FocusDropdownButton<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final ui = context.ui;
     return ValueListenableBuilder(
       valueListenable: isFocused,
       builder: (context, value, child) {
@@ -52,19 +54,21 @@ class _FocusDropdownButtonState<T> extends State<FocusDropdownButton<T>> {
           return Container(
             decoration: BoxDecoration(
               color: widget.focusColor,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12 * ui),
             ),
             child: child,
           );
         } else {
           return Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12 * ui),
+            ),
             child: child,
           );
         }
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6),
+        padding: EdgeInsets.symmetric(horizontal: 6 * ui),
         child: Row(
           children: [
             widget.icon ?? const SizedBox(),

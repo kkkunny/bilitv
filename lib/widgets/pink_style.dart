@@ -1,14 +1,19 @@
+import 'dart:math' as math;
+
 import 'package:bilitv/consts/color.dart';
 import 'package:dpad/dpad.dart';
 import 'package:flutter/material.dart';
 
 // 统一的粉色选中特效：粉色描边 + 粉色光晕（描边宽度恒定，避免选中时布局位移）
+//
+// [radius]、[borderWidth] 均由调用方按 ui 缩放传入；
+// 描边宽度为空时按 2 * ui，且最小1逻辑像素，避免低分辨率下消失。
 Widget buildPinkFocusEffect({
   required double ui,
   required double radius,
   required bool isFocused,
   required Widget child,
-  double borderWidth = 2,
+  double? borderWidth,
   Color unfocusedColor = Colors.transparent,
   Color? backgroundColor,
 }) {
@@ -19,7 +24,7 @@ Widget buildPinkFocusEffect({
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(
         color: isFocused ? biliPink : unfocusedColor,
-        width: borderWidth,
+        width: math.max(1.0, borderWidth ?? 2 * ui),
       ),
       boxShadow: isFocused
           ? [
@@ -39,7 +44,7 @@ Widget buildPinkFocusEffect({
 FocusEffectBuilder pinkFocusEffect({
   required double ui,
   required double radius,
-  double borderWidth = 2,
+  double? borderWidth,
   Color unfocusedColor = Colors.transparent,
   Color? backgroundColor,
 }) {

@@ -1,3 +1,4 @@
+import 'package:bilitv/utils/ui_scale.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -44,13 +45,14 @@ class _ScrollTextState extends State<ScrollText> {
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     if (_scrolling) return KeyEventResult.ignored;
 
+    final step = 200 * context.ui;
     if (event is KeyDownEvent || event is KeyRepeatEvent) {
       switch (event.logicalKey) {
         case LogicalKeyboardKey.arrowUp:
           _scrolling = true;
           _scrollCtl
               .animateTo(
-                _scrollCtl.offset - 200,
+                _scrollCtl.offset - step,
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.linear,
               )
@@ -60,7 +62,7 @@ class _ScrollTextState extends State<ScrollText> {
           _scrolling = true;
           _scrollCtl
               .animateTo(
-                _scrollCtl.offset + 200,
+                _scrollCtl.offset + step,
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.linear,
               )
