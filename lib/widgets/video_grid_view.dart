@@ -6,6 +6,7 @@ import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/models/video.dart';
 import 'package:bilitv/utils/ui_scale.dart';
 import 'package:bilitv/widgets/animated_infinite_scrollview.dart';
+import 'package:bilitv/widgets/loading.dart';
 import 'package:bilitv/widgets/video_card.dart';
 import 'package:dpad/dpad.dart';
 import 'package:flutter/material.dart';
@@ -425,6 +426,7 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
                 _itemBuilder(context, index, item),
             primary: widget.shrinkWrap,
             noItemsWidget: widget.noItemsWidget,
+            errorWidget: buildErrorRetryWidget(() => widget.provider.refresh()),
             padding:
                 widget.padding ??
                 EdgeInsets.symmetric(

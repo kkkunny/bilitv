@@ -166,6 +166,8 @@ class _PageState extends State<Page> {
     final ui = context.ui;
 
     return Scaffold(
+      // TV 场景键盘以浮层出现，不压缩布局（避免侧边栏在键盘弹出时溢出）
+      resizeToAvoidBottomInset: false,
       body: Container(
         decoration: const BoxDecoration(gradient: pageBackgroundGradient),
         child: Row(

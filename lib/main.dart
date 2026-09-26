@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bilitv/consts/color.dart';
 import 'package:bilitv/pages/pages.dart';
 import 'package:bilitv/pages/splash.dart';
+import 'package:bilitv/utils/log.dart';
 import 'package:bilitv/utils/scroll_behavior.dart';
 import 'package:bilitv/utils/ui_scale.dart';
 import 'package:bilitv/widgets/tooltip.dart';
@@ -10,27 +11,28 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart' hide Page;
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:get/get.dart';
-import 'package:logger/logger.dart';
 import 'package:media_kit/media_kit.dart';
 
-final _logger = Logger();
+final _log = log('main');
 
 // 全局导航 key：供无 BuildContext 的全局错误提示定位 Overlay
 final navigatorKey = GlobalKey<NavigatorState>();
 
-// 安装 Flutter 未捕获异常兜底：记录日志，debug 保留红屏，release 提示用户
+// 安装 Flutter 未捕获异常兜底：记录日志，debug 保留既有处理（红屏/测试框架捕获），release 提示用户
 void installFlutterErrorHandler({
   required void Function() onFatal,
   bool debug = kDebugMode,
 }) {
+  final previousOnError = FlutterError.onError;
   FlutterError.onError = (details) {
-    _logger.e(
+    _log.e(
       '未捕获的Flutter异常',
       error: details.exception,
       stackTrace: details.stack,
     );
     if (debug) {
-      FlutterError.presentError(details);
+      // 链式传递，避免覆盖测试框架/调试环境的既有处理
+      (previousOnError ?? FlutterError.presentError)(details);
     } else {
       onFatal();
     }
@@ -44,6 +46,9 @@ Future<void> main() async {
       WidgetsFlutterBinding.ensureInitialized();
       MediaKit.ensureInitialized();
 
+      // 初始化本地文件日志（失败仅控制台输出）
+      await initFileLogging();
+
       installFlutterErrorHandler(onFatal: _showGlobalFatal);
 
       // 设置所支持的最高刷新率
@@ -53,7 +58,7 @@ Future<void> main() async {
       runApp(const BiliTVApp());
     },
     (error, stack) {
-      _logger.e('未捕获的异步异常', error: error, stackTrace: stack);
+      _log.e('未捕获的异步异常', error: error, stackTrace: stack);
       if (!kDebugMode) _showGlobalFatal();
     },
   );

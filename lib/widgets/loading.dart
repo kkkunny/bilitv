@@ -52,6 +52,33 @@ Widget buildLoadingStyle3() {
   );
 }
 
+// 加载失败时的通用错误态（带重试按钮），可用于列表首屏与分页失败
+Widget buildErrorRetryWidget(VoidCallback retry) {
+  return Builder(
+    builder: (context) {
+      final ui = context.ui;
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '加载失败，请稍后重试',
+              style: TextStyle(fontSize: 24 * ui, color: Colors.grey.shade600),
+            ),
+            SizedBox(height: 20 * ui),
+            PinkButton(
+              ui: ui,
+              label: '重试',
+              icon: Icons.refresh_rounded,
+              onPressed: retry,
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 class LoadingWidget<T> extends StatefulWidget {
   final ValueNotifier<bool>? isLoading;
   final Future<T> Function() loader;

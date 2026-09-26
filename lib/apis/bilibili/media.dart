@@ -3,10 +3,13 @@ import 'package:bilitv/models/pbs/dm.pb.dart';
 import 'package:bilitv/models/video.dart' show Video;
 import 'package:bilitv/storages/auth.dart' show loadCookie;
 import 'package:bilitv/utils/json.dart';
+import 'package:bilitv/utils/log.dart';
 import 'package:dio/dio.dart';
 
 import 'client.dart';
 import 'dynamic.dart';
+
+final _log = log('media');
 
 class Quality {
   late final int id;
@@ -113,6 +116,7 @@ Future<GetVideoPlayURLResponse> getVideoPlayURL({
     'https://api.bilibili.com/x/player/wbi/playurl',
     queries: queryParams,
   );
+  _log.i('获取播放地址 aid=$avid bvid=$bvid cid=$cid');
   return GetVideoPlayURLResponse.fromJson(jsonMap(data) ?? const {});
 }
 

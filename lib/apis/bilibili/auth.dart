@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:basic_utils/basic_utils.dart';
 import 'package:bilitv/storages/auth.dart';
 import 'package:bilitv/utils/json.dart';
+import 'package:bilitv/utils/log.dart';
 import 'package:convert/convert.dart' as convert;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -15,6 +16,8 @@ import 'package:xpath_selector_html_parser/xpath_selector_html_parser.dart';
 
 import 'client.dart';
 import 'error.dart';
+
+final _log = log('auth');
 
 // 二维码
 class QR {
@@ -101,6 +104,7 @@ Future<QRStatus> checkQRStatus(String key) async {
   );
   var qrStatus = QRStatus.fromJson(jsonMap(data) ?? const {});
   if (qrStatus.state == QRState.confirmed) {
+    _log.i('二维码已确认，登录成功');
     final cookies = respHeaders?['set-cookie'];
     final cookieList = <Cookie>[];
     for (final raw in cookies ?? const <String>[]) {
@@ -217,6 +221,7 @@ Future<String> getRefreshCsrf(String correspondPath) async {
   final doc = HtmlXPath.html(resp.data);
   final refreshCsrf = doc.query("//div[@id='1-name']").nodes.firstOrNull?.text;
   if (refreshCsrf == null || refreshCsrf.isEmpty) {
+    _log.w('refresh_csrf 获取失败');
     throw const BilibiliError(-2, '刷新凭据获取失败');
   }
   return refreshCsrf;
@@ -262,6 +267,7 @@ Future<(List<Cookie>, String)> refreshCookie(
   if (newRefreshToken.isEmpty) {
     throw const BilibiliError(-2, 'cookie刷新响应不完整');
   }
+  _log.i('cookie 刷新成功');
   return (cookies, newRefreshToken);
 }
 

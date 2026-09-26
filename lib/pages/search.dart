@@ -72,12 +72,18 @@ class _SearchPageState extends State<SearchPage> {
     final seq = ++_searchSeq;
     _searchKeyword = input;
     _page = 0;
-    final (videos, _) = await _onLoad(isFetchMore: true);
-    if (!mounted || seq != _searchSeq) return;
+    try {
+      final (videos, _) = await _onLoad(isFetchMore: true);
+      if (!mounted || seq != _searchSeq) return;
 
-    _provider.clear();
-    _provider.addAll(videos);
-    _provider.hasMore = videos.isNotEmpty;
+      _provider.clear();
+      _provider.addAll(videos);
+      _provider.hasMore = videos.isNotEmpty;
+    } catch (e) {
+      // 搜索失败时给出提示，避免未捕获异步异常
+      if (!mounted || seq != _searchSeq) return;
+      showAppError(context, e);
+    }
   }
 
   @override
@@ -126,6 +132,8 @@ class _SearchPageState extends State<SearchPage> {
               if (text.isEmpty) {
                 return;
               }
+              // 提交后收起键盘，避免键盘浮层遮挡结果
+              FocusManager.instance.primaryFocus?.unfocus();
               unawaited(_onSearch(text));
             },
           ),
