@@ -1,5 +1,6 @@
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
 import 'package:bilitv/storages/auth.dart' show loadCookie, loginInfoNotifier;
+import 'package:bilitv/utils/json.dart';
 import 'package:dio/dio.dart';
 
 import 'client.dart';
@@ -17,9 +18,9 @@ class MediaPlayInfo {
 
   factory MediaPlayInfo.fromJson(Map<String, dynamic> json) {
     return MediaPlayInfo(
-      lastPlayCid: json['last_play_cid'] ?? 0,
-      lastPlayTime: Duration(milliseconds: json['last_play_time'] ?? 0),
-      onlineCount: json['online_count'] ?? 0,
+      lastPlayCid: jsonInt(json['last_play_cid']),
+      lastPlayTime: Duration(milliseconds: jsonInt(json['last_play_time'])),
+      onlineCount: jsonInt(json['online_count']),
     );
   }
 }
@@ -41,7 +42,7 @@ Future<MediaPlayInfo> getMediaPlayInfo({
     'https://api.bilibili.com/x/player/v2',
     queries: queryParams,
   );
-  return MediaPlayInfo.fromJson(data);
+  return MediaPlayInfo.fromJson(jsonMap(data) ?? const {});
 }
 
 // 上报播放开始
@@ -122,11 +123,11 @@ class HistoryCursor {
 
   factory HistoryCursor.fromJson(Map<String, dynamic> json) {
     return HistoryCursor(
-      max: json['max'],
+      max: jsonInt(json['max']),
       viewAt: DateTime.fromMillisecondsSinceEpoch(
-        json['view_at'] * Duration.millisecondsPerSecond,
+        jsonInt(json['view_at']) * Duration.millisecondsPerSecond,
       ),
-      business: json['business'],
+      business: jsonString(json['business']),
     );
   }
 }
@@ -149,10 +150,15 @@ Future<(HistoryCursor, List<MediaCardInfo>)> listHistory({
     'https://api.bilibili.com/x/web-interface/history/cursor',
     queries: queries,
   );
-  final nextCursor = HistoryCursor.fromJson(data['cursor']);
-  final videos = ((data['list'] ?? []) as List<dynamic>).map((e) {
-    return MediaCardInfo.fromHistoryJson(e);
-  }).toList();
+  final nextCursor = HistoryCursor.fromJson(
+    jsonMap(jsonMap(data)?['cursor']) ?? const {},
+  );
+  final videos = (jsonList(jsonMap(data)?['list']) ?? const <dynamic>[])
+      .map((e) => jsonMap(e))
+      .whereType<Map<String, dynamic>>()
+      .map(MediaCardInfo.fromHistoryJson)
+      .whereType<MediaCardInfo>()
+      .toList();
   return (nextCursor, videos);
 }
 

@@ -1,6 +1,8 @@
+import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/models/pbs/dm.pb.dart';
 import 'package:bilitv/models/video.dart' show Video;
 import 'package:bilitv/storages/auth.dart' show loadCookie;
+import 'package:bilitv/utils/json.dart';
 import 'package:dio/dio.dart';
 
 import 'client.dart';
@@ -12,8 +14,11 @@ class Quality {
 
   Quality({required this.id, required this.description});
 
-  factory Quality.fromJson(Map<String, dynamic> json) {
-    return Quality(id: json['quality'], description: json['new_description']);
+  // 核心字段（清晰度 id）缺失时返回 null，调用方丢弃该项
+  static Quality? fromJson(Map<String, dynamic> json) {
+    final id = jsonInt(json['quality'], fallback: jsonInt(json['id']));
+    if (id <= 0) return null;
+    return Quality(id: id, description: jsonString(json['new_description']));
   }
 }
 
@@ -28,14 +33,16 @@ class DashMediaData {
     required this.backupUrls,
   });
 
-  factory DashMediaData.fromJson(Map<String, dynamic> json) {
+  // 核心字段（播放地址）缺失时返回 null，调用方丢弃该项
+  static DashMediaData? fromJson(Map<String, dynamic> json) {
+    final baseUrl = jsonString(json['base_url']);
+    if (baseUrl.isEmpty) return null;
     return DashMediaData(
-      quality: json['id'],
-      baseUrl: json['base_url'],
-      backupUrls:
-          ((json['backup_url'] ?? List<dynamic>.empty()) as List<dynamic>)
-              .map((e) => e as String)
-              .toList(),
+      quality: jsonInt(json['id']),
+      baseUrl: baseUrl,
+      backupUrls: (jsonList(json['backup_url']) ?? const <dynamic>[])
+          .whereType<String>()
+          .toList(),
     );
   }
 }
@@ -48,11 +55,17 @@ class DashData {
 
   factory DashData.fromJson(Map<String, dynamic> json) {
     return DashData(
-      video: ((json['video'] ?? List<dynamic>.empty()) as List<dynamic>)
-          .map((item) => DashMediaData.fromJson(item))
+      video: (jsonList(json['video']) ?? const <dynamic>[])
+          .map((item) => jsonMap(item))
+          .whereType<Map<String, dynamic>>()
+          .map(DashMediaData.fromJson)
+          .whereType<DashMediaData>()
           .toList(),
-      audio: ((json['audio'] ?? List<dynamic>.empty()) as List<dynamic>)
-          .map((item) => DashMediaData.fromJson(item))
+      audio: (jsonList(json['audio']) ?? const <dynamic>[])
+          .map((item) => jsonMap(item))
+          .whereType<Map<String, dynamic>>()
+          .map(DashMediaData.fromJson)
+          .whereType<DashMediaData>()
           .toList(),
     );
   }
@@ -71,12 +84,14 @@ class GetVideoPlayURLResponse {
 
   factory GetVideoPlayURLResponse.fromJson(Map<String, dynamic> json) {
     return GetVideoPlayURLResponse(
-      defaultQualityID: json['quality'],
-      supportFormats:
-          ((json['support_formats'] ?? List<dynamic>.empty()) as List<dynamic>)
-              .map((item) => Quality.fromJson(item))
-              .toList(),
-      dashData: DashData.fromJson(json['dash']),
+      defaultQualityID: jsonInt(json['quality']),
+      supportFormats: (jsonList(json['support_formats']) ?? const <dynamic>[])
+          .map((item) => jsonMap(item))
+          .whereType<Map<String, dynamic>>()
+          .map(Quality.fromJson)
+          .whereType<Quality>()
+          .toList(),
+      dashData: DashData.fromJson(jsonMap(json['dash']) ?? const {}),
     );
   }
 }
@@ -98,7 +113,7 @@ Future<GetVideoPlayURLResponse> getVideoPlayURL({
     'https://api.bilibili.com/x/player/wbi/playurl',
     queries: queryParams,
   );
-  return GetVideoPlayURLResponse.fromJson(data);
+  return GetVideoPlayURLResponse.fromJson(jsonMap(data) ?? const {});
 }
 
 // 获取视频信息
@@ -114,7 +129,11 @@ Future<Video> getVideoInfo({int? avid, String? bvid}) async {
     'https://api.bilibili.com/x/web-interface/view',
     queries: queryParams,
   );
-  return Video.fromJson(data);
+  final video = Video.fromJson(jsonMap(data) ?? const {});
+  if (video == null) {
+    throw const BilibiliError(-2, '视频信息不完整');
+  }
+  return video;
 }
 
 class ArchiveRelation {
@@ -134,11 +153,11 @@ class ArchiveRelation {
 
   factory ArchiveRelation.fromJson(Map<String, dynamic> json) {
     return ArchiveRelation(
-      like: json['like'],
-      dislike: json['dislike'],
-      favorite: json['favorite'],
-      coin: json['coin'],
-      seasonFav: json['season_fav'],
+      like: jsonBool(json['like']),
+      dislike: jsonBool(json['dislike']),
+      favorite: jsonBool(json['favorite']),
+      coin: jsonInt(json['coin']),
+      seasonFav: jsonBool(json['season_fav']),
     );
   }
 }
@@ -156,7 +175,7 @@ Future<ArchiveRelation> getArchiveRelation({int? avid, String? bvid}) async {
     'https://api.bilibili.com/x/web-interface/archive/relation',
     queries: queryParams,
   );
-  return ArchiveRelation.fromJson(data);
+  return ArchiveRelation.fromJson(jsonMap(data) ?? const {});
 }
 
 // 获取弹幕
@@ -171,7 +190,15 @@ Future<DmSegMobileReply> getDanmaku(int cid, int segmentIndex) async {
     queryParameters: queryParams,
     options: Options(responseType: ResponseType.bytes),
   );
-  return DmSegMobileReply.fromBuffer(response.data);
+  final bytes = response.data;
+  if (bytes is! List<int>) {
+    throw const BilibiliError(-2, '弹幕响应格式异常');
+  }
+  try {
+    return DmSegMobileReply.fromBuffer(bytes);
+  } catch (_) {
+    throw const BilibiliError(-2, '弹幕解析失败');
+  }
 }
 
 // // 点赞

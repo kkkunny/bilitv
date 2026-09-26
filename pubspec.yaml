@@ -77,6 +77,7 @@ dev_dependencies:
 
   flutter_launcher_icons: ^0.14.4 # 图标
   iconfont_convert: ^1.0.2 # icon
+  http_mock_adapter: ^0.6.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

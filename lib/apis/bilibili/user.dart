@@ -1,5 +1,7 @@
 import 'package:bilitv/apis/bilibili/client.dart';
+import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/storages/auth.dart' show loadCookie;
+import 'package:bilitv/utils/json.dart';
 import 'package:dio/dio.dart' show Headers;
 
 class UserInfo {
@@ -9,11 +11,14 @@ class UserInfo {
 
   UserInfo({required this.mid, required this.name, required this.avatar});
 
-  factory UserInfo.fromJson(Map<String, dynamic> json) {
+  // 核心字段（mid）缺失时返回 null，调用方丢弃该项
+  static UserInfo? fromJson(Map<String, dynamic> json) {
+    final mid = jsonInt(json['mid']);
+    if (mid <= 0) return null;
     return UserInfo(
-      mid: json['mid'] ?? 0,
-      name: json['uname'] ?? '',
-      avatar: json['face'] ?? '',
+      mid: mid,
+      name: jsonString(json['uname']),
+      avatar: jsonString(json['face']),
     );
   }
 }
@@ -30,13 +35,17 @@ class MySelf extends UserInfo {
     required this.money,
   });
 
-  factory MySelf.fromJson(Map<String, dynamic> json) {
+  // 核心字段（mid）缺失时返回 null，由调用方转为可读错误
+  static MySelf? fromJson(Map<String, dynamic> json) {
+    final mid = jsonInt(json['mid']);
+    if (mid <= 0) return null;
+    final levelInfo = jsonMap(json['level_info']) ?? const <String, dynamic>{};
     return MySelf(
-      mid: json['mid'] ?? 0,
-      name: json['uname'] ?? '',
-      avatar: json['face'] ?? '',
-      level: json['level_info']['current_level'] ?? 0,
-      money: json['money'] ?? 0,
+      mid: mid,
+      name: jsonString(json['uname']),
+      avatar: jsonString(json['face']),
+      level: jsonInt(levelInfo['current_level']),
+      money: jsonInt(json['money']),
     );
   }
 }
@@ -46,7 +55,11 @@ Future<MySelf> getMySelfInfo() async {
     'GET',
     'https://api.bilibili.com/x/web-interface/nav',
   );
-  return MySelf.fromJson(data);
+  final info = MySelf.fromJson(jsonMap(data) ?? const {});
+  if (info == null) {
+    throw const BilibiliError(-2, '用户信息不完整');
+  }
+  return info;
 }
 
 // 用户关系属性
@@ -56,7 +69,7 @@ class UserRelation {
   const UserRelation({this.attribute = 0});
 
   factory UserRelation.fromJson(Map<String, dynamic> json) {
-    return UserRelation(attribute: json['attribute'] ?? 0);
+    return UserRelation(attribute: jsonInt(json['attribute']));
   }
 
   // 是否已关注
@@ -70,8 +83,9 @@ Future<UserRelation> getUserRelation(int mid) async {
     'https://api.bilibili.com/x/relation',
     queries: {'fid': mid},
   );
-  if (data is! Map<String, dynamic>) return const UserRelation();
-  return UserRelation.fromJson(data);
+  final map = jsonMap(data);
+  if (map == null) return const UserRelation();
+  return UserRelation.fromJson(map);
 }
 
 // 查询用户粉丝数
@@ -81,8 +95,7 @@ Future<int> getUserFollowerCount(int mid) async {
     'https://api.bilibili.com/x/relation/stat',
     queries: {'vmid': mid},
   );
-  if (data is! Map<String, dynamic>) return 0;
-  return data['follower'] ?? 0;
+  return jsonInt(jsonMap(data)?['follower']);
 }
 
 // 关注/取关（需要登陆）

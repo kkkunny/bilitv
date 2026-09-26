@@ -1,4 +1,5 @@
 import 'package:bilitv/models/video.dart' show MediaCardInfo, MediaType;
+import 'package:bilitv/utils/json.dart';
 
 import 'client.dart';
 
@@ -20,10 +21,10 @@ Future<List<MediaCardInfo>> listRecommendVideos({
     },
   );
   final List<MediaCardInfo> videos = [];
-  for (final item in data['item']) {
-    // 过滤掉非视频媒体
-    final media = MediaCardInfo.fromJson(item);
-    if (media.type != MediaType.video) {
+  for (final item in jsonList(jsonMap(data)?['item']) ?? const <dynamic>[]) {
+    // 过滤掉非视频媒体与坏数据
+    final media = MediaCardInfo.fromJson(jsonMap(item) ?? const {});
+    if (media == null || media.type != MediaType.video) {
       continue;
     }
     videos.add(media);
@@ -48,8 +49,10 @@ Future<List<MediaCardInfo>> fetchRelatedVideos({
     queries: queryParams,
   );
   final List<MediaCardInfo> videos = [];
-  for (final item in data) {
-    videos.add(MediaCardInfo.fromJson(item));
+  for (final item in jsonList(data) ?? const <dynamic>[]) {
+    final media = MediaCardInfo.fromJson(jsonMap(item) ?? const {});
+    if (media == null) continue;
+    videos.add(media);
   }
   return videos;
 }

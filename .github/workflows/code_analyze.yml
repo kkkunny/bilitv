@@ -23,3 +23,6 @@ jobs:
 
       - name: Analyze
         run: make analyse
+
+      - name: Test
+        run: flutter test

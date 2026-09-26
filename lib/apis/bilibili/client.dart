@@ -1,5 +1,6 @@
 import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/storages/auth.dart' show loadCookie;
+import 'package:bilitv/utils/json.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -68,9 +69,23 @@ Future<dynamic> bilibiliRequest<T>(
     final (ok, respData) = respHandler(response);
     if (ok) return respData;
   }
-  final respData = response.data as Map<String, dynamic>;
-  if (respData['code'] != 0) {
-    throw BilibiliError(respData['code'], respData['message']);
+  // 响应必须是 JSON 对象（风控/验证页会返回 HTML 文本）
+  final respData = jsonMap(response.data);
+  if (respData == null) {
+    throw const BilibiliError(-2, '响应格式异常');
+  }
+  // code 必须存在且为数字（含数字字符串）
+  final rawCode = respData['code'];
+  final code = rawCode is num
+      ? rawCode.toInt()
+      : (rawCode is String ? int.tryParse(rawCode.trim()) : null);
+  if (code == null) {
+    throw const BilibiliError(-2, '响应格式异常');
+  }
+  if (code != 0) {
+    var message = jsonString(respData['message']).trim();
+    if (message.isEmpty) message = jsonString(respData['msg']).trim();
+    throw BilibiliError(code, message.isNotEmpty ? message : '未知错误');
   }
   return respData['data'];
 }

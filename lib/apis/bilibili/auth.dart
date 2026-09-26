@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:basic_utils/basic_utils.dart';
 import 'package:bilitv/storages/auth.dart';
+import 'package:bilitv/utils/json.dart';
 import 'package:convert/convert.dart' as convert;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -13,6 +14,7 @@ import 'package:pointycastle/random/fortuna_random.dart';
 import 'package:xpath_selector_html_parser/xpath_selector_html_parser.dart';
 
 import 'client.dart';
+import 'error.dart';
 
 // 二维码
 class QR {
@@ -26,8 +28,14 @@ class QR {
     this.expire = const Duration(minutes: 3),
   });
 
+  // 核心字段（qrcode_key/url）缺失时抛错，避免生成无法登录的二维码
   factory QR.fromJson(Map<String, dynamic> json) {
-    return QR(key: json['qrcode_key'], url: json['url']);
+    final key = jsonString(json['qrcode_key']);
+    final url = jsonString(json['url']);
+    if (key.isEmpty || url.isEmpty) {
+      throw const BilibiliError(-2, '二维码数据不完整');
+    }
+    return QR(key: key, url: url);
   }
 }
 
@@ -37,7 +45,7 @@ Future<QR> createQR() async {
     'GET',
     'https://passport.bilibili.com/x/passport-login/web/qrcode/generate',
   );
-  return QR.fromJson(data);
+  return QR.fromJson(jsonMap(data) ?? const {});
 }
 
 // 二维码状态
@@ -58,11 +66,11 @@ class QRStatus {
   QRStatus({required this.state, this.refreshToken, this.cookies = const []});
 
   factory QRStatus.fromJson(Map<String, dynamic> json) {
-    switch (json['code']) {
+    switch (jsonInt(json['code'], fallback: -1)) {
       case 0:
         return QRStatus(
           state: QRState.confirmed,
-          refreshToken: json['refresh_token'],
+          refreshToken: jsonString(json['refresh_token']),
         );
       case 86038:
         return QRStatus(state: QRState.expired);
@@ -71,8 +79,9 @@ class QRStatus {
       case 86101:
         return QRStatus(state: QRState.waiting);
       default:
-        throw Exception(
-          'bilibili api error, code=${json['code']}, msg=${json['message']}',
+        throw BilibiliError(
+          jsonInt(json['code'], fallback: -2),
+          jsonString(json['message'], fallback: '二维码状态异常'),
         );
     }
   }
@@ -90,14 +99,17 @@ Future<QRStatus> checkQRStatus(String key) async {
       return (false, null);
     },
   );
-  var qrStatus = QRStatus.fromJson(data);
+  var qrStatus = QRStatus.fromJson(jsonMap(data) ?? const {});
   if (qrStatus.state == QRState.confirmed) {
     final cookies = respHeaders?['set-cookie'];
-    final cookieList = cookies != null
-        ? cookies.map((cookie) {
-            return Cookie.fromSetCookieValue(cookie);
-          }).toList()
-        : <Cookie>[];
+    final cookieList = <Cookie>[];
+    for (final raw in cookies ?? const <String>[]) {
+      try {
+        cookieList.add(Cookie.fromSetCookieValue(raw));
+      } catch (_) {
+        // 单条Cookie损坏时跳过，避免影响其它Cookie
+      }
+    }
     final (buvid3, buvid4) = await getBuvids();
     cookieList.addAll([Cookie('buvid3', buvid3), Cookie('buvid4', buvid4)]);
     qrStatus.cookies = cookieList;
@@ -111,7 +123,8 @@ Future<(String, String)> getBuvids() async {
     'GET',
     'https://api.bilibili.com/x/frontend/finger/spi',
   );
-  return (data['b_3'].toString(), data['b_4'].toString());
+  final map = jsonMap(data) ?? const <String, dynamic>{};
+  return (jsonString(map['b_3']), jsonString(map['b_4']));
 }
 
 class CookieStatus {
@@ -121,7 +134,10 @@ class CookieStatus {
   CookieStatus({required this.refresh, required this.timestamp});
 
   factory CookieStatus.fromJson(Map<String, dynamic> json) {
-    return CookieStatus(refresh: json['refresh'], timestamp: json['timestamp']);
+    return CookieStatus(
+      refresh: jsonBool(json['refresh']),
+      timestamp: jsonInt(json['timestamp']),
+    );
   }
 }
 
@@ -136,8 +152,8 @@ class IsNeedRefreshCookieResponse {
 
   factory IsNeedRefreshCookieResponse.fromJson(Map<String, dynamic> json) {
     return IsNeedRefreshCookieResponse(
-      needRefresh: json['refresh'],
-      timestamp: json['timestamp'],
+      needRefresh: jsonBool(json['refresh']),
+      timestamp: jsonInt(json['timestamp']),
     );
   }
 }
@@ -152,7 +168,7 @@ Future<IsNeedRefreshCookieResponse> isNeedRefreshCookie() async {
     'https://passport.bilibili.com/x/passport-login/web/cookie/info',
     queries: {'csrf': csrf},
   );
-  return IsNeedRefreshCookieResponse.fromJson(data);
+  return IsNeedRefreshCookieResponse.fromJson(jsonMap(data) ?? const {});
 }
 
 const _publicKeyPEM = """
@@ -199,7 +215,10 @@ Future<String> getRefreshCsrf(String correspondPath) async {
     options: Options(responseType: ResponseType.plain),
   );
   final doc = HtmlXPath.html(resp.data);
-  final refreshCsrf = doc.query("//div[@id='1-name']").nodes.first.text!;
+  final refreshCsrf = doc.query("//div[@id='1-name']").nodes.firstOrNull?.text;
+  if (refreshCsrf == null || refreshCsrf.isEmpty) {
+    throw const BilibiliError(-2, '刷新凭据获取失败');
+  }
   return refreshCsrf;
 }
 
@@ -227,10 +246,23 @@ Future<(List<Cookie>, String)> refreshCookie(
       return (false, null);
     },
   );
-  final cookies = respHeaders!['set-cookie']!.map((cookie) {
-    return Cookie.fromSetCookieValue(cookie);
-  }).toList();
-  return (cookies, data['refresh_token'] as String);
+  final setCookies = respHeaders?['set-cookie'] ?? const <String>[];
+  final cookies = <Cookie>[];
+  for (final raw in setCookies) {
+    try {
+      cookies.add(Cookie.fromSetCookieValue(raw));
+    } catch (_) {
+      // 单条Cookie损坏时跳过，避免影响其它Cookie
+    }
+  }
+  if (cookies.isEmpty) {
+    throw const BilibiliError(-2, 'cookie刷新失败');
+  }
+  final newRefreshToken = jsonString(jsonMap(data)?['refresh_token']);
+  if (newRefreshToken.isEmpty) {
+    throw const BilibiliError(-2, 'cookie刷新响应不完整');
+  }
+  return (cookies, newRefreshToken);
 }
 
 // 确认刷新cookie
