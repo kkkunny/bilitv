@@ -33,6 +33,7 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
 
   @override
   void dispose() {
+    _currentPosition.dispose();
     _focusScopeNode.dispose();
     super.dispose();
   }
@@ -119,24 +120,28 @@ class _FocusProgressBarState extends State<FocusProgressBar> {
       final gep = widget.player.state.duration ~/ 100;
       switch (value.logicalKey) {
         case LogicalKeyboardKey.arrowLeft:
-          final target =
-              (_currentPosition.value ?? widget.player.state.position) - gep;
-          _currentPosition.value = target.clamp(
-            Duration.zero,
-            widget.player.state.duration,
-          );
-          break;
         case LogicalKeyboardKey.arrowRight:
+          if (widget.player.state.duration <= Duration.zero) {
+            return KeyEventResult.handled;
+          }
+          final direction = value.logicalKey == LogicalKeyboardKey.arrowRight
+              ? 1
+              : -1;
           final target =
-              (_currentPosition.value ?? widget.player.state.position) + gep;
+              (_currentPosition.value ?? widget.player.state.position) +
+              gep * direction;
           _currentPosition.value = target.clamp(
             Duration.zero,
             widget.player.state.duration,
           );
-          break;
+          // 拦截左右键，避免冒泡到默认焦点遍历导致焦点被移走
+          return KeyEventResult.handled;
       }
     } else if (value is KeyUpEvent) {
       switch (value.logicalKey) {
+        case LogicalKeyboardKey.arrowLeft:
+        case LogicalKeyboardKey.arrowRight:
+          return KeyEventResult.handled;
         case LogicalKeyboardKey.arrowDown:
           FocusScope.of(context).nextFocus();
           return KeyEventResult.handled;

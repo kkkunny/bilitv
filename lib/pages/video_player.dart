@@ -77,14 +77,17 @@ class _VideoControlWidgetState extends State<_VideoControlWidget> {
     Settings.setBool(Settings.pathDanmuSwitch, _pageState._danmakuCtl.enabled);
   }
 
-  void _onSelectQuality(Quality? sf) {
+  Future<void> _onSelectQuality(Quality? sf) async {
     if (sf == null) {
       return;
     }
     Settings.setInt(Settings.pathQualitySwitch, sf.id);
-    setState(() {
-      _pageState._onQualityChange(sf);
-    });
+    await _pageState._onQualityChange(sf);
+    if (!mounted) {
+      return;
+    }
+    // 画质切换成功后刷新下拉框显示值
+    setState(() {});
   }
 
   void _onPrevTapped() {
@@ -400,15 +403,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         pushTooltipError(context, '视频加载失败');
         return;
       }
-      _controller.player
-          .open(
-            Media(
-              _videoUrls.first,
-              httpHeaders: bilibiliHttpClient.options.headers
-                  .cast<String, String>(),
-            ),
-          )
-          .ignore();
+      _restartPlayback().ignore();
       return;
     }
     // 音频源失败：轮换到下一个备份地址
@@ -422,10 +417,37 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         pushTooltipError(context, "音频加载失败");
         return;
       }
-      _controller.player.setAudioTrack(AudioTrack.uri(_audioUrls.first));
+      _controller.player
+          .setAudioTrack(AudioTrack.uri(_audioUrls.first))
+          .ignore();
       return;
     }
     pushTooltipError(context, err);
+  }
+
+  // 切换视频备份地址后重新打开媒体，保留播放进度、弹幕时间轴与音轨
+  Future<void> _restartPlayback() async {
+    if (_videoUrls.isEmpty) return;
+    final start = _controller.player.state.position;
+    // 重置弹幕时间轴，避免重开后按旧时间轴推送导致长时间无弹幕
+    _danmakuCtl.clear();
+    try {
+      await _controller.player.open(
+        Media(
+          _videoUrls.first,
+          httpHeaders: bilibiliHttpClient.options.headers
+              .cast<String, String>(),
+          start: start,
+        ),
+      );
+      if (_audioUrls.isNotEmpty) {
+        await _controller.player.setAudioTrack(
+          AudioTrack.uri(_audioUrls.first),
+        );
+      }
+    } catch (_) {
+      // 打开失败会通过错误流再次触发轮换
+    }
   }
 
   DateTime? _lastBackTime;
@@ -457,6 +479,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   Future<void> _onEpisodeChanged() async {
     // 快照本次请求的分P，若处理过程中用户又切了分P则丢弃本次结果
     final cid = _currentCid.value;
+    // 新分P就绪前禁止画质等操作，避免用到旧分P的播放信息
+    _videoReady.value = false;
     // 结束心跳
     _heartbeatTimer?.cancel();
     // 取消待执行的自动下一分P
@@ -567,7 +591,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         sf,
         start: _controller.player.state.position,
       );
-      if (!mounted) return;
+      // 切画质期间用户切换了分P时丢弃结果，避免画质与分P错配
+      if (!mounted || cid != _currentCid.value) return;
       // 播放成功后才提交画质
       _currentQuality = sf;
     } catch (e) {
@@ -609,22 +634,17 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     _videoUrls = videoUrls;
     _audioUrls = audioUrls;
 
-    final futures = <Future<void>>[
-      _controller.player.open(
-        Media(
-          videoUrls.first,
-          httpHeaders: bilibiliHttpClient.options.headers
-              .cast<String, String>(),
-          start: start,
-        ),
+    // 先打开视频流，成功后再设置DASH音轨，两者完成前不提交播放成功状态
+    await _controller.player.open(
+      Media(
+        videoUrls.first,
+        httpHeaders: bilibiliHttpClient.options.headers.cast<String, String>(),
+        start: start,
       ),
-    ];
+    );
     if (audioUrls.isNotEmpty) {
-      futures.add(
-        _controller.player.setAudioTrack(AudioTrack.uri(audioUrls.first)),
-      );
+      await _controller.player.setAudioTrack(AudioTrack.uri(audioUrls.first));
     }
-    Future.wait(futures).ignore();
   }
 
   void _cancelAutoNext() {
@@ -642,16 +662,16 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       ).ignore();
     }
 
-    final index = widget.video.episodes.indexWhere(
-      (e) => e.cid == _currentCid.value,
-    );
+    final index = widget.video.episodes.indexWhere((e) => e.cid == _playingCid);
     if (index < 0 || index == widget.video.episodes.length - 1) return;
     if (!mounted) return;
 
     // 3秒后自动切到下一分P，用户seek或手动切P会取消该计时器
     _autoNextTimer = Timer(const Duration(seconds: 3), () {
       _autoNextTimer = null;
-      if (!mounted || _currentCid.value != widget.video.episodes[index].cid) {
+      if (!mounted ||
+          _currentCid.value != widget.video.episodes[index].cid ||
+          _playingCid != widget.video.episodes[index].cid) {
         return;
       }
       _currentCid.value = widget.video.episodes[index + 1].cid;
@@ -700,8 +720,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
               ),
               ValueListenableBuilder(
                 valueListenable: _displayControl,
-                builder: (context, display, child) =>
-                    Offstage(offstage: !display, child: child!),
+                builder: (context, display, child) => ExcludeFocus(
+                  excluding: !display,
+                  child: Offstage(offstage: !display, child: child!),
+                ),
                 child: _VideoControlWidget(_controller.player, _displayControl),
               ),
             ],
@@ -736,6 +758,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
           // 这样_onBack里才能拿到此时的displayControl.value（true），
           // 从而仅关闭控制层而不是退出播放页
           Future.delayed(const Duration(milliseconds: 10)).then((_) {
+            if (!mounted) return;
             _displayControl.value = false;
           });
           break;
@@ -749,6 +772,11 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     switch (value.logicalKey) {
       case LogicalKeyboardKey.select:
       case LogicalKeyboardKey.enter:
+        // 仅当没有控件持有焦点时才由页面接管播放/暂停，
+        // 避免与控件自身的激活（ActivateIntent）重复触发
+        if (FocusManager.instance.primaryFocus != _screenFocusNode) {
+          break;
+        }
         _controller.player.playOrPause();
         break;
       case LogicalKeyboardKey.contextMenu:

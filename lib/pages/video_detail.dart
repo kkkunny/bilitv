@@ -631,9 +631,19 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         height: MediaQuery.of(context).size.height / 2,
         child: ScrollText(
           widget.video.desc,
+          autofocus: true,
           style: TextStyle(fontSize: 20 * ui),
         ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(),
+          child: Text(
+            '关闭',
+            style: TextStyle(fontSize: 20 * ui, color: biliPink),
+          ),
+        ),
+      ],
     );
   }
 
@@ -733,8 +743,11 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                   action: (media) {
                     if (!loginInfoNotifier.value.isLogin) return;
 
-                    addToView(avid: media.avid);
-                    pushTooltipInfo(context, '已加入稍后再看：${media.title}');
+                    requestWithTooltip(
+                      context,
+                      request: () => addToView(avid: media.avid),
+                      successText: '已加入稍后再看：${media.title}',
+                    );
                   },
                 ),
               ],
