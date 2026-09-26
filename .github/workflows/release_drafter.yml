@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'
 
+# pubspec.lock 中的依赖来自国内镜像源（pub.flutter-io.cn），
+# CI 若使用默认的 pub.dev 会丢弃整份 lock 重新解析依赖，导致版本漂移。
+env:
+  PUB_HOSTED_URL: https://pub.flutter-io.cn
+
 jobs:
   create_release_draft:
     permissions:
