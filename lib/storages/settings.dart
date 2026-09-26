@@ -14,6 +14,9 @@ class Settings {
   ];
   static const pathDanmuFontSize = ['setting', 'danmu', 'font_size'];
   static const pathQualitySwitch = ['setting', 'player', 'quality'];
+  static const pathPlaybackRateSwitch = ['setting', 'player', 'playback_rate'];
+  static const pathAspectModeSwitch = ['setting', 'player', 'aspect_mode'];
+  static const pathLoopModeSwitch = ['setting', 'player', 'loop_mode'];
 
   static String _getKey(List<String> path) => '$_settingsKey.${path.join('.')}';
 
