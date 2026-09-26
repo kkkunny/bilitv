@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bilitv/apis/bilibili/dynamic.dart';
+import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/apis/bilibili/user.dart' show UserInfo;
 import 'package:bilitv/consts/assets.dart';
@@ -32,6 +33,7 @@ final _dynamicAvatarMockUp = UserInfo(mid: -1, name: '全部动态', avatar: '')
 class _DynamicPageState extends State<DynamicPage> {
   int _offset = 0;
   int? _selectedMid;
+  int _loadSeq = 0;
   final List<UserInfo> _ups = [];
   late final VideoGridViewProvider _provider;
   final _upListScrollCtl = ScrollController();
@@ -53,22 +55,33 @@ class _DynamicPageState extends State<DynamicPage> {
   }
 
   Future<void> _fetchUpList() async {
-    final portal = await getDynamicPortal();
-    if (!mounted) return;
-    setState(() {
-      _ups.clear();
-      _ups.add(_dynamicAvatarMockUp);
-      _ups.addAll(portal.ups);
-    });
+    try {
+      final portal = await getDynamicPortal();
+      if (!mounted) return;
+      setState(() {
+        _ups.clear();
+        _ups.add(_dynamicAvatarMockUp);
+        _ups.addAll(portal.ups);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      pushTooltipError(context, e is BilibiliError ? e.message : '未知的错误');
+    }
   }
 
   Future<void> _onRefresh() async {
-    _selectedMid = null;
-    _upListScrollCtl.animateTo(
-      0,
-      duration: Duration(milliseconds: 250),
-      curve: Curves.linear,
-    );
+    if (_selectedMid != null) {
+      setState(() {
+        _selectedMid = null;
+      });
+    }
+    if (_upListScrollCtl.hasClients && _upListScrollCtl.offset != 0) {
+      _upListScrollCtl.animateTo(
+        0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.linear,
+      );
+    }
     await Future.wait([_fetchUpList(), _refreshVideos()]);
   }
 
@@ -79,24 +92,27 @@ class _DynamicPageState extends State<DynamicPage> {
       return (List<MediaCardInfo>.empty(growable: false), false);
     }
 
+    // 丢弃过期请求：仅最新一次请求可以提交offset与数据
+    final seq = ++_loadSeq;
     final resp = await listDynamic(offset: _offset, mid: _selectedMid);
+    if (seq != _loadSeq) {
+      return (List<MediaCardInfo>.empty(growable: false), false);
+    }
     _offset = resp.offset;
     return (resp.medias, resp.hasMore);
   }
 
   void _onUpSelected(int? mid) {
-    if (_selectedMid == mid) {
+    // “全部动态”用-1占位，实际请求时不传host_mid
+    final selectedMid = (mid ?? 0) <= 0 ? null : mid;
+    if (_selectedMid == selectedMid) {
       // 刷新视频
       _refreshVideos();
       return;
     }
     // 更换up主并刷新
     setState(() {
-      if (mid == null) {
-        _selectedMid = null;
-      } else {
-        _selectedMid = mid;
-      }
+      _selectedMid = selectedMid;
     });
     _refreshVideos();
   }
@@ -179,8 +195,12 @@ class _DynamicPageState extends State<DynamicPage> {
           icon: Icons.playlist_add_rounded,
           action: (media) {
             if (!loginInfoNotifier.value.isLogin) return;
-            addToView(avid: media.avid);
-            pushTooltipInfo(context, '已加入稍后再看：${media.title}');
+
+            requestWithTooltip(
+              context,
+              request: () => addToView(avid: media.avid),
+              successText: '已加入稍后再看：${media.title}',
+            );
           },
         ),
       ],

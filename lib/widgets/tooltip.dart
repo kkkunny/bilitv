@@ -1,3 +1,4 @@
+import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/utils/ui_scale.dart';
 import 'package:flutter/material.dart';
 
@@ -121,5 +122,24 @@ Future<T> tooltipNetFetch<T>(
     }
     pushTooltipError(context, e.toString());
     rethrow;
+  }
+}
+
+// 执行网络请求，成功后提示成功文案，失败时提示错误信息
+Future<void> requestWithTooltip(
+  BuildContext context, {
+  required Future<void> Function() request,
+  required String successText,
+}) async {
+  try {
+    await request();
+    if (!context.mounted) return;
+    pushTooltipInfo(context, successText);
+  } on BilibiliError catch (e) {
+    if (!context.mounted) return;
+    pushTooltipError(context, e.message);
+  } catch (e) {
+    if (!context.mounted) return;
+    pushTooltipError(context, '未知的错误');
   }
 }

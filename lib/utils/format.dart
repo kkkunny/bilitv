@@ -11,21 +11,31 @@ String videoDurationString(Duration duration) {
 // 视频时长格式化
 Duration fromVideoDurationString(String duration) {
   if (duration.isEmpty) {
-    return Duration();
+    return Duration.zero;
   }
+  // 支持 "SS" / "M:SS" / "H:MM:SS" 以及带小数的秒数
   final res = duration.split(':');
-  final m = int.parse(res[0]);
-  final s = int.parse(res[1]);
-  return Duration(minutes: m, seconds: s);
+  if (res.length > 3) {
+    return Duration.zero;
+  }
+  var seconds = 0.0;
+  for (final part in res) {
+    final value = double.tryParse(part.trim());
+    if (value == null || value < 0) {
+      return Duration.zero;
+    }
+    seconds = seconds * 60 + value;
+  }
+  return Duration(milliseconds: (seconds * 1000).round());
 }
 
 // 数量格式化
 String amountString(int viewCount) {
-  if (viewCount > 100000000) {
+  if (viewCount >= 100000000) {
     return '${(viewCount / 100000000).toStringAsFixed(1)}亿';
-  } else if (viewCount > 10000) {
+  } else if (viewCount >= 10000) {
     return '${(viewCount / 10000).toStringAsFixed(1)}万';
-  } else if (viewCount > 1000) {
+  } else if (viewCount >= 1000) {
     return '${(viewCount / 1000).toStringAsFixed(1)}千';
   }
   return viewCount.toString();

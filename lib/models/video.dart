@@ -151,7 +151,7 @@ class MediaCardInfo {
       type: json['type'] == 'video' ? MediaType.video : MediaType.unknown,
       avid: json['aid'],
       bvid: json['bvid'],
-      cid: json['id'],
+      // 搜索接口不返回cid（id字段是aid），留空由详情页从视频信息中获取
       title: title,
       cover: (json['pic'] as String).startsWith('https:')
           ? json['pic']
@@ -274,7 +274,8 @@ class Video {
       userName: owner['name'] ?? '',
       userAvatar: owner['face'] ?? '',
       publishTime: DateTime.fromMillisecondsSinceEpoch(
-        (json['pubdate'] ?? DateTime.timestamp()) *
+        ((json['pubdate'] as num?)?.toInt() ??
+                DateTime.now().millisecondsSinceEpoch) *
             Duration.millisecondsPerSecond,
       ),
       cid: json['cid'] ?? 0,

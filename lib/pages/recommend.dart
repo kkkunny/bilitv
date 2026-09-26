@@ -48,13 +48,14 @@ class _RecommendPageState extends State<RecommendPage> {
   Future<(List<MediaCardInfo>, bool)> _onLoad({
     bool isFetchMore = false,
   }) async {
-    _page++;
-
+    // 请求成功后提交页码，失败时下次重试同一页
+    final nextPage = _page + 1;
     final videos = await listRecommendVideos(
-      page: _page,
+      page: nextPage,
       count: _pageVideoCount,
       removeAvids: _provider.toList().map((e) => e.avid).toList(),
     );
+    _page = nextPage;
     return (videos, true);
   }
 
@@ -74,8 +75,11 @@ class _RecommendPageState extends State<RecommendPage> {
           action: (media) {
             if (!loginInfoNotifier.value.isLogin) return;
 
-            addToView(avid: media.avid);
-            pushTooltipInfo(context, '已加入稍后再看：${media.title}');
+            requestWithTooltip(
+              context,
+              request: () => addToView(avid: media.avid),
+              successText: '已加入稍后再看：${media.title}',
+            );
           },
         ),
       ],

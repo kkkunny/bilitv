@@ -51,11 +51,12 @@ class ListDynamicResponse {
 
   factory ListDynamicResponse.fromJson(Map<String, dynamic> json) {
     return ListDynamicResponse(
-      hasMore: json['has_more'],
+      hasMore: json['has_more'] ?? false,
       medias: ((json['items'] ?? []) as List<dynamic>)
           .map((e) => MediaCardInfo.fromDynamicJson(e))
           .toList(),
-      offset: int.parse(json['offset']),
+      // 最后一页时offset可能为空串
+      offset: int.tryParse('${json['offset'] ?? ''}') ?? 0,
     );
   }
 }

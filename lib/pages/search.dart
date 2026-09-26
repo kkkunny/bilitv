@@ -24,6 +24,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   String _searchKeyword = "";
   int _page = 0;
+  int _searchSeq = 0;
   late final VideoGridViewProvider _provider;
 
   @override
@@ -45,10 +46,18 @@ class _SearchPageState extends State<SearchPage> {
       return (List<MediaCardInfo>.empty(growable: false), false);
     }
 
-    _page++;
+    // 先占位页码，避免请求期间并发触发时重复请求同一页
+    final page = _page + 1;
+    _page = page;
+    final seq = _searchSeq;
+    final keyword = _searchKeyword;
 
-    final videos = await searchVideos(_searchKeyword, page: _page);
-    return (videos, true);
+    final videos = await searchVideos(keyword, page: page);
+    // 搜索关键词已更换时丢弃过期结果
+    if (seq != _searchSeq || keyword != _searchKeyword) {
+      return (List<MediaCardInfo>.empty(growable: false), false);
+    }
+    return (videos, videos.isNotEmpty);
   }
 
   void _onVideoTapped(_, MediaCardInfo video) {
@@ -60,11 +69,15 @@ class _SearchPageState extends State<SearchPage> {
       return;
     }
 
+    final seq = ++_searchSeq;
     _searchKeyword = input;
+    _page = 0;
     final (videos, _) = await _onLoad(isFetchMore: true);
+    if (!mounted || seq != _searchSeq) return;
+
     _provider.clear();
     _provider.addAll(videos);
-    _provider.hasMore = true;
+    _provider.hasMore = videos.isNotEmpty;
   }
 
   @override
@@ -109,11 +122,11 @@ class _SearchPageState extends State<SearchPage> {
                 borderSide: BorderSide(color: biliPink, width: 2 * ui),
               ),
             ),
-            onSubmitted: (text) async {
+            onSubmitted: (text) {
               if (text.isEmpty) {
                 return;
               }
-              _onSearch(text);
+              unawaited(_onSearch(text));
             },
           ),
         ),
@@ -128,8 +141,11 @@ class _SearchPageState extends State<SearchPage> {
                 action: (media) {
                   if (!loginInfoNotifier.value.isLogin) return;
 
-                  addToView(avid: media.avid);
-                  pushTooltipInfo(context, '已加入稍后再看：${media.title}');
+                  requestWithTooltip(
+                    context,
+                    request: () => addToView(avid: media.avid),
+                    successText: '已加入稍后再看：${media.title}',
+                  );
                 },
               ),
             ],

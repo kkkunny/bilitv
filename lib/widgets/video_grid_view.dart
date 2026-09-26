@@ -28,7 +28,7 @@ class _VideoGridViewController
   }
 
   @override
-  Future<void> fetchData(int page) async => onLoad(isFetchMore: page == 1);
+  Future<void> fetchData(int page) async => onLoad(isFetchMore: page > 1);
 
   void clear() {
     page = 1;
@@ -49,6 +49,8 @@ class VideoGridViewProvider {
   final _refreshing = ValueNotifier(false);
   late final ScrollController _scrollCtl = ScrollController();
   bool _disposed = false;
+  bool _fetching = false;
+  int _generation = 0;
 
   VideoGridViewProvider({this.initVideos = const [], this.onLoad});
 
@@ -82,32 +84,62 @@ class VideoGridViewProvider {
   Future<void> refresh({saveInitData = true}) async {
     if (_disposed || _refreshing.value) return;
 
-    if (_scrollCtl.hasClients && _scrollCtl.offset != 0) {
-      await _scrollCtl.animateTo(
-        0,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-      );
-    }
-    if (_disposed) return;
     _refreshing.value = true;
-    clear();
-    // 传入初始数据（可能为空，用于正确显示空数据状态）
-    if (saveInitData) addAll(initVideos);
-    await fetchData(isFetchMore: false);
-    if (_disposed) return;
-    _refreshing.value = false;
+    // 使在途请求的结果失效，避免刷新后旧数据回填
+    _generation++;
+    try {
+      if (_scrollCtl.hasClients && _scrollCtl.offset != 0) {
+        await _scrollCtl.animateTo(
+          0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+        );
+      }
+      if (_disposed) return;
+      clear();
+      // 传入初始数据（可能为空，用于正确显示空数据状态）
+      if (saveInitData) addAll(initVideos);
+      await _fetchData(isFetchMore: false, generation: _generation);
+    } catch (_) {
+      // 滚动动画等异常不向上抛，避免未捕获异步异常
+    } finally {
+      if (!_disposed) _refreshing.value = false;
+    }
   }
 
   Future<void> fetchData({bool isFetchMore = false}) async {
+    if (_disposed || onLoad == null || _fetching) return;
+    await _fetchData(isFetchMore: isFetchMore, generation: _generation);
+  }
+
+  @visibleForTesting
+  bool get debugRefreshing => _refreshing.value;
+
+  @visibleForTesting
+  Future<void> debugFetchPage(int page) => _ctl.fetchData(page);
+
+  Future<void> _fetchData({
+    required bool isFetchMore,
+    required int generation,
+  }) async {
     if (_disposed || onLoad == null) return;
 
-    _ctl.emitState(const PaginationLoadingState());
+    _fetching = true;
+    try {
+      _ctl.emitState(const PaginationLoadingState());
 
-    final (newVideos, hasMore) = await onLoad!(isFetchMore: isFetchMore);
-    if (_disposed) return;
-    _hasMore = hasMore;
-    addAll(newVideos);
+      final (newVideos, hasMore) = await onLoad!(isFetchMore: isFetchMore);
+      if (_disposed || generation != _generation) return;
+      _hasMore = hasMore;
+      addAll(newVideos);
+    } catch (_) {
+      // 请求失败时结束 loading 状态，允许用户重试
+      if (!_disposed && generation == _generation) {
+        _ctl.emitState(const PaginationErrorState());
+      }
+    } finally {
+      _fetching = false;
+    }
   }
 }
 
@@ -221,16 +253,25 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
     if (widget.crossAxisCount != null) {
       crossAxisCount = widget.crossAxisCount!;
     } else {
-      final size = MediaQuery.sizeOf(context);
+      // 优先使用组件实际尺寸，避免侧边栏等内容挤占宽度时列数估算错误
+      final renderObject = context.findRenderObject();
+      final mediaSize = MediaQuery.sizeOf(context);
       final crossAxisSize = widget.scrollDirection == Axis.horizontal
-          ? size.height
-          : size.width;
+          ? (renderObject is RenderBox && renderObject.hasSize
+                ? renderObject.size.height
+                : mediaSize.height)
+          : (renderObject is RenderBox && renderObject.hasSize
+                ? renderObject.size.width
+                : mediaSize.width);
+      // 与SliverGridDelegateWithMaxCrossAxisExtent的列数计算保持一致（向上取整）
       crossAxisCount = max(
-        crossAxisSize /
-            (((widget.maxCrossAxisExtent ?? _defaultMaxCrossAxisExtent) * ui) +
-                widget.crossAxisSpacing * ui),
-        1.0,
-      ).toInt();
+        (crossAxisSize /
+                (((widget.maxCrossAxisExtent ?? _defaultMaxCrossAxisExtent) *
+                        ui) +
+                    widget.crossAxisSpacing * ui))
+            .ceil(),
+        1,
+      );
     }
     final isLastRowOrLine =
         (index / crossAxisCount).toInt() ==
@@ -246,7 +287,7 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
     if (_isFetchingMore) return;
     _lastRefresh = now;
     _isFetchingMore = true;
-    widget.provider.fetchData(isFetchMore: true).then((_) {
+    widget.provider.fetchData(isFetchMore: true).whenComplete(() {
       _isFetchingMore = false;
     });
   }
@@ -265,7 +306,12 @@ class _VideoGridViewState<T> extends State<VideoGridView<T>> {
     if (event is! KeyUpEvent) return;
     switch (event.logicalKey) {
       case LogicalKeyboardKey.contextMenu:
-        _onItemMenu(_focusIndex, widget.provider[_focusIndex]);
+        if (widget.itemMenuActions.isEmpty) break;
+        final provider = widget.provider;
+        if (provider.isEmpty) break;
+        // 列表可能因刷新/换关键词变短，越界时回退到最后一个元素
+        final index = _focusIndex.clamp(0, provider.length - 1);
+        _onItemMenu(index, provider[index]);
         break;
     }
   }

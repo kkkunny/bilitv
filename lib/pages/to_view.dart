@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bilitv/apis/bilibili/error.dart';
 import 'package:bilitv/apis/bilibili/toview.dart';
 import 'package:bilitv/consts/assets.dart';
 import 'package:bilitv/models/video.dart' show MediaCardInfo;
@@ -51,12 +52,11 @@ class _ToViewPageState extends State<ToViewPage> {
       return (List<MediaCardInfo>.empty(growable: false), false);
     }
 
-    _page++;
-
-    final videos = await listToView(page: _page, count: _pageVideoCount + 1);
-    final hasMore = videos.length > _pageVideoCount;
-    if (hasMore) videos.removeLast();
-    return (videos, hasMore);
+    // 请求成功后提交页码，失败时下次重试同一页
+    final nextPage = _page + 1;
+    final videos = await listToView(page: nextPage, count: _pageVideoCount);
+    _page = nextPage;
+    return (videos, videos.length >= _pageVideoCount);
   }
 
   Future<void> _refreshFromData(List<MediaCardInfo> medias) async {
@@ -77,10 +77,20 @@ class _ToViewPageState extends State<ToViewPage> {
         ItemMenuAction(
           title: '移除',
           icon: Icons.playlist_remove_rounded,
-          action: (media) {
+          action: (media) async {
             if (!loginInfoNotifier.value.isLogin) return;
 
-            deleteToView(media.avid);
+            try {
+              await deleteToView(media.avid);
+            } catch (e) {
+              if (!context.mounted) return;
+              pushTooltipError(
+                context,
+                e is BilibiliError ? e.message : '未知的错误',
+              );
+              return;
+            }
+            if (!context.mounted) return;
             pushTooltipInfo(context, '已从稍后再看中移除：${media.title}');
             final newVideos = _provider.toList();
             newVideos.removeWhere((video) => video.avid == media.avid);
